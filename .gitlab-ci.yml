@@ -1,0 +1,36 @@
+image: node:latest
+
+stages:
+  - test
+  - release
+
+variables:
+  GIT_DEPTH: "0"
+
+# before_script:
+#   - python --version
+#   - pip install --upgrade pip
+#   - pip install -r requirements.txt
+
+# test:
+#   image: python:3.12
+#   stage: test
+#   script:
+#     - pytest
+
+release:
+  image: node:latest
+  variables:
+    PYPI_TOKEN: ${CI_JOB_TOKEN}
+    PYPI_USERNAME: gitlab-ci-token
+    PYPI_REPO_URL: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi
+    GITLAB_TOKEN: $GITLAB_TOKEN
+  stage: release
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends git-core ca-certificates
+    - npm install -g semantic-release @semantic-release/gitlab @semantic-release/git @semantic-release/changelog
+  script:
+    - semantic-release
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH == "develop"
