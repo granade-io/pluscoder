@@ -21,7 +21,7 @@ def get_llm():
         raise ValueError("No 'model' specified. Please set the 'model' environment variable, .env, or use --model argument.")
     
     # Uses aws bedrock if available
-    if config.aws_access_key_id:
+    if config.aws_access_key_id and (not config.provider or config.provider == "aws_bedrock"):
         io.event(f"> Using model '{model_id}' with AWS Bedrock")
         return ChatBedrock(    
             model_id=model_id,
@@ -31,7 +31,7 @@ def get_llm():
         )
         
     # Prefer using OpenAI if available
-    if config.openai_api_key:
+    if config.openai_api_key and (not config.provider or config.provider == "openai"):
         io.event(f"> Using model '{model_id}' with OpenAI")
         return ChatOpenAI(
             model=model_id.replace("openai/", ""),
