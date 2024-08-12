@@ -7,6 +7,7 @@ from pluscoder.io_utils import io
 from pluscoder.type import AgentState, OrchestrationState
 from rich.rule import Rule                                                                                                      
 from rich.table import Table
+import subprocess
 
 class CommandRegistry:
     def __init__(self):
@@ -121,6 +122,26 @@ def help_command(state: OrchestrationState):
                                                                                                                                   
     io.console.print(table)                                                                                                       
     return state  
+
+@command_registry.register("run")
+def run_command(state: OrchestrationState, *args) -> OrchestrationState:
+    """Execute a system command and capture its output"""
+    command = " ".join(args)
+    try:
+        result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
+        output = result.stdout
+        io.console.print(f"Command executed successfully:\n{output}")
+        state["command_output"] = output
+    except subprocess.CalledProcessError as e:
+        error_message = f"Command execution failed:\nError: {e}\nOutput: {e.output}\nError output: {e.stderr}"
+        io.console.print(error_message, style="bold red")
+        state["command_output"] = error_message
+    except Exception as e:
+        error_message = f"An unexpected error occurred: {str(e)}"
+        io.console.print(error_message, style="bold red")
+        state["command_output"] = error_message
+    
+    return state
 
 def is_command(command: Union[str, dict]) -> bool:
     if isinstance(command, str):
