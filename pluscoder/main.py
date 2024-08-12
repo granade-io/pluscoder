@@ -20,6 +20,7 @@ from pluscoder.message_utils import get_message_content_str
 from pluscoder.model import get_llm
 from pluscoder.agents.event.config import event_emitter
 from pluscoder.commands import handle_command, is_command
+from pluscoder.setup import setup
 
 set_debug(False)
 
@@ -174,11 +175,11 @@ async def orchestrator_agent_node(state: OrchestrationState, agent: Orchestrator
     global_state = state
 
     def update_global_state(_agent_id, _updated_state):
-        global_state = accumulate_token_usage(global_state, _updated_state)
-        _current_state = global_state[_agent_id + "_state"]
-        global_state[_agent_id + "_state"] = {**_current_state, **_updated_state}
+        _global_state = accumulate_token_usage(global_state, _updated_state)
+        _current_state = _global_state[_agent_id + "_state"]
+        _global_state[_agent_id + "_state"] = {**_current_state, **_updated_state}
         
-        return global_state
+        return _global_state
     
     # Get the current state of the agent
     state = state[agent.id + "_state"] 
@@ -384,10 +385,9 @@ async def run_workflow():
 
 
 # Run the workflow
+
 def main():
-    repo = Repository(io=io)
-    if not repo.setup():
-        io.event("[yellow]Exiting pluscoder[/yellow]")
+    if not setup():
         return
     
     asyncio.run(run_workflow())
