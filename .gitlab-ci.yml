@@ -7,16 +7,16 @@ stages:
 variables:
   GIT_DEPTH: "0"
 
-# before_script:
-#   - python --version
-#   - pip install --upgrade pip
-#   - pip install -r requirements.txt
+before_script:
+  - python --version
+  - pip install --upgrade pip
+  - pip install -r requirements.txt
 
-# test:
-#   image: python:3.12
-#   stage: test
-#   script:
-#     - pytest
+test:
+  image: python:3.12
+  stage: test
+  script:
+    - pytest
 
 release:
   image: node:latest

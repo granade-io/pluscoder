@@ -17,9 +17,10 @@ from pluscoder.repo import Repository
 from pluscoder.config import config
 from pluscoder.agents.event.config import event_emitter
 from pluscoder.type import AgentState
+from langchain_community.callbacks.manager import get_openai_callback
 
 def parse_block(text):
-    pattern = r'`([^`\n]+):?`\n^```(\w*)\n(.*?)^```'
+    pattern = r'`([^`\n]+):?`\n{1,2}^```(\w*)\n(.*?)^```'
     matches = re.findall(pattern, text, re.DOTALL | re.MULTILINE)
     return [{'file_path': m[0], 'language': m[1], 'content': m[2].strip()} for m in matches]
 
@@ -128,28 +129,37 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
         
         interaction_msgs = []
         self.current_deflection = 0
-        while self.current_deflection < self.max_deflections:
-            try:
-                llm_response = self._invoke_llm_chain(state, interaction_msgs)
-                interaction_msgs.append(llm_response)
-                state_updates = self.process_agent_response(state, llm_response)
-                
-                break
-            except AgentException as e:
-                io.console.log(f"Error: {str(e)}")
-                interaction_msgs.append(HumanMessage(content=f"An error ocurrred: {str(e)}"))
-            except Exception as e:
-                io.console.log(f"State that causes raise: {state}")
-                raise e
-            finally:
-                self.current_deflection += 1
+        with get_openai_callback() as cb:
+            while self.current_deflection < self.max_deflections:
+                try:
+                    llm_response = self._invoke_llm_chain(state, interaction_msgs)
+                    interaction_msgs.append(llm_response)
+                    state_updates = self.process_agent_response(state, llm_response)
+                    
+                    break
+                except AgentException as e:
+                    io.console.log(f"Error: {str(e)}")
+                    interaction_msgs.append(HumanMessage(content=f"An error ocurrred: {str(e)}"))
+                except Exception as e:
+                    io.console.log(f"State that causes raise: {state}")
+                    raise e
+                finally:
+                    self.current_deflection += 1
         
         
         # deflections message
         if self.current_deflection == self.max_deflections:
-            io.console.log(f"Maximum deflections reached. Stopping.")
+            io.console.log(f"Maximum deflections reached. Stopping.", style="bold dark_goldenrod")
 
-        new_state = {"messages": interaction_msgs, **state_updates}
+        new_state = {"messages": interaction_msgs, 
+                     "token_usage": {
+                        "total_tokens": cb.total_tokens,
+                        "prompt_tokens": cb.prompt_tokens,
+                        "completion_tokens": cb.completion_tokens,
+                        "total_cost": cb.total_cost
+                    },
+                     **state_updates
+                     }
         return new_state
     
     def agent_router(self, state: AgentState) -> Literal["tools", "__end__"]:

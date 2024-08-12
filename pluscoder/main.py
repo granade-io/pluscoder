@@ -10,7 +10,8 @@ from pluscoder.io_utils import io
 from langgraph.graph import StateGraph, END, START
 from langchain_core.messages import HumanMessage, AnyMessage
 from pluscoder.agents.base import Agent, AgentState
-from pluscoder.type import OrchestrationState
+from pluscoder.state_utils import accumulate_token_usage
+from pluscoder.type import OrchestrationState, TokenUsage
 from pluscoder.agents.core import DeveloperAgent, DomainStakeholderAgent, PlanningAgent, DomainExpertAgent
 from rich.panel import Panel
 from rich.rule import Rule
@@ -19,6 +20,7 @@ from pluscoder.message_utils import get_message_content_str
 from pluscoder.model import get_llm
 from pluscoder.agents.event.config import event_emitter
 from pluscoder.commands import handle_command, is_command
+from pluscoder.setup import setup
 
 set_debug(False)
 
@@ -133,7 +135,6 @@ def agent_router(state: OrchestrationState) -> str:
     
     # Return to the orchestrator
     return orchestrator_agent.id
-        
 
 async def agent_node(state: OrchestrationState, agent: Agent) -> OrchestrationState:
     """
@@ -153,8 +154,11 @@ async def agent_node(state: OrchestrationState, agent: Agent) -> OrchestrationSt
     # Execute the agent's graph node and get a its modified state
     agent_state_output = await agent.graph_node(agent_state)
     
+    # Update token usage
+    state = accumulate_token_usage(state, agent_state_output)
+    
     # orchestrated agent doesn't need to update its state, is was already updated by the internal graph execution
-    return {agent.id + "_state": {**agent_state, **agent_state_output}}
+    return {**state, agent.id + "_state": {**agent_state, **agent_state_output}}
 
 async def orchestrator_agent_node(state: OrchestrationState, agent: OrchestratorAgent) -> OrchestrationState:
     """
@@ -169,10 +173,13 @@ async def orchestrator_agent_node(state: OrchestrationState, agent: Orchestrator
     
     # Helper to update the global state
     global_state = state
+
     def update_global_state(_agent_id, _updated_state):
-        _current_state = global_state[_agent_id + "_state"]
-        global_state[_agent_id + "_state"] = {**_current_state, **_updated_state}
-        return global_state
+        _global_state = accumulate_token_usage(global_state, _updated_state)
+        _current_state = _global_state[_agent_id + "_state"]
+        _global_state[_agent_id + "_state"] = {**_current_state, **_updated_state}
+        
+        return _global_state
     
     # Get the current state of the agent
     state = state[agent.id + "_state"] 
@@ -239,6 +246,9 @@ async def orchestrator_agent_node(state: OrchestrationState, agent: Orchestrator
     # Validates using only last message not entire conversation
     await event_emitter.emit("task_validation_start", agent_instructions=orchestrator_agent.get_agent_instructions(state))
     validation_response = await agent.graph_node({**state, "messages": [HumanMessage(content=f"Validate if the current task was completed by the agent:\nTask objective: {task_objective}\nTask Details:{task_details}\n\nAgent response:\n{executor_agent_response}")]})
+    
+    # Update global tokens
+    global_state = accumulate_token_usage(global_state, validation_response)
     
     if not agent.was_task_validation_tool_used(validation_response):
         # Task ALWAYS must be used when validating the current task
@@ -366,6 +376,7 @@ async def run_workflow():
         "planning_state": AgentState.default(),
         "developer_state": AgentState.default(),
         "domain_expert_state": AgentState.default(),
+        "accumulated_token_usage": TokenUsage.default(),
         }, version="v1"):
             kind = event["event"]
             if kind == "on_chain_end":
@@ -374,10 +385,9 @@ async def run_workflow():
 
 
 # Run the workflow
+
 def main():
-    repo = Repository(io=io)
-    if not repo.setup():
-        io.event("[yellow]Exiting pluscoder[/yellow]")
+    if not setup():
         return
     
     asyncio.run(run_workflow())
