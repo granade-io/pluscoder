@@ -6,7 +6,20 @@ from langchain_core.pydantic_v1 import BaseModel
 from langchain_core.messages import AnyMessage
 
 
+class TokenUsage(TypedDict):
+    total_tokens: int
+    prompt_tokens: int
+    completion_tokens: int
+    total_cost: float
+    
+    @classmethod
+    def default(cls):
+        return {"total_tokens": 0, "prompt_tokens": 0, "completion_tokens": 0, "total_cost": 0.0}
+    
 class AgentState(TypedDict, total=False):
+    # Token usage data
+    token_usage: TokenUsage
+    
     # Deprecated: Context for loaded files
     context_files: Annotated[List[str], add] = []
     
@@ -30,6 +43,7 @@ class AgentState(TypedDict, total=False):
         return {"messages": [], "agent_messages": [], "tool_data": {}, "status": "active"}
 
 class OrchestrationState(AgentState, total=False):
+    accumulated_token_usage: TokenUsage
     orchestrator_state: AgentState
     domain_stakeholder_state: AgentState
     planning_state: AgentState
