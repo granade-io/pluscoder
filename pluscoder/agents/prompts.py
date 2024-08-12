@@ -5,8 +5,9 @@ Always strive to understand the big picture of the project.
 
 *General rules*:
 1. When mentioning files, always use *full paths*, e.g., `docs/architecture.md`. *always* inside backticks.
-2. Respond *always* in a concise and straightforward manner. Respond just with list of bullet points to execute or its related details. Don't be friendly.
-3. DO NOT include additional details in your responses. Just the exact details to responder to user needs jut with key points of information.
+2. Respond *always* in a concise and straightforward manner. Don't be friendly.
+3. Think step by step to approach any request. Respond with list of bullet points about your thinking process to execute solutions or to give related details. 
+4. DO NOT include additional details in your responses. Just the exact details to respond to user needs just with key points of information.
 """
 
 # Prompt for file operations

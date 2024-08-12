@@ -6,35 +6,62 @@ To create an automated workflow entirely managed by LLM agents, capable of devel
 ## System Description
 This project aims to develop a system that uses a composition of LLM agents, leveraging Langchain and LangGraph, to automate the entire software development lifecycle. The workflow encompasses various stages including vision creation, roadmap planning, development, quality assurance, and production deployment.
 
-## Key Components
-1. Domain Stakeholder Agent: Responsible for deeply understanding the project and writing an updated overview for the entire team.
-2. Domain Expert Agent: Validates the tasks of all other agents, checks alignment with the project vision, and provides feedback for task revisions.
-3. Planning Agent: Creates a comprehensive development plan by breaking down roadmap pieces into smaller tasks.
-4. Developer Agent(s): Responsible for implementing the plan and potentially handling testing.
-5. Orchestrator Agent: Manages the workflow between different agents, selects appropriate agents for tasks, and ensures overall project progress.
-6. Workflow Engine: Manages the flow of tasks between agents using a Directed Acyclic Graph (DAG) created with LangGraph.
+## Key Features
 
-## Current State
-- Implemented: Domain Stakeholder Agent
-- Implemented: Domain Expert Agent
-- Implemented: Planning Agent
-- Implemented: Developer Agent
-- Implemented: Orchestrator Agent (manages workflow between agents, breaks down user requirements into tasks)
-- Implemented: Basic workflow engine using LangGraph
-- Implemented: User interaction flow with agent selection and task approval
-- Implemented: File auto-completion in input
-- Implemented: Auto-commit feature using Git event handler
-- In Progress: Refinement of Orchestrator Agent's task division capabilities
-- Future Focus: Optimization of agent interactions and performance improvements
+1. Multi-agent system with orchestration capabilities
+   - Includes specialized agents (Domain Stakeholder, Domain Expert, Planning, Developer)
+   - Orchestrator Agent manages workflow between agents
+
+2. Task-based agent orchestration
+   - Breaks down user requirements into manageable tasks
+   - Executes tasks using appropriate agents
+
+3. Agent chat loop and orchestration
+   - Allows direct interaction with individual agents
+   - Supports complex multi-agent workflows with max interactions to avoid infinite loops.
+
+4. User approvals for key points in the workflow
+   - Task list approval before execution
+   - Agent selection at the start of the application
+
+5. Automated file editing by agents
+   - Agents can read and update project files based on their specialized knowledge
+
+6. Auto-commit feature using Git event handler
+   - Automatically creates Git commits for file changes made by agents
+   - Enhances traceability and allows for easy review or reversion of modifications
+
+7. Cost and token tracking for LLM interactions
+   - Tracks token usage and calculates real-time cost information
+   - Supports various LLM models with different pricing structures
+
+8. Flexible configuration system
+   - Configurable through command-line arguments, environment variables, and default values
+   - Enhances project flexibility and ease of use
+
+9. Support for multiple LLM models
+   - Integration with LLMLite, OpenAI, and AWS Bedrock
+   - Allows for easy switching between different LLM providers
+
+10. Enhanced user interaction
+    - Command-line interface with rich console output
+    - Auto-completion for files and commands in user input
+    - Slash commands for quick actions
+
+11. Task execution progress display
+    - Real-time updates on task status and agent activities
+
+12. LLM input/output logging to file
+    - Captures all interactions with LLM models for analysis and debugging
 
 ## Technology Stack
 - Primary Language: Python
 - Key Libraries: Langchain, LangGraph
-- LLM Integration: AWS Bedrock with Claude 3 Sonnet model
+- LLM Integration: LLMLite, OpenAI, AWS Bedrock
 - Additional Libraries: asyncio, dotenv, rich (for console output), prompt_toolkit (for advanced input features), argparse (for command-line argument parsing)
 
-## Configuration System
-The project now includes a flexible configuration system (`pluscoder/config.py`) that allows setting various parameters:
+## Configuration and Startup
+The project includes a flexible configuration system (`pluscoder/config.py`) that allows setting various parameters:
 - Through command-line arguments when running the application
 - Via environment variables
 - Using default values defined in the code
@@ -42,36 +69,35 @@ The project now includes a flexible configuration system (`pluscoder/config.py`)
 This system enhances the project's flexibility and ease of use, allowing quick configuration changes without modifying the code.
 
 ## Development Workflow
-1. User selects an agent to interact with at the start of the application.
-2. If the Orchestrator Agent is selected:
+1. User selects an agent or starts with the Orchestrator.
+2. If using the Orchestrator:
    a. User provides requirements.
-   b. Orchestrator analyzes and breaks down requirements into manageable tasks.
-   c. A list of sequential tasks is presented to the user for approval.
-   d. Upon approval, tasks are executed by appropriate agents.
-   e. Progress is displayed in the console, showing task status.
-   f. Once tasks are completed, user can provide new requirements or quit.
-3. If another agent is selected:
+   b. Orchestrator breaks down requirements into tasks.
+   c. User approves the task list.
+   d. Tasks are executed by appropriate agents.
+   e. Progress is displayed in real-time.
+   f. User can provide new requirements or end the session.
+3. If using other agents:
    a. User can directly chat with the chosen agent.
-   b. The agent can read and update files based on its specialized knowledge.
-   c. The chat continues until the user decides to quit.
+   b. Agents can read and update files as needed.
 
 ## User Interaction
 - Command-line interface using `rich` library for enhanced console output
-- Input Handling: Uses `prompt_toolkit` for advanced input features, including multi-line input and file auto-completion
+- Input Handling: Uses `prompt_toolkit` for advanced input features, including multi-line input, file and command auto-completion
 - Agent Selection: Users can choose which agent to interact with at the start of the application
 - Task Approval: Users must approve the task list generated by the Orchestrator before execution
-- Auto-commit: Changes made to files are automatically committed to the Git repository
+- Slash Commands: Quick actions for common operations
+- Real-time progress display of task execution
 
 ## Version Control Integration
 - Git Event Handler: Implements automatic commits when files are edited by agents
 - This feature ensures that all changes made during the development process are tracked and versioned
 - Enhances traceability and allows for easy rollback if needed
+- Users can view diffs of AI-generated changes and manage the development process more effectively
 
 ## Challenges and Future Directions
-- Improving the Orchestrator Agent's prompt for more flexible handling of user requests
-- Optimizing task division to create manageable tasks (2-3 days of work per task)
+- Optimizing task division and agent interactions
 - Enhancing agents' understanding of the project state and vision
-- Implementing a maximum limit for agent interactions to prevent infinite loops
 - Improving inter-agent communication by summarizing or limiting preserved messages
 - Exploring solutions for better context retrieval (e.g., GraphRAG, project file tree summaries)
 - Refining the output filtering system to present clear, concise information to users
@@ -83,7 +109,7 @@ For detailed information on the project's next steps and prioritized features, p
 ## Technical Considerations
 - The project is in active development, with ongoing refinements to core functionalities
 - Asynchronous operations are used throughout the system for improved performance
-- The system is designed to be flexible and can potentially integrate with different LLM providers
+- The system is designed to be flexible and can integrate with different LLM providers
 - Future updates may include more sophisticated state management for complex, multi-step processes
 
 ## Repository Structure
