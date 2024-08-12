@@ -1,3 +1,10 @@
+# [1.2.0](https://gitlab.com/codematos/pluscoder/compare/v1.1.0...v1.2.0) (2024-08-12)
+
+
+### Features
+
+* new run command to execute bash command in chat ([d0e1ba7](https://gitlab.com/codematos/pluscoder/commit/d0e1ba736dfbec454846ad592141948878ba01e4))
+
 # [1.1.0](https://gitlab.com/codematos/pluscoder/compare/v1.0.0...v1.1.0) (2024-08-12)
 
 
