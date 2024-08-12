@@ -1,3 +1,17 @@
+# 1.0.0 (2024-08-12)
+
+
+### Bug Fixes
+
+* pluscoder referente for testing ([3490daf](https://gitlab.com/codematos/pluscoder/commit/3490daf639e4ab807809a3dc7f115b7b94ae8737))
+
+
+### Features
+
+* add token llm token tracking ([390cded](https://gitlab.com/codematos/pluscoder/commit/390cded6b0d05286d5cdcff06ccff5b4068a15b6))
+* new setup for start up validation, cost tracking for any model ([a86daa2](https://gitlab.com/codematos/pluscoder/commit/a86daa2f10b579d18b976a1a0d54840c49a2383a))
+* restores cicd test ([6deac7b](https://gitlab.com/codematos/pluscoder/commit/6deac7b637bff8275abffa078575077337a63a32))
+
 ## [1.3.1](https://gitlab.com/codematos/plus-coder/compare/v1.3.0...v1.3.1) (2024-08-11)
 
 
