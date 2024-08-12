@@ -1,3 +1,10 @@
+# [1.1.0](https://gitlab.com/codematos/pluscoder/compare/v1.0.0...v1.1.0) (2024-08-12)
+
+
+### Features
+
+* added provider config & updated overview with new features ([e49df23](https://gitlab.com/codematos/pluscoder/commit/e49df23e2807829151d173eea7bcce4959355154))
+
 # 1.0.0 (2024-08-12)
 
 
