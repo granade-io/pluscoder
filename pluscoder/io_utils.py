@@ -9,6 +9,7 @@ from rich.rule import Rule
 from rich.progress import Progress
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.completion import Completer, Completion, WordCompleter
+import sys
 
 from pluscoder.repo import Repository
 
@@ -92,6 +93,8 @@ class IO:
         self.error_console = Console(stderr=True, style="bold red")
         self.file_console = Console(file=".plus_coderlog.txt", style="cyan")
         self.progress = None
+        self.ctrl_c_count = 0
+        self.last_input = ""
         
     def event(self, string: str):
         return self.console.print(string, style="yellow")
@@ -106,6 +109,20 @@ class IO:
         def _(event):
             event.current_buffer.insert_text("\n")
 
+        @kb.add("c-c")
+        def _(event):
+            buf = event.current_buffer
+            if not buf.text:
+                self.ctrl_c_count += 1
+                if self.ctrl_c_count == 2:
+                    event.app.exit(exception=KeyboardInterrupt)
+                else:
+                    self.console.print("\nPress Ctrl+C again to exit.")
+            else:
+                self.ctrl_c_count = 0
+                buf.text = ""
+                buf.cursor_position = 0
+            
         # Autocompleter config
         completer = None
         if autocomplete:
@@ -116,9 +133,13 @@ class IO:
             completer=completer
         )
         
-        user_input = session.prompt(string)
-        
-        return user_input
+        try:
+            user_input = session.prompt(string)
+            self.ctrl_c_count = 0  # Reset the counter when input is successfully received
+            self.last_input = user_input
+            return user_input
+        except KeyboardInterrupt:
+            sys.exit(0)
     
     
     def set_progress(self, progress: Progress | Live) -> None:

@@ -366,7 +366,7 @@ app = workflow.compile()
 # Run the workflow
 
 async def run_workflow():
-    async for event in app.astream_events({
+    state = {
         "return_to_user": False,
         "messages": [], 
         "context_files": [],
@@ -376,7 +376,9 @@ async def run_workflow():
         "developer_state": AgentState.default(),
         "domain_expert_state": AgentState.default(),
         "accumulated_token_usage": TokenUsage.default(),
-        }, version="v1"):
+        }
+    
+    async for event in app.astream_events(state, version="v1"):
             kind = event["event"]
             if kind == "on_chain_end":
                 pass
