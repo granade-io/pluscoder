@@ -70,7 +70,7 @@ To execute/delegate/complete tasks *use the delegation tool*.
 
     def __init__(self, llm, tools=[tools.read_files], extraction_tools=[tools.delegate_tasks, tools.is_task_completed]):
         system_message = combine_prompts(BASE_PROMPT, self.orchestrator_prompt, FILE_OPERATIONS_PROMPT)
-        super().__init__(llm, system_message, "Orchestrator Agent", tools=tools, extraction_tools=extraction_tools)
+        super().__init__(llm, system_message, "Orchestrator Agent", tools=tools, extraction_tools=extraction_tools, default_context_files=["PROJECT_OVERVIEW.md"])
     
     def get_system_message(self, state: AgentState) -> str:
         # Default prompt

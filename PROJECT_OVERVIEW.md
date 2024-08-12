@@ -54,6 +54,11 @@ This project aims to develop a system that uses a composition of LLM agents, lev
 12. LLM input/output logging to file
     - Captures all interactions with LLM models for analysis and debugging
 
+13. Command execution feature
+    - Allows agents to execute system commands
+    - Enhances agents' ability to interact with the development environment
+    - Supports project setup, dependency management, and other development tasks
+
 ## Technology Stack
 - Primary Language: Python
 - Key Libraries: Langchain, LangGraph

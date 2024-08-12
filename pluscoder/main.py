@@ -298,9 +298,8 @@ async def orchestrator_agent_node(state: OrchestrationState, agent: Orchestrator
         task = agent.get_current_task(state_update)
         # Delegating the task to the next agent
         await event_emitter.emit("task_delegated", agent_instructions=orchestrator_agent.get_agent_instructions(state))
-        global_updated = update_global_state(target_agent, {"messages": [HumanMessage(content=agent.task_to_instruction(task))]})
-        global_updated = {**global_updated, **update_global_state(agent.id, {"agent_messages": validation_response["messages"]})}
-        return {**global_updated, **state_update}
+        global_updated = update_global_state(target_agent, {**state_update, "messages": [HumanMessage(content=agent.task_to_instruction(task))]})
+        return {**global_updated, **update_global_state(agent.id, {"agent_messages": validation_response["messages"]})}
 
     # Task is still incomplete. Keep delegating to the same agent
     # io.event(f"> [bold]Task incompleted. Re-delegating. [/bold]")
