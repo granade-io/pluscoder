@@ -65,7 +65,7 @@ PlusCoder can be configured using environment variables, command-line arguments,
 
 ### Model and API Settings
 - `MODEL`: LLM model to use (default: "anthropic.claude-3-5-sonnet-20240620-v1:0")
-- `PROVIDER`: Provider to use. If none, provider will be selected based on environment variables. Options: aws_bedrock, openai, litellm (default: None)
+- `PROVIDER`: Provider to use. If none, provider will be selected based on environment variables. Options: aws_bedrock, openai, litellm, anthropic (default: None)
 - `OPENAI_API_KEY`: OpenAI API key
 - `OPENAI_API_BASE`: OpenAI API base URL
 

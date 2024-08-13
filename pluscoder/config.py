@@ -38,6 +38,7 @@ class Config:
         self.openai_api_key = None
         self.openai_api_base = None
         self.provider = None
+        self.anthropic_api_key = None
 
         # AWS settings
         self.aws_access_key_id = None
@@ -94,9 +95,10 @@ def parse_args():
 
     # Model and API settings
     parser.add_argument("--model", type=str, default=None, help="LLM model to use")
-    parser.add_argument("--provider", type=str, default=None, help="Prvider to use. Options: aws_bedrock, openai, litellm")
+    parser.add_argument("--provider", type=str, default=None, help="Prvider to use. Options: aws_bedrock, openai, litellm, anthropic")
     parser.add_argument("--openai-api-key", type=str, default=None, help="OpenAI API key")
     parser.add_argument("--openai-api-base", type=str, default=None, help="OpenAI API base URL")
+    parser.add_argument("--anthropic-api-key", type=str, default=None, help="Anthropic API key")
 
     # AWS settings
     parser.add_argument("--aws-access-key-id", type=str, default=None, help="AWS Access Key ID")
