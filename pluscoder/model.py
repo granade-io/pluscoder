@@ -1,6 +1,7 @@
 from langchain_community.chat_models import ChatLiteLLM
 from langchain_openai import ChatOpenAI
 from langchain_aws import ChatBedrock
+from langchain_anthropic import ChatAnthropic
 from langchain_community.cache import SQLiteCache
 from langchain.globals import set_llm_cache
 import os
@@ -28,6 +29,16 @@ def get_llm():
             model_kwargs={"temperature": 0.0, "max_tokens": 4096},
             streaming=config.streaming,
             credentials_profile_name=config.aws_profile
+        )
+        
+    # Uses aws bedrock if available
+    if config.anthropic_api_key and (not config.provider or config.provider == "anthropic"):
+        io.event(f"> Using model '{model_id}' with Anthropic")
+        return ChatAnthropic(    
+            model_name=model_id,
+            temperature=0.0,
+            max_tokens= 4096,
+            streaming=config.streaming
         )
         
     # Prefer using OpenAI if available
