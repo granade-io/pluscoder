@@ -32,7 +32,7 @@ class CommandCompleter(Completer):
 class FileNameCompleter(Completer):
     def __init__(self):
         super().__init__()
-        self.repo = Repository(io=self)
+        self.repo = Repository(io=io)
 
     def get_completions(self, document, complete_event):
         text_before_cursor = document.text_before_cursor

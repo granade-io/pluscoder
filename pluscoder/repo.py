@@ -64,9 +64,16 @@ class Repository:
             repo_root = repo.working_tree_dir
             
             # Get all tracked files
-            tracked_files = repo.git.ls_files().split('\n')
+            tracked_files = set(repo.git.ls_files().splitlines())
             
-            return tracked_files
+            # Get untracked files (excluding ignored ones)
+            untracked_files = set(repo.git.ls_files(others=True, exclude_standard=True).splitlines())
+
+            # Combine and sort the results
+            all_files = sorted(tracked_files.union(untracked_files))
+
+            
+            return all_files
         
         except Exception as e:
             self.io.console.print(f"An error occurred: {e}", style="bold red")

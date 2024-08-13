@@ -41,7 +41,7 @@ To execute/delegate/complete tasks *use the delegation tool*.
 
 [] <task name>:
    Objective: <task objective>
-   Details: <task details> if possible include file path to give more context. Of references to files edited by previous tasks.
+   Details: <task details> always include file path to give more context, or functions/class/methos names. Always include references to files edited by previous tasks.
    Agent: <agent name> Agent who is responsible for this task.
 
 """
