@@ -1,3 +1,10 @@
+# [1.3.0](https://gitlab.com/codematos/pluscoder/compare/v1.2.0...v1.3.0) (2024-08-13)
+
+
+### Features
+
+* now untracked files in repo are included in chat/prompts ([00e871d](https://gitlab.com/codematos/pluscoder/commit/00e871ddfcb225b566cf0b4c05b794bf8cc9886d))
+
 # [1.2.0](https://gitlab.com/codematos/pluscoder/compare/v1.1.0...v1.2.0) (2024-08-12)
 
 
