@@ -77,7 +77,22 @@ class CustomProgress(Progress):
         return super().stop()
     
     def stream(self, chunk: str) -> None:
-        self.chunks.append(chunk)
+        if '\n' in chunk:
+            # Split the chunk by the last newline
+            parts = chunk.rsplit('\n', 1)
+            
+            # Combine all previous chunks with the first part of the new chunk
+            full_text = ''.join(self.chunks) + parts[0]
+            
+            # Print the full text
+            self.console.print(full_text, style="dark_blue")
+            
+            # Clear the chunks list and add only the remainder (if any)
+            self.chunks.clear()
+            if len(parts) > 1:
+                self.chunks.append(parts[1])
+        else:
+            self.chunks.append(chunk)
         
     def get_stream_renderable(self) -> ConsoleRenderable | RichCast | str:
         return Text(''.join(self.chunks), style="dark_blue")
