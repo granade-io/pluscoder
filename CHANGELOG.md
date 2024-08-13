@@ -1,3 +1,10 @@
+# [1.4.0](https://gitlab.com/codematos/pluscoder/compare/v1.3.0...v1.4.0) (2024-08-13)
+
+
+### Features
+
+* anthropic support ([3b14155](https://gitlab.com/codematos/pluscoder/commit/3b14155d73b7405f3d6e14877d5af232d84ffc24))
+
 # [1.3.0](https://gitlab.com/codematos/pluscoder/compare/v1.2.0...v1.3.0) (2024-08-13)
 
 
