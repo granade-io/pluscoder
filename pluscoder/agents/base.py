@@ -1,6 +1,7 @@
 import asyncio
 import re
 from pathlib import Path
+from time import sleep
 from typing import  List, Literal
 from langgraph.graph import StateGraph, add_messages
 from langgraph.prebuilt import ToolNode
@@ -120,6 +121,7 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
     
     def call_agent(self, state):
         """When entering this agent graph, this function is the first node to be called"""
+        print("keke")
         
         # last_message = state["messages"][-1]
         # io.error_console.print(f"Received message: {last_message.content}")
@@ -128,28 +130,26 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
         # io.event(self.get_context_files_panel(context_files))
         
         interaction_msgs = []
-        self.current_deflection = 0
+        state_updates = {}
+        
         with get_openai_callback() as cb:
-            while self.current_deflection < self.max_deflections:
+            while True:
                 try:
                     llm_response = self._invoke_llm_chain(state, interaction_msgs)
+                    print(f"Received LLM response: {llm_response.content}")
                     interaction_msgs.append(llm_response)
                     state_updates = self.process_agent_response(state, llm_response)
-                    
                     break
                 except AgentException as e:
                     io.console.log(f"Error: {str(e)}")
-                    interaction_msgs.append(HumanMessage(content=f"An error ocurrred: {str(e)}"))
+                    if self.current_deflection < self.max_deflections:
+                        self.current_deflection += 1
+                        interaction_msgs.append(HumanMessage(content=f"An error ocurrred: {str(e)}"))
+                    else:
+                        break
                 except Exception as e:
                     io.console.log(f"State that causes raise: {state}")
                     raise e
-                finally:
-                    self.current_deflection += 1
-        
-        
-        # deflections message
-        if self.current_deflection == self.max_deflections:
-            io.console.log(f"Maximum deflections reached. Stopping.", style="bold dark_goldenrod")
 
         new_state = {"messages": interaction_msgs, 
                      "token_usage": {
@@ -164,8 +164,14 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
     
     def agent_router(self, state: AgentState) -> Literal["tools", "__end__"]:
         """Edge to chose next node after agent was executed"""
+        # Ends agent if max deflections reached
+        if self.current_deflection >= self.max_deflections:
+            io.console.log(f"Maximum deflections reached. Stopping.", style="bold dark_goldenrod")
+            return "__end__"
+        
         messages = state["messages"]
         last_message = messages[-1]
+        
         if last_message.tool_calls:            
             return "tools"
         
@@ -217,6 +223,9 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
         """Node for handling interactions with the user and other nodes. Called every time a new message is received."""
         state_updates = {**state}
         
+        # Restart deflection counter
+        self.current_deflection = 0
+        
         if config.streaming:
             
             io.start_stream()
@@ -239,17 +248,20 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
                     # io.console.print(Text(f"Tool output: {event['data'].get('output')}", style="italic"))
                 elif kind == "on_chain_end" and event["name"] == "LangGraph":
                     # io.console.print("inner on_chain_end", event)
-                    state_updates = {**state_updates, **event["data"]["output"]}
+                    print(f"aaaa", state_updates)
+                    state_updates = {**state_updates, **event["data"]["output"]["agent"]}
+                    print(f"aaaa2", event["data"]["output"])
             io.stop_stream()
         else:
             state_updates = self.graph.invoke(state_updates, {"callbacks": [file_callback]})
-            
+            print(f"bbbbbb", state_updates)
             # get last message
             last_message = state_updates["messages"][-1]
             
             io.console.print(get_message_content_str(last_message))
             
         io.console.print("")
+        print(f"state after agent response:", state_updates)
         return state_updates
     
     def process_agent_response(self, state, response: AIMessage):
