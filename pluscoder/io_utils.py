@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import List, Union
+from typing import Union
 from prompt_toolkit import PromptSession
 from rich.console import Console, Group, ConsoleRenderable, RichCast
 from rich.live import Live
@@ -8,12 +8,11 @@ from rich.text import Text
 from rich.rule import Rule
 from rich.progress import Progress
 from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.completion import Completer, Completion, WordCompleter
+from prompt_toolkit.completion import Completer, Completion
 import sys
 
 from pluscoder.repo import Repository
 
-import logging
 logging.getLogger().setLevel(logging.ERROR) # hide warning log
 
 class CommandCompleter(Completer):
@@ -24,7 +23,7 @@ class CommandCompleter(Completer):
     def get_completions(self, document, complete_event):
         text = document.text_before_cursor
         if text.startswith('/'):
-            prefix = text[1:]  # Remove the leading '/'
+            text[1:]  # Remove the leading '/'
             for command in self.commands:
                 if command.startswith(text):
                     yield Completion(command, start_position=-len(text))

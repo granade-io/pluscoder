@@ -4,16 +4,14 @@ import asyncio
 import functools
 import warnings
 
-from pluscoder.repo import Repository
 from pluscoder.agents.orchestrator import OrchestratorAgent
 from pluscoder.io_utils import io
 from langgraph.graph import StateGraph, END, START
-from langchain_core.messages import HumanMessage, AnyMessage
+from langchain_core.messages import HumanMessage
 from pluscoder.agents.base import Agent, AgentState
 from pluscoder.state_utils import accumulate_token_usage
 from pluscoder.type import OrchestrationState, TokenUsage
 from pluscoder.agents.core import DeveloperAgent, DomainStakeholderAgent, PlanningAgent, DomainExpertAgent
-from rich.panel import Panel
 from rich.rule import Rule
 from langchain_core.globals import set_debug
 from pluscoder.message_utils import get_message_content_str
@@ -204,7 +202,7 @@ async def orchestrator_agent_node(state: OrchestrationState, agent: Orchestrator
         
         if task:
             # Ask the user for confirmation to proceed
-            if not io.confirm(f"Do you want to proceed?"):
+            if not io.confirm("Do you want to proceed?"):
                 state = orchestrator_agent.remove_task_list_data(state)
                 return {
                     **update_global_state(agent.id, state),
@@ -282,10 +280,10 @@ async def orchestrator_agent_node(state: OrchestrationState, agent: Orchestrator
             # no more tasks to delegate. Return to user by setting status to active. Resets the agent messages
             return update_global_state(agent.id, {**final_response, "status": "active", "agent_messages": []})
         
-        io.event(f"> [bold]Task completed![/bold]")
+        io.event("> [bold]Task completed![/bold]")
         
         # Ask the user for confirmation to proceed
-        if not io.confirm(f"Do you want to proceed with next task?"):
+        if not io.confirm("Do you want to proceed with next task?"):
             await event_emitter.emit("task_list_interrumpted", agent_instructions=orchestrator_agent.get_agent_instructions(state_update))
             
             # Return to user to give obtain more feedback & set status to active to allow agent to execute its default behavior
@@ -293,7 +291,7 @@ async def orchestrator_agent_node(state: OrchestrationState, agent: Orchestrator
                 **update_global_state(agent.id, {**state_update, "status": "active"}),
                 "return_to_user": True,
             }
-        io.event(f"> [bold]Moving to next task... [/bold]")
+        io.event("> [bold]Moving to next task... [/bold]")
             
         task = agent.get_current_task(state_update)
         # Delegating the task to the next agent
@@ -306,7 +304,7 @@ async def orchestrator_agent_node(state: OrchestrationState, agent: Orchestrator
     
     if global_state["current_agent_deflections"] >= global_state["max_agent_deflections"]:
         # Max reflections reached and user does not confirm the task as completed.
-        io.event(f"> Max reflections reached. Validate changes and refine task list properly.")
+        io.event("> Max reflections reached. Validate changes and refine task list properly.")
         
         await event_emitter.emit("task_list_interrumpted", agent_instructions=orchestrator_agent.get_agent_instructions(state_update))
         

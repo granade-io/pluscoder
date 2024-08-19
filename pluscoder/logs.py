@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any, Dict, List
 from langchain.schema import AIMessage
 from pathlib import Path
-from langchain_core.callbacks import BaseCallbackHandler, StdOutCallbackHandler
+from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.messages import BaseMessage
 
 llm_log_file = ".plus_coder_llm.history"
@@ -19,10 +19,10 @@ class FileCallbackHandler(BaseCallbackHandler):
             for m in message:
                 if hasattr(m, 'content'):
                     # check type str for content
-                    if type(m.content) == str:
+                    if type(m.content) is str:
                         chat_log += "\n".join(f"{m.type}: {line}" for line in m.content.split('\n')) + "\n"
                     # check type list for content
-                    elif type(m.content) == list:
+                    elif type(m.content) is list:
                         for item in m.content:
                             if isinstance(item, dict) and 'text' in item:
                                 chat_log += "\n".join(f"{m.type}: {line}" for line in item['text'].split('\n')) + "\n"

@@ -1,8 +1,7 @@
-from time import sleep
 import asyncio
 from typing import List
 from pluscoder.agents.event.base import AgentEventBaseHandler
-from rich.progress import Progress, SpinnerColumn, TextColumn, TaskProgressColumn, BarColumn
+from rich.progress import SpinnerColumn, TextColumn
 
 from pluscoder.io_utils import IO, CustomProgress
 from pluscoder.type import AgentInstructions, AgentTask
@@ -21,7 +20,6 @@ class ConsoleAgentEventHandler(AgentEventBaseHandler):
         self.progress = CustomProgress(SpinnerColumn(), TextColumn("[white]{task.description}"), console=self.io.console, transient=False)
         self.io.set_progress(self.progress)
         self.task_ids = []
-        first_incomplete = True
         for task in self.agent_instructions.task_list:
             task_id = self.progress.add_task(f"[ ] {task.objective} - {task.agent} agent", total=1)
             self.task_ids.append(task_id)
@@ -78,7 +76,6 @@ class ConsoleAgentEventHandler(AgentEventBaseHandler):
     
 if __name__ == "__main__":
     import asyncio
-    import time
     from io_utils import io
 
     async def main():

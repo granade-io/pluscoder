@@ -1,4 +1,4 @@
-from typing import Dict, Union, Callable, is_typeddict
+from typing import Dict, Union, Callable
 from functools import wraps
 from rich.syntax import Syntax
 from pluscoder.config import config
@@ -60,7 +60,7 @@ def diff(state: OrchestrationState):
 @command_registry.register("config")
 def config_command(state: OrchestrationState, key: str, value: str):
     """Override any pluscoder configuration. e.g: `/config auto-commits false`"""
-    if not key in config.__dict__:
+    if key not in config.__dict__:
         io.console.print(f"Error: '{key}' is not a valid configuration option.", style="bold red")
         return state
     old_value = getattr(config, key)

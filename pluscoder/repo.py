@@ -1,8 +1,6 @@
 import os
 import pprint
-from click import style
 from git import Actor, Repo
-from pathlib import Path
 from git import GitCommandError
 from pluscoder.config import config
 
@@ -61,7 +59,6 @@ class Repository:
             repo = Repo(os.getcwd(), search_parent_directories=True)
             
             # Get the root directory of the repository
-            repo_root = repo.working_tree_dir
             
             # Get all tracked files
             tracked_files = set(repo.git.ls_files().splitlines())

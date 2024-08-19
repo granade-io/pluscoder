@@ -1,7 +1,4 @@
-import pytest
 from unittest.mock import patch, mock_open
-from pathlib import Path
-from pluscoder.exceptions import AgentException
 from pluscoder.fs import apply_block_update
 
 @patch('pluscoder.fs.Path')

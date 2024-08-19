@@ -4,8 +4,6 @@ from langchain_aws import ChatBedrock
 from langchain_anthropic import ChatAnthropic
 from langchain_community.cache import SQLiteCache
 from langchain.globals import set_llm_cache
-import os
-from dotenv import load_dotenv
 from pluscoder.io_utils import io
 from pluscoder.config import config
 

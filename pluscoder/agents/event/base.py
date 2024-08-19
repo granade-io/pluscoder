@@ -3,7 +3,6 @@
 import asyncio
 
 from pluscoder.agents.event.event_handler.base import AgentEventBaseHandler
-from pluscoder.type import AgentTask
     
 
 class EventEmitter:

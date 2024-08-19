@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, patch
 from langchain_core.messages import HumanMessage, AIMessage
 from pluscoder.agents.base import Agent, AgentState, parse_block, parse_mentioned_files
 from pluscoder.exceptions import AgentException

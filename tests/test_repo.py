@@ -1,9 +1,8 @@
 import pytest
 from unittest.mock import ANY, Mock, patch, MagicMock
 from pluscoder.repo import Repository
-from git import Repo, GitCommandError
+from git import GitCommandError
 from pluscoder.io_utils import io
-from pluscoder import config
 
 @pytest.fixture
 def mock_repo():
