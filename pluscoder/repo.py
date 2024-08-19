@@ -1,5 +1,7 @@
 import os
 import pprint
+import subprocess
+from typing import Optional
 from git import Actor, Repo
 from git import GitCommandError
 from pluscoder.config import config
@@ -110,7 +112,50 @@ class Repository:
         
         return True
 
+    def run_lint(self) -> Optional[str]:
+        """
+        Execute the configured lint command.
         
+        Returns:
+            Optional[str]: None if linting was successful or not configured,
+                           error message string if it failed.
+        """
+        if not config.run_lint_after_edit:
+            return None  # Return None as there's no error, just not configured
+        elif config.run_lint_after_edit and not config.lint_command:
+            self.io.console.print("No lint command configured. Skipping linting.", style="bold dark_goldenrod")
+            return None  # Return None as there's no error, just not configured
+        
+        try:
+            subprocess.run(config.lint_command, shell=True, check=True, capture_output=True, text=True)
+            return None  # Linting successful
+        except subprocess.CalledProcessError as e:
+            return f"Linting failed: {e.stderr}"  # Return error message
+
+    def run_test(self) -> Optional[str]:
+        """
+        Execute the configured test command.
+        
+        Returns:
+            Optional[str]: None if tests were successful or not configured,
+                           error message string if they failed.
+        """
+        
+        if not config.run_tests_after_edit:
+            return None  # Return None as there's no error, just not configured
+        elif config.run_tests_after_edit and not config.test_command:
+            self.io.console.print("No test command configured. Skipping tests.", style="bold dark_goldenrod")
+            return None  # Return None as there's no error, just not configured
+        
+        try:
+            subprocess.run(config.test_command, shell=True, check=True, capture_output=True, text=True)
+            return None  # Tests successful
+        except subprocess.CalledProcessError as e:
+            return f"Tests failed: {e.stderr}"  # Return error message
+
+
 if __name__ == "__main__":
     repo = Repository()
     pprint.pprint(repo.get_tracked_files())
+    
+    repo.run_test()

@@ -49,6 +49,12 @@ class Config:
         self.auto_commits = True
         self.allow_dirty_commits = True
 
+        # Test and Lint settings
+        self.run_tests_after_edit = False
+        self.run_lint_after_edit = False
+        self.test_command = None
+        self.lint_command = None
+
     def update_from_env(self):
         for key in vars(self):
             env_var = f"{key.upper()}"
@@ -108,6 +114,12 @@ def parse_args():
     # Git settings
     parser.add_argument("--auto-commits", type=str2bool, default=None, help="Enable/disable automatic Git commits")
     parser.add_argument("--allow-dirty-commits", type=str2bool, default=None, help="Allow commits in a dirty repository")
+
+    # Test and Lint settings
+    parser.add_argument("--run-tests-after-edit", type=str2bool, default=None, help="Run tests after file edits")
+    parser.add_argument("--run-lint-after-edit", type=str2bool, default=None, help="Run linter after file edits")
+    parser.add_argument("--test-command", type=str, default=None, help="Command to run tests")
+    parser.add_argument("--lint-command", type=str, default=None, help="Command to run linter")
 
     return parser.parse_args()
 

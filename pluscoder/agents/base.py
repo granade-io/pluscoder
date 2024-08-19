@@ -244,7 +244,10 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
                     # io.console.print(Text(f"Tool output: {event['data'].get('output')}", style="italic"))
                 elif kind == "on_chain_end" and event["name"] == "LangGraph":
                     # io.console.print("inner on_chain_end", event)
-                    state_updates = {**state_updates, **event["data"]["output"]["agent"]}
+                    if "agent" in event["data"]["output"]:
+                        state_updates = {**state_updates, **event["data"]["output"]["agent"]}
+                    else:
+                        state_updates = {**state_updates, **event["data"]["output"]}
             io.stop_stream()
         else:
             state_updates = self.graph.invoke(state_updates, {"callbacks": [file_callback]})
@@ -254,7 +257,6 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
             io.console.print(get_message_content_str(last_message))
             
         io.console.print("")
-        print("state after agent response:", state_updates)
         return state_updates
     
     def process_agent_response(self, state, response: AIMessage):
@@ -306,8 +308,22 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
             else:
                 error_messages.append(error_msg)
         
+        if error_messages:
+            raise AgentException("Some files couldn't be updated:\n" + "\n".join(error_messages))
+        
+        if updated_files:
+            # Run tests and linting if enabled
+            lint_error = self.repo.run_lint()
+            test_error = self.repo.run_test()
+            
+            if lint_error or test_error:
+                error_message = "Errors found:\n"
+                if lint_error:
+                    error_message += f"Linting: {lint_error}\n"
+                if test_error:
+                    error_message += f"Tests: {test_error}\n"
+                raise AgentException(error_message)
+        
         if updated_files:
             asyncio.run(event_emitter.emit("files_updated", updated_files=updated_files))
-        if error_messages:
-            raise AgentException("Some files couldn't be updated: \n" + "\n".join(error_messages))
 
