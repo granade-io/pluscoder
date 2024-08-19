@@ -160,3 +160,66 @@ def test_process_blocks_with_errors(mock_apply_block_update, mock_event_emitter,
     assert "Some files couldn't be updated:" in str(excinfo.value)
     assert "Error in file `test.py`" in str(excinfo.value)
     mock_event_emitter.assert_not_called()
+
+def test_agent_router_return_tools(agent):
+    message = AIMessage(content="")
+    message.tool_calls = True  # Just to simulate a tool call message
+    state = AgentState(messages=[message])
+    result = agent.agent_router(state)
+    assert result == "tools"
+
+def test_agent_router_return_end_on_max_deflections(agent):
+    agent.current_deflection = agent.max_deflections
+    message = AIMessage(content="")
+    message.tool_calls = True  # Just to simulate a tool call message
+    state = AgentState(messages=[message])
+    result = agent.agent_router(state)
+    assert result == "__end__"
+    
+def test_agent_router_no_tools(agent):
+    state = AgentState(messages=[AIMessage(content="")])
+    result = agent.agent_router(state)
+    assert result == "__end__"
+
+@patch.object(Agent, '_invoke_llm_chain')
+@pytest.mark.asyncio
+async def test_graph_node_normal_response(mock_invoke_llm_chain, agent):
+    # Mock the graph.invoke method to return a normal response
+    mock_invoke_llm_chain.return_value = AIMessage(content="Normal response")
+
+        
+    initial_state = AgentState(messages=[HumanMessage(content="Hello")])
+    result = await agent.graph_node(initial_state)
+    
+    assert "Normal response" in result["messages"][-1].content
+    assert agent.current_deflection == 0
+
+@patch.object(Agent, '_invoke_llm_chain')
+@pytest.mark.asyncio
+async def test_graph_node_one_deflection_and_recover(mock_invoke_llm_chain, agent):
+    # Mock the graph.invoke method to raise an exception once, then return a normal response
+    mock_invoke_llm_chain.side_effect = [
+        AgentException("Test error"),
+        AIMessage(content="Recovered response")
+    ]
+        
+    initial_state = AgentState(messages=[HumanMessage(content="Hello")])
+    result = await agent.graph_node(initial_state)
+    
+    assert "Recovered response" in result["messages"][-1].content
+    assert agent.current_deflection == 1
+
+@patch.object(Agent, 'process_agent_response')
+@patch.object(Agent, '_invoke_llm_chain')
+@pytest.mark.asyncio
+async def test_graph_node_max_deflections_no_recover(mock_invoke_llm_chain, mock_process_agent_response, agent):
+    # Mock the graph.invoke method to always raise an exception
+    mock_process_agent_response.side_effect = AgentException("Persistent error")
+    mock_invoke_llm_chain.return_value = AIMessage(content="Edit response")
+    
+    initial_state = AgentState(messages=[HumanMessage(content="Hello")])
+    result = await agent.graph_node(initial_state)
+    
+    assert "Edit response" in str(result["messages"][-1].content)
+    assert agent.current_deflection == agent.max_deflections
+    assert len(result["messages"]) == 7

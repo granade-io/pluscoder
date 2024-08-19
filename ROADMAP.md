@@ -1,5 +1,8 @@
 # Prioritized Project Roadmap
 
+## Critical to fix
+- "Maximum deflections reached. Stopping" didn't worked and the agent tried to edit the file infinitely.
+
 ## High Priority Features
 
 ### 1. Improve Orchestrator's flexibility and feedback mechanism (Highest Priority, High Complexity)
