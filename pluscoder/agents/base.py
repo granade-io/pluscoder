@@ -121,7 +121,6 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
     
     def call_agent(self, state):
         """When entering this agent graph, this function is the first node to be called"""
-        print("keke")
         
         # last_message = state["messages"][-1]
         # io.error_console.print(f"Received message: {last_message.content}")
@@ -136,7 +135,6 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
             while True:
                 try:
                     llm_response = self._invoke_llm_chain(state, interaction_msgs)
-                    print(f"Received LLM response: {llm_response.content}")
                     interaction_msgs.append(llm_response)
                     state_updates = self.process_agent_response(state, llm_response)
                     break
@@ -248,13 +246,10 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
                     # io.console.print(Text(f"Tool output: {event['data'].get('output')}", style="italic"))
                 elif kind == "on_chain_end" and event["name"] == "LangGraph":
                     # io.console.print("inner on_chain_end", event)
-                    print(f"aaaa", state_updates)
                     state_updates = {**state_updates, **event["data"]["output"]["agent"]}
-                    print(f"aaaa2", event["data"]["output"])
             io.stop_stream()
         else:
             state_updates = self.graph.invoke(state_updates, {"callbacks": [file_callback]})
-            print(f"bbbbbb", state_updates)
             # get last message
             last_message = state_updates["messages"][-1]
             
@@ -287,7 +282,7 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
             
             path = Path(file_path)
             if not path.is_file():
-                io.console.print(Text(f"File not found: {path.name}"))
+                # io.console.print(Text(f"File not found: {path.name}"))
                 continue
             
             context_files = [*context_files, file_path]
