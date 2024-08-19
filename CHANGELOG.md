@@ -1,3 +1,10 @@
+## [1.4.1](https://gitlab.com/codematos/pluscoder/compare/v1.4.0...v1.4.1) (2024-08-19)
+
+
+### Bug Fixes
+
+* agent deflections now finishes when max reached. Tests added ([23692b8](https://gitlab.com/codematos/pluscoder/commit/23692b87ff497252960b47e7113cb7a4c331fe38))
+
 # [1.4.0](https://gitlab.com/codematos/pluscoder/compare/v1.3.0...v1.4.0) (2024-08-13)
 
 
