@@ -1,3 +1,11 @@
+# [1.5.0](https://gitlab.com/codematos/pluscoder/compare/v1.4.2...v1.5.0) (2024-08-20)
+
+
+### Features
+
+* auto lint fix & lint command configs ([5e42a83](https://gitlab.com/codematos/pluscoder/commit/5e42a83e27901b28dbd605c5c8fb9d78e4bb47f6))
+* lint & test support ([afbd184](https://gitlab.com/codematos/pluscoder/commit/afbd184b8459819b887dedf6e2beca57dea8c0a7))
+
 ## [1.4.2](https://gitlab.com/codematos/pluscoder/compare/v1.4.1...v1.4.2) (2024-08-19)
 
 
