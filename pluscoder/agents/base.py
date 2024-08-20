@@ -17,6 +17,7 @@ from pluscoder.config import config
 from pluscoder.agents.event.config import event_emitter
 from pluscoder.type import AgentState
 from langchain_community.callbacks.manager import get_openai_callback
+from rich.json import JSON
 
 def parse_block(text):
     pattern = r'`([^`\n]+):?`\n{1,2}^```(\w*)\n(.*?)^```'
@@ -144,8 +145,13 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
                     else:
                         break
                 except Exception as e:
-                    io.console.log(f"State that causes raise: {state}")
-                    raise e
+                    # Handles unknown exceptions, maybe caused by llm api or wrong state
+                    io.console.log(f"An error occurred: {str(e)}", style="bold red")
+                    io.console.print("State that causes raise:", style="bold red")
+                    io.console.print(JSON(state), style="bold red")
+                    self.current_deflection += 1
+                    if self.current_deflection < self.max_deflections:
+                        self.current_deflection += 1
 
         new_state = {"messages": interaction_msgs, 
                      "token_usage": {

@@ -114,7 +114,7 @@ class Repository:
 
     def run_lint(self) -> Optional[str]:
         """
-        Execute the configured lint command.
+        Execute the configured lint command, with optional auto-fix.
         
         Returns:
             Optional[str]: None if linting was successful or not configured,
@@ -126,11 +126,18 @@ class Repository:
             self.io.console.print("No lint command configured. Skipping linting.", style="bold dark_goldenrod")
             return None  # Return None as there's no error, just not configured
         
+        # Run linter fix if configured
+        if config.auto_run_linter_fix and config.lint_fix_command:
+            subprocess.run(config.lint_fix_command, shell=True, check=False)
+        
         try:
             subprocess.run(config.lint_command, shell=True, check=True, capture_output=True, text=True)
             return None  # Linting successful
         except subprocess.CalledProcessError as e:
-            return f"Linting failed: {e.stderr}"  # Return error message
+            # Both stdout and stderr returned because stderr not showing 
+            error_message = e.stdout if e.stdout else ''
+            error_message += e.stderr if e.stderr else ''  # Append stderr to error message
+            return f"Linting failed: {error_message}"  # Return error message
 
     def run_test(self) -> Optional[str]:
         """

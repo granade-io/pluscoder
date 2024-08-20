@@ -1,7 +1,5 @@
-from unittest.mock import patch, mock_open, MagicMock
+from unittest.mock import patch, mock_open
 from pluscoder.fs import apply_block_update
-from pluscoder.exceptions import AgentException
-import pytest
 
 @patch('pluscoder.fs.Path')
 def test_apply_block_update_multiple_updates(mock_path):

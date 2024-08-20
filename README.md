@@ -83,6 +83,8 @@ PlusCoder can be configured using environment variables, command-line arguments,
 - `RUN_LINT_AFTER_EDIT`: Run linter after file edits (default: False)
 - `TEST_COMMAND`: Command to run tests (default: None)
 - `LINT_COMMAND`: Command to run linter (default: None)
+- `AUTO_RUN_LINTER_FIX`: Automatically run linter fix before linting (default: False)
+- `LINT_FIX_COMMAND`: Command to run linter fix (default: None)
 
 You can set these options using environment variables, command-line arguments (e.g., `--streaming false`), or the `/config` command during runtime (e.g., `/config streaming false`).
 

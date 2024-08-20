@@ -242,13 +242,13 @@ def test_run_lint_success(mock_config, mock_subprocess_run):
     result = repo.run_lint()
 
     assert result is None
-    mock_subprocess_run.assert_called_once_with("pylint .", shell=True, check=True, capture_output=True, text=True)
+    mock_subprocess_run.assert_called_with("pylint .", shell=True, check=True, capture_output=True, text=True)
 
 @patch('pluscoder.repo.subprocess.run')
 @patch('pluscoder.repo.config')
 def test_run_lint_failure(mock_config, mock_subprocess_run):
     mock_config.lint_command = "pylint ."
-    mock_subprocess_run.side_effect = subprocess.CalledProcessError(1, "pylint .", stderr="Linting errors found")
+    mock_subprocess_run.side_effect = [True, subprocess.CalledProcessError(1, "pylint .", stderr="Linting errors found")]
 
     repo = Repository(io=io)
     result = repo.run_lint()
