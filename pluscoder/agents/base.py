@@ -1,11 +1,9 @@
 import asyncio
 import re
 from pathlib import Path
-from time import sleep
 from typing import  List, Literal
-from langgraph.graph import StateGraph, add_messages
+from langgraph.graph import StateGraph
 from langgraph.prebuilt import ToolNode
-from rich.text import Text
 from pluscoder.exceptions import AgentException
 from pluscoder.io_utils import io
 from pluscoder.logs import file_callback
@@ -19,6 +17,7 @@ from pluscoder.config import config
 from pluscoder.agents.event.config import event_emitter
 from pluscoder.type import AgentState
 from langchain_community.callbacks.manager import get_openai_callback
+from rich.json import JSON
 
 def parse_block(text):
     pattern = r'`([^`\n]+):?`\n{1,2}^```(\w*)\n(.*?)^```'
@@ -52,7 +51,7 @@ class Agent:
         self.state = None
         
     def get_context_files(self, state):
-        state_files = state.get("context_files") or []
+        state.get("context_files") or []
         # files = [*self.default_context_files, *state_files]
         files = [*self.default_context_files]
         
@@ -125,7 +124,7 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
         # last_message = state["messages"][-1]
         # io.error_console.print(f"Received message: {last_message.content}")
         
-        context_files = self.get_context_files(state)
+        self.get_context_files(state)
         # io.event(self.get_context_files_panel(context_files))
         
         interaction_msgs = []
@@ -146,8 +145,13 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
                     else:
                         break
                 except Exception as e:
-                    io.console.log(f"State that causes raise: {state}")
-                    raise e
+                    # Handles unknown exceptions, maybe caused by llm api or wrong state
+                    io.console.log(f"An error occurred: {str(e)}", style="bold red")
+                    io.console.print("State that causes raise:", style="bold red")
+                    io.console.print(JSON(state), style="bold red")
+                    self.current_deflection += 1
+                    if self.current_deflection < self.max_deflections:
+                        self.current_deflection += 1
 
         new_state = {"messages": interaction_msgs, 
                      "token_usage": {
@@ -164,7 +168,7 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
         """Edge to chose next node after agent was executed"""
         # Ends agent if max deflections reached
         if self.current_deflection >= self.max_deflections:
-            io.console.log(f"Maximum deflections reached. Stopping.", style="bold dark_goldenrod")
+            io.console.log("Maximum deflections reached. Stopping.", style="bold dark_goldenrod")
             return "__end__"
         
         messages = state["messages"]
@@ -232,9 +236,9 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
                 if kind == "on_chat_model_stream":
                     content = event["data"]["chunk"].content
                     if content:
-                        if type(content) == str:
+                        if type(content) is str:
                             io.stream(content)
-                        elif type(content) == list:
+                        elif type(content) is list:
                             for entry in content:
                                 if "text" in entry:
                                     # io.console.print(entry["text"], style="bright_green", end="")
@@ -246,7 +250,10 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
                     # io.console.print(Text(f"Tool output: {event['data'].get('output')}", style="italic"))
                 elif kind == "on_chain_end" and event["name"] == "LangGraph":
                     # io.console.print("inner on_chain_end", event)
-                    state_updates = {**state_updates, **event["data"]["output"]["agent"]}
+                    if "agent" in event["data"]["output"]:
+                        state_updates = {**state_updates, **event["data"]["output"]["agent"]}
+                    else:
+                        state_updates = {**state_updates, **event["data"]["output"]}
             io.stop_stream()
         else:
             state_updates = self.graph.invoke(state_updates, {"callbacks": [file_callback]})
@@ -256,7 +263,6 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
             io.console.print(get_message_content_str(last_message))
             
         io.console.print("")
-        print(f"state after agent response:", state_updates)
         return state_updates
     
     def process_agent_response(self, state, response: AIMessage):
@@ -296,7 +302,7 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
         for block in file_blocks:
             file_path = block["file_path"]
             content = block["content"]
-            language = block["language"]
+            block["language"]
             
             if file_path.startswith("/"):
                 file_path = file_path[1:]
@@ -308,8 +314,22 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
             else:
                 error_messages.append(error_msg)
         
+        if error_messages:
+            raise AgentException("Some files couldn't be updated:\n" + "\n".join(error_messages))
+        
+        if updated_files:
+            # Run tests and linting if enabled
+            lint_error = self.repo.run_lint()
+            test_error = self.repo.run_test()
+            
+            if lint_error or test_error:
+                error_message = "Errors found:\n"
+                if lint_error:
+                    error_message += f"Linting: {lint_error}\n"
+                if test_error:
+                    error_message += f"Tests: {test_error}\n"
+                raise AgentException(error_message)
+        
         if updated_files:
             asyncio.run(event_emitter.emit("files_updated", updated_files=updated_files))
-        if error_messages:
-            raise AgentException("Some files couldn't be updated: \n" + "\n".join(error_messages))
 

@@ -1,7 +1,4 @@
-import pytest
 from unittest.mock import patch, mock_open
-from pathlib import Path
-from pluscoder.exceptions import AgentException
 from pluscoder.fs import apply_block_update
 
 @patch('pluscoder.fs.Path')
@@ -70,4 +67,3 @@ from dotenv import load_dotenv
     mock_path.return_value.exists.assert_called_once()
     mock_path.return_value.read_text.assert_not_called()
     mock_path.return_value.write_text.assert_called_once_with("import os\nfrom dotenv import load_dotenv")
-    

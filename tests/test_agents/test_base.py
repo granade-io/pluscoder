@@ -1,8 +1,9 @@
 import pytest
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, patch
 from langchain_core.messages import HumanMessage, AIMessage
 from pluscoder.agents.base import Agent, AgentState, parse_block, parse_mentioned_files
 from pluscoder.exceptions import AgentException
+from pluscoder.repo import Repository
 
 def test_parse_block():
     test_input = """
@@ -135,9 +136,13 @@ def test_process_agent_response(agent):
         result = agent.process_agent_response(state, response)
     assert "new_file.txt" in result["context_files"]
 
+@patch.object(Repository, 'run_lint')
+@patch.object(Repository, 'run_test')
 @patch('pluscoder.agents.event.config.event_emitter.emit')
 @patch('pluscoder.agents.base.apply_block_update')
-def test_process_blocks_success(mock_apply_block_update, mock_event_emitter, agent):
+def test_process_blocks_success(mock_apply_block_update, mock_event_emitter, mock_run_test, mock_run_lint, agent):
+    mock_run_test.return_value = False  # Indicates success
+    mock_run_lint.return_value = False  # Indicates success
     mock_apply_block_update.return_value = False  # Indicates success
     blocks = [
         {"file_path": "test.py", "content": "print('Hello')", "language": "python"}
@@ -208,6 +213,7 @@ async def test_graph_node_one_deflection_and_recover(mock_invoke_llm_chain, agen
     
     assert "Recovered response" in result["messages"][-1].content
     assert agent.current_deflection == 1
+
 
 @patch.object(Agent, 'process_agent_response')
 @patch.object(Agent, '_invoke_llm_chain')

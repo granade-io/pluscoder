@@ -1,8 +1,8 @@
 import os
 import pprint
-from click import style
+import subprocess
+from typing import Optional
 from git import Actor, Repo
-from pathlib import Path
 from git import GitCommandError
 from pluscoder.config import config
 
@@ -61,7 +61,6 @@ class Repository:
             repo = Repo(os.getcwd(), search_parent_directories=True)
             
             # Get the root directory of the repository
-            repo_root = repo.working_tree_dir
             
             # Get all tracked files
             tracked_files = set(repo.git.ls_files().splitlines())
@@ -113,7 +112,57 @@ class Repository:
         
         return True
 
+    def run_lint(self) -> Optional[str]:
+        """
+        Execute the configured lint command, with optional auto-fix.
         
+        Returns:
+            Optional[str]: None if linting was successful or not configured,
+                           error message string if it failed.
+        """
+        if not config.run_lint_after_edit:
+            return None  # Return None as there's no error, just not configured
+        elif config.run_lint_after_edit and not config.lint_command:
+            self.io.console.print("No lint command configured. Skipping linting.", style="bold dark_goldenrod")
+            return None  # Return None as there's no error, just not configured
+        
+        # Run linter fix if configured
+        if config.auto_run_linter_fix and config.lint_fix_command:
+            subprocess.run(config.lint_fix_command, shell=True, check=False)
+        
+        try:
+            subprocess.run(config.lint_command, shell=True, check=True, capture_output=True, text=True)
+            return None  # Linting successful
+        except subprocess.CalledProcessError as e:
+            # Both stdout and stderr returned because stderr not showing 
+            error_message = e.stdout if e.stdout else ''
+            error_message += e.stderr if e.stderr else ''  # Append stderr to error message
+            return f"Linting failed: {error_message}"  # Return error message
+
+    def run_test(self) -> Optional[str]:
+        """
+        Execute the configured test command.
+        
+        Returns:
+            Optional[str]: None if tests were successful or not configured,
+                           error message string if they failed.
+        """
+        
+        if not config.run_tests_after_edit:
+            return None  # Return None as there's no error, just not configured
+        elif config.run_tests_after_edit and not config.test_command:
+            self.io.console.print("No test command configured. Skipping tests.", style="bold dark_goldenrod")
+            return None  # Return None as there's no error, just not configured
+        
+        try:
+            subprocess.run(config.test_command, shell=True, check=True, capture_output=True, text=True)
+            return None  # Tests successful
+        except subprocess.CalledProcessError as e:
+            return f"Tests failed: {e.stderr}"  # Return error message
+
+
 if __name__ == "__main__":
     repo = Repository()
     pprint.pprint(repo.get_tracked_files())
+    
+    repo.run_test()

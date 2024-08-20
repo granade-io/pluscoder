@@ -1,9 +1,9 @@
 import pytest
 from unittest.mock import ANY, Mock, patch, MagicMock
 from pluscoder.repo import Repository
-from git import Repo, GitCommandError
+from git import GitCommandError
 from pluscoder.io_utils import io
-from pluscoder import config
+import subprocess
 
 @pytest.fixture
 def mock_repo():
@@ -231,3 +231,49 @@ def test_undo_non_pluscoder_commit(mock_repo):
 
     assert result is False
     mock_repo_instance.git.reset.assert_not_called()
+
+@patch('pluscoder.repo.subprocess.run')
+@patch('pluscoder.repo.config')
+def test_run_lint_success(mock_config, mock_subprocess_run):
+    mock_config.lint_command = "pylint ."
+    mock_subprocess_run.return_value.returncode = 0
+
+    repo = Repository(io=io)
+    result = repo.run_lint()
+
+    assert result is None
+    mock_subprocess_run.assert_called_with("pylint .", shell=True, check=True, capture_output=True, text=True)
+
+@patch('pluscoder.repo.subprocess.run')
+@patch('pluscoder.repo.config')
+def test_run_lint_failure(mock_config, mock_subprocess_run):
+    mock_config.lint_command = "pylint ."
+    mock_subprocess_run.side_effect = [True, subprocess.CalledProcessError(1, "pylint .", stderr="Linting errors found")]
+
+    repo = Repository(io=io)
+    result = repo.run_lint()
+
+    assert result == "Linting failed: Linting errors found"
+
+@patch('pluscoder.repo.subprocess.run')
+@patch('pluscoder.repo.config')
+def test_run_test_success(mock_config, mock_subprocess_run):
+    mock_config.test_command = "pytest"
+    mock_subprocess_run.return_value.returncode = 0
+
+    repo = Repository(io=io)
+    result = repo.run_test()
+
+    assert result is None
+    mock_subprocess_run.assert_called_once_with("pytest", shell=True, check=True, capture_output=True, text=True)
+
+@patch('pluscoder.repo.subprocess.run')
+@patch('pluscoder.repo.config')
+def test_run_test_failure(mock_config, mock_subprocess_run):
+    mock_config.test_command = "pytest"
+    mock_subprocess_run.side_effect = subprocess.CalledProcessError(1, "pytest", stderr="Test failures found")
+
+    repo = Repository(io=io)
+    result = repo.run_test()
+
+    assert result == "Tests failed: Test failures found"

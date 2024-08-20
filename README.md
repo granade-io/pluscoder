@@ -78,5 +78,13 @@ PlusCoder can be configured using environment variables, command-line arguments,
 - `AUTO_COMMITS`: Enable/disable automatic Git commits (default: True)
 - `ALLOW_DIRTY_COMMITS`: Allow commits in a dirty repository (default: True)
 
+### Test and Lint Settings
+- `RUN_TESTS_AFTER_EDIT`: Run tests after file edits (default: False)
+- `RUN_LINT_AFTER_EDIT`: Run linter after file edits (default: False)
+- `TEST_COMMAND`: Command to run tests (default: None)
+- `LINT_COMMAND`: Command to run linter (default: None)
+- `AUTO_RUN_LINTER_FIX`: Automatically run linter fix before linting (default: False)
+- `LINT_FIX_COMMAND`: Command to run linter fix (default: None)
+
 You can set these options using environment variables, command-line arguments (e.g., `--streaming false`), or the `/config` command during runtime (e.g., `/config streaming false`).
 

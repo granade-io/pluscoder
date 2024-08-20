@@ -56,10 +56,3 @@ class EventEmitter:
                 await method(*args, **kwargs)
             elif method:
                 method(*args, **kwargs)
-                
-    def emit(self, event, *args, **kwargs): 
-        method_name = f"on_{event}"
-        for handler in self.handlers:
-            method = getattr(handler, method_name, None)
-            if method:
-                method(*args, **kwargs)

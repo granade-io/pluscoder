@@ -41,7 +41,7 @@ def sum_token_usage(accumulated: TokenUsage, new: TokenUsage) -> TokenUsage:
     }
 
 def accumulate_token_usage(global_state: OrchestrationState, _state: AgentState) -> OrchestrationState:
-        if not "token_usage" in _state:
+        if "token_usage" not in _state:
             return global_state
         
         # Update token usage

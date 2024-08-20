@@ -1,10 +1,7 @@
-from langgraph.graph import END
 from pluscoder import tools
 from typing import Annotated, List, Literal
 from pluscoder.agents.base import Agent, AgentState
 from pluscoder.agents.prompts import combine_prompts, BASE_PROMPT, FILE_OPERATIONS_PROMPT
-from pluscoder.io_utils import io
-from rich.panel import Panel
 from langchain_core.messages import HumanMessage
 
 from pluscoder.type import AgentInstructions
@@ -46,7 +43,7 @@ To execute/delegate/complete tasks *use the delegation tool*.
 
 """
 
-    validation_system_message = f"""
+    validation_system_message = """
     An user requested you a task, and you delegated it to an agent to solve it.
     Your work is to tell if a task/instruction solven by the agent was fully executed and if the expected outcome was achieved.
     
