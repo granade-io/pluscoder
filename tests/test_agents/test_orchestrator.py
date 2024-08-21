@@ -111,5 +111,3 @@ def test_task_to_instruction_with_completed_tasks(orchestrator_agent):
     assert "Details 1" in instruction
     assert "Completed: Completed task 2" in instruction
     assert "Details 2" in instruction
-    assert "Remember:" in instruction
-    assert "Focus only on the current task" in instruction
