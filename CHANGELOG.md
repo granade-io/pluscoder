@@ -1,3 +1,10 @@
+## [1.6.1](https://gitlab.com/codematos/pluscoder/compare/v1.6.0...v1.6.1) (2024-08-21)
+
+
+### Bug Fixes
+
+* stream chunks properly displayed when progress is shown ([b7409e9](https://gitlab.com/codematos/pluscoder/commit/b7409e9b842c5887c0c5d81d2a739dc5c0de3a6a))
+
 # [1.6.0](https://gitlab.com/codematos/pluscoder/compare/v1.5.0...v1.6.0) (2024-08-21)
 
 
