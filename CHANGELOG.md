@@ -1,3 +1,15 @@
+# [1.6.0](https://gitlab.com/codematos/pluscoder/compare/v1.5.0...v1.6.0) (2024-08-21)
+
+
+### Bug Fixes
+
+* test to match agent instructions ([fd93070](https://gitlab.com/codematos/pluscoder/commit/fd9307050b7b189756a40e438ab29d86e0780ac2))
+
+
+### Features
+
+* agents now have full context of task list to solve the current task ([8e97751](https://gitlab.com/codematos/pluscoder/commit/8e977513a8169cc9178f267394917f37b9808384))
+
 # [1.5.0](https://gitlab.com/codematos/pluscoder/compare/v1.4.2...v1.5.0) (2024-08-20)
 
 
