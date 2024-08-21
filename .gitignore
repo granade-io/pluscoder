@@ -73,3 +73,6 @@ build/
 
 # Test
 .coverage
+
+# Ruff
+.ruff_cache

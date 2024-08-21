@@ -59,3 +59,55 @@ def test_get_current_task_unfinished_task(orchestrator_agent):
         }
     })
     assert orchestrator_agent.get_current_task(state) == unfinished_task
+
+def test_get_completed_tasks_no_tool_data(orchestrator_agent):
+    state = AgentState()
+    assert orchestrator_agent.get_completed_tasks(state) == []
+
+def test_get_completed_tasks_empty_task_list(orchestrator_agent):
+    state = AgentState(tool_data={tools.delegate_tasks.name: {"task_list": []}})
+    assert orchestrator_agent.get_completed_tasks(state) == []
+
+def test_get_completed_tasks_mixed(orchestrator_agent):
+    state = AgentState(tool_data={
+        tools.delegate_tasks.name: {
+            "task_list": [
+                {"is_finished": True, "objective": "Task 1"},
+                {"is_finished": False, "objective": "Task 2"},
+                {"is_finished": True, "objective": "Task 3"}
+            ]
+        }
+    })
+    completed_tasks = orchestrator_agent.get_completed_tasks(state)
+    assert len(completed_tasks) == 2
+    assert completed_tasks[0]["objective"] == "Task 1"
+    assert completed_tasks[1]["objective"] == "Task 3"
+
+def test_task_to_instruction_no_completed_tasks(orchestrator_agent):
+    task = {"objective": "Current task", "details": "Task details"}
+    state = AgentState(tool_data={tools.delegate_tasks.name: {"task_list": []}})
+    instruction = orchestrator_agent.task_to_instruction(task, state)
+    assert "Current task" in instruction
+    assert "Task details" in instruction
+    assert "Context (completed tasks):" in instruction
+    assert "Completed:" not in instruction
+
+def test_task_to_instruction_with_completed_tasks(orchestrator_agent):
+    task = {"objective": "Current task", "details": "Task details"}
+    state = AgentState(tool_data={
+        tools.delegate_tasks.name: {
+            "task_list": [
+                {"is_finished": True, "objective": "Completed task 1", "details": "Details 1"},
+                {"is_finished": True, "objective": "Completed task 2", "details": "Details 2"},
+                {"is_finished": False, "objective": "Current task", "details": "Task details"}
+            ]
+        }
+    })
+    instruction = orchestrator_agent.task_to_instruction(task, state)
+    assert "Current task" in instruction
+    assert "Task details" in instruction
+    assert "Context (completed tasks):" in instruction
+    assert "Completed: Completed task 1" in instruction
+    assert "Details 1" in instruction
+    assert "Completed: Completed task 2" in instruction
+    assert "Details 2" in instruction

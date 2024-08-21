@@ -38,8 +38,79 @@ To execute/delegate/complete tasks *use the delegation tool*.
 
 [] <task name>:
    Objective: <task objective>
-   Details: <task details> always include file path to give more context, or functions/class/methos names. Always include references to files edited by previous tasks.
+   Details: <task details> Details of the task to complete. Always include file paths to give more context, and functions/class/methos names. Always include references to files edited by previous tasks to explain how task are related
    Agent: <agent name> Agent who is responsible for this task.
+   
+   
+*Examples of task list*:
+
+Example 1. For features; always speficy files to edit in the details. Include unit test and doc updated
+
+[ ] Implement Weather Data Fetching:
+   Objective: Add functionality to fetch current weather data from an API
+   Details: Create a new file `code/weather.py`. Implement a `WeatherService` class with a method `get_current_weather(city: str)` that fetches weather data for a given city using an external API (e.g., OpenWeatherMap). Use the `requests` library to make HTTP calls.
+   Agent: Developer
+
+[ ] Add Weather Command to CLI:
+   Objective: Create a new CLI command to display weather information
+   Details: Modify `code/commands.py` to add a new command `weather`. This command should accept a city name as an argument, use the `WeatherService` from `code/weather.py` to fetch weather data, and display it to the user. Update the command parser to include this new weather command.
+   Agent: Developer
+
+[ ] Create Unit Tests for Weather Feature:
+   Objective: Implement unit tests for the new weather functionality
+   Details: Create a new file `tests/test_weather.py`. Write unit tests to verify the correct functioning of the `WeatherService` class and its `get_current_weather()` method. Include tests for successful API calls, error handling, and edge cases. Also, add tests for the new weather command in `pluscoder/commands.py`, mocking the `WeatherService` to avoid actual API calls during testing.
+   Agent: Developer
+
+[ ] Document Weather Feature in README and overview:
+   Objective: Update project documentation to include information about the new weather feature
+   Details: Document new feature in overview file explaining the weather feature. Include information on how to use the new weather command at README, any required API keys or configuration, and an example of the output.
+   Agent: Domain Expert
+   
+Example 2: Another feature
+
+[ ] Implement CSV Data Processing:
+   Objective: Add functionality to process CSV files and calculate statistics
+   Details: Create a new file `data_processor.py`. Implement a `CSVProcessor` class with a method `calculate_stats(file_path: str)` that reads a CSV file, calculates basic statistics (mean, median, mode) for numeric columns, and returns the results. Use the `pandas` library to read and process the CSV data.
+   Agent: Developer
+
+[ ] Add Command-line Interface for CSV Processing:
+   Objective: Create a CLI to allow users to process CSV files
+   Details: Modify the existing `main.py` file. Add a new command-line argument `--process-csv` that accepts a file path. Update the main function to check for this argument and call the `CSVProcessor.calculate_stats()` method when present. Use the `argparse` library to handle command-line arguments.
+   Agent: Developer
+
+[ ] Create Unit Tests for CSV Processing:
+   Objective: Implement unit tests for the new CSV processing functionality
+   Details: Create a new file `tests/test_csv_processor.py`. Write unit tests to verify the correct functioning of the `CSVProcessor` class and its `calculate_stats()` method. Include tests for various CSV formats, error handling, and edge cases. Create sample CSV files in a `tests/data/` directory to use in these tests. Also, add tests for the new command-line interface in `main.py`, using mock CSV files.
+   Agent: Developer
+
+[ ] Document CSV Processing Feature:
+   Objective: Update project documentation to include information about the new CSV processing feature
+   Details: Edit the existing `README.md` file. Add a new section explaining the CSV processing functionality, including how to use the command-line interface, expected CSV format, and the statistics calculated. Provide an example command and sample output. Reference the new `data_processor.py` file and the changes made to `main.py`.
+   Agent: Domain Expert
+   
+Example 3: Project Analysis and overview
+
+[ ] Analyze Backend Architecture:
+   Objective: Read and analyze the main backend components
+   Details: Examine `src/server/app.js`, `src/server/models/index.js`, and `src/server/controllers/index.js`. Analyze these files to understand the server setup, database models, and API endpoints. Summarize the findings in a temporary file `temp_backend_analysis.md`.
+   Agent: Developer
+
+[ ] Review Frontend Structure:
+   Objective: Examine the main frontend components and structure
+   Details: Read and analyze `src/client/App.js`, `src/client/components/index.js`, and `src/client/pages/index.js`. Summarize the key React components, routing structure, and overall frontend architecture. Add this information to `temp_frontend_analysis.md`.
+   Agent: Developer
+
+[ ] Examine Database and API Integration:
+   Objective: Review database schema and API integration
+   Details: Analyze `src/server/config/database.js`, `src/server/routes/api.js`, and `src/client/services/api.js`. Summarize the database configuration, API routes on the server, and how the frontend interacts with the API. Append this information to `temp_integration_analysis.md`.
+   Agent: Developer
+
+[ ] Generate Structured Overview:
+   Objective: Create a comprehensive, structured overview of the e-commerce platform
+   Details: Based on the analysis in the temporary files, create a new file `PLATFORM_OVERVIEW.md` in the project root. Organize the information into sections such as "Backend Architecture", "Frontend Structure", "Database Schema", "API Integration", and "Key Features". Include relevant file paths, main components, and brief explanations of their purposes. Ensure the document provides a clear, high-level understanding of the e-commerce platform's structure and functionality.
+   Agent: Domain Expert
+   
+* All previous tasks were examples, do not use them as a reference. Create your own list of tasks and follow the given instructions to complete them *
 
 """
 
@@ -126,6 +197,26 @@ To execute/delegate/complete tasks *use the delegation tool*.
         task_list = state["tool_data"][tools.delegate_tasks.name]["task_list"]
         return next((task for task in task_list if not task.get('is_finished', False)), None)
     
+    def get_completed_tasks(self, state: AgentState) -> List[dict]:
+        """
+        Get the list of completed tasks from the state.
+
+        Args:
+            state (AgentState): The current state containing tasks.
+
+        Returns:
+            List[dict]: A list of completed tasks with their results.
+        """
+        if "tool_data" not in state \
+            or not state["tool_data"] \
+            or tools.delegate_tasks.name not in state["tool_data"] \
+            or not state["tool_data"][tools.delegate_tasks.name] \
+            or "task_list" not in state["tool_data"][tools.delegate_tasks.name]:
+            return []
+
+        task_list = state["tool_data"][tools.delegate_tasks.name]["task_list"]
+        return [task for task in task_list if task.get('is_finished', False)]
+    
     def get_task_list(self, state: AgentState) -> List[dict]:
         """
         Get the task list from the state.
@@ -194,8 +285,26 @@ To execute/delegate/complete tasks *use the delegation tool*.
 
         return {**state, "tool_data": tool_data}
     
-    def task_to_instruction(self, task: dict) -> str:
-        return f"""Complete the following task entirely. \nObjective: {task["objective"]}\nDetails: {task["details"]}\n"""
+    def task_to_instruction(self, task: dict, state: AgentState) -> str:
+        completed_tasks = self.get_completed_tasks(state)
+        completed_tasks_info = "\n".join([
+            f"- Completed: {t['objective']}\n  {t['details']}" 
+            for t in completed_tasks
+        ])
+        
+        instruction = f"""Given these completed tasks as context:
+
+*Context (completed tasks):*
+{completed_tasks_info}
+
+
+*Execute/Complete the ONLY following task*:
+
+Objective: {task["objective"]}
+Details: {task["details"]}
+
+"""
+        return instruction
     
     
     def is_task_list_empty(self, state: AgentState):

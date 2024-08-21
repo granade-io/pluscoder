@@ -218,7 +218,7 @@ async def orchestrator_agent_node(state: OrchestrationState, agent: Orchestrator
             
             # Delegate the task to the target agent
             return {**update_global_state(agent.id, {"status": "delegating"}), 
-                    **update_global_state(target_agent, {"messages": target_agent_state["messages"] + [HumanMessage(content=orchestrator_agent.task_to_instruction(task))]})}
+                    **update_global_state(target_agent, {"messages": target_agent_state["messages"] + [HumanMessage(content=orchestrator_agent.task_to_instruction(task, state))]})}
         
         # We asume other tool was called and respond to the caller
         # TODO check what meas respond to the caller
@@ -296,7 +296,7 @@ async def orchestrator_agent_node(state: OrchestrationState, agent: Orchestrator
         task = agent.get_current_task(state_update)
         # Delegating the task to the next agent
         await event_emitter.emit("task_delegated", agent_instructions=orchestrator_agent.get_agent_instructions(state))
-        global_updated = update_global_state(target_agent, {**state_update, "messages": [HumanMessage(content=agent.task_to_instruction(task))]})
+        global_updated = update_global_state(target_agent, {**state_update, "messages": [HumanMessage(content=agent.task_to_instruction(task, state_update))]})
         return {**global_updated, **update_global_state(agent.id, {"agent_messages": validation_response["messages"]})}
 
     # Task is still incomplete. Keep delegating to the same agent
@@ -316,7 +316,7 @@ async def orchestrator_agent_node(state: OrchestrationState, agent: Orchestrator
     # Get target agent messages
     messages = target_agent_state["messages"]
     await event_emitter.emit("task_delegated", agent_instructions=orchestrator_agent.get_agent_instructions(state))
-    global_updated = update_global_state(target_agent, {"messages": messages + [HumanMessage(content=agent.task_to_instruction(task))]})
+    global_updated = update_global_state(target_agent, {"messages": messages + [HumanMessage(content=agent.task_to_instruction(task, state))]})
     global_updated = {
         **global_updated, 
         **update_global_state(agent.id, {"agent_messages": validation_response["messages"]}),
@@ -376,7 +376,7 @@ async def run_workflow():
         "accumulated_token_usage": TokenUsage.default(),
         }
     
-    async for event in app.astream_events(state, version="v1"):
+    async for event in app.astream_events(state, config={"recursion_limit": 100}, version="v1"):
             kind = event["event"]
             if kind == "on_chain_end":
                 pass
