@@ -1,3 +1,10 @@
+## [1.6.2](https://gitlab.com/codematos/pluscoder/compare/v1.6.1...v1.6.2) (2024-08-28)
+
+
+### Bug Fixes
+
+* now user empty messages doesnt break the console interaction ([4ed3436](https://gitlab.com/codematos/pluscoder/commit/4ed34366e11906e1d22eaa16ded1f7bc3c27c9c8))
+
 ## [1.6.1](https://gitlab.com/codematos/pluscoder/compare/v1.6.0...v1.6.1) (2024-08-21)
 
 
