@@ -99,16 +99,28 @@ class Repository:
         if missing_files:
             if input("To proceed, create the missing files? (y/n):").lower().strip() == 'y':
                 with open(config.overview_file_path, "w") as f:
-                    f.write("# Project Overview\n\n")
+                    f.write("")
                 
                 with open(config.guidelines_file_path, "w") as f:
                     f.write("# Coding Guidelines\n\n")
             
                 # allow to continue using pluscoder
-                return True
             
-            # otherwise, stop using pluscoder
-            return False
+            else:
+                # otherwise, stop using pluscoder
+                return False
+        
+        # Ask to add .plus_coder* to gitignore. Reads the file or create it if it doesn't exist
+        if not os.path.isfile(".gitignore"):
+            if input("Create the missing .gitignore file? (y/n):").lower().strip() == 'y':
+                with open(".gitignore", "a") as f:
+                    f.write("\n# Pluscoder\n")
+                    f.write(".plus_coder*\n")
+        else:
+            with open(".gitignore", "r+") as f:
+                if ".plus_coder*" not in f.read() and input("Add pluscoder files to gitignore (recommended)? (y/n):").lower().strip() == 'y':
+                    f.write("\n# Pluscoder\n")
+                    f.write(".plus_coder*\n")
         
         return True
 
@@ -137,7 +149,7 @@ class Repository:
             # Both stdout and stderr returned because stderr not showing 
             error_message = e.stdout if e.stdout else ''
             error_message += e.stderr if e.stderr else ''  # Append stderr to error message
-            return f"Linting failed: {error_message}"  # Return error message
+            return f"Linting failed:\n\n{error_message}"  # Return error message
 
     def run_test(self) -> Optional[str]:
         """
@@ -158,7 +170,10 @@ class Repository:
             subprocess.run(config.test_command, shell=True, check=True, capture_output=True, text=True)
             return None  # Tests successful
         except subprocess.CalledProcessError as e:
-            return f"Tests failed: {e.stderr}"  # Return error message
+            # Both stdout and stderr returned because stderr not showing 
+            error_message = e.stdout if e.stdout else ''
+            error_message += e.stderr if e.stderr else ''  # Append stderr to error message
+            return f"Tests failed:\n\n{error_message}"
 
 
 if __name__ == "__main__":

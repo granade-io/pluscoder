@@ -76,7 +76,7 @@ class ConsoleAgentEventHandler(AgentEventBaseHandler):
     
 if __name__ == "__main__":
     import asyncio
-    from io_utils import io
+    from pluscoder.io_utils import io
 
     async def main():
         handler = ConsoleAgentEventHandler(io=io)

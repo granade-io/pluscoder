@@ -141,23 +141,24 @@ def test_get_tracked_files_git_error(mock_repo):
 
     assert result == []
 
+@patch('builtins.input', side_effect=['y', 'y'])
 @patch('pluscoder.repo.os.path.isfile')
-@patch('pluscoder.repo.open', new_callable=Mock)
-def test_setup_all_files_exist(mock_open, mock_isfile, mock_repo):
-    mock_isfile.return_value = True
+@patch('pluscoder.repo.open', new_callable=MagicMock)
+def test_setup_all_files_exist(mock_open, mock_isfile, mock_input, mock_repo):
+    mock_isfile.side_effect = [True, True, True]  # For overview, guidelines, and .gitignore
 
     repo = Repository(io=io)
     result = repo.setup()
 
     assert result is True
-    mock_open.assert_not_called()
+    mock_open.assert_called_once()  # Called once for .gitignore
 
 @patch('pluscoder.repo.os.path.isfile')
 @patch('pluscoder.repo.open', new_callable=MagicMock)
-@patch('builtins.input', return_value='y')
+@patch('builtins.input', side_effect=['y', 'y'])
 @patch('pluscoder.repo.config')
 def test_setup_missing_files_user_agrees(mock_config, mock_input, mock_open, mock_isfile, mock_repo):
-    mock_isfile.return_value = False
+    mock_isfile.side_effect = [False, False, False]  # For overview, guidelines, and .gitignore
     mock_config.overview_file_path = 'mocked_overview.md'
     mock_config.guidelines_file_path = 'mocked_guidelines.md'
 
@@ -165,9 +166,10 @@ def test_setup_missing_files_user_agrees(mock_config, mock_input, mock_open, moc
     result = repo.setup()
 
     assert result is True
-    assert mock_open.call_count == 2
+    assert mock_open.call_count == 3
     mock_open.assert_any_call('mocked_overview.md', "w")
     mock_open.assert_any_call('mocked_guidelines.md', "w")
+    mock_open.assert_any_call('.gitignore', "a")
 
 @patch('pluscoder.repo.os.path.isfile')
 @patch('pluscoder.repo.open', new_callable=Mock)
@@ -253,7 +255,7 @@ def test_run_lint_failure(mock_config, mock_subprocess_run):
     repo = Repository(io=io)
     result = repo.run_lint()
 
-    assert result == "Linting failed: Linting errors found"
+    assert result == "Linting failed:\n\nLinting errors found"
 
 @patch('pluscoder.repo.subprocess.run')
 @patch('pluscoder.repo.config')
@@ -276,4 +278,4 @@ def test_run_test_failure(mock_config, mock_subprocess_run):
     repo = Repository(io=io)
     result = repo.run_test()
 
-    assert result == "Tests failed: Test failures found"
+    assert result == "Tests failed:\n\nTest failures found"

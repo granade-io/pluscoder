@@ -114,6 +114,7 @@ class IO:
         return self.console.print(string, style="yellow")
     
     def confirm(self, message: str) -> bool:
+        # return Confirm.ask(f"{message}", console=self.console)
         return input(f'{message} (y/n):').lower().strip() == 'y'
     
     def input(self, string: str, autocomplete=True) -> Union[str, dict]:
