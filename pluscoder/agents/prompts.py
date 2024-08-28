@@ -44,7 +44,7 @@ FILE_OPERATIONS_PROMPT = """
     ```
 
 3. Multiple replacements in a single file are allowed.
-4. Keep file edits to a minimum, use minimum <content_to_replace> as possible to replace/insert new content.
+4. Keep file edits to a minimum, use minimum <content_to_replace> as possible to replace/insert new content, but ALWAYS include few more lines of context to generate correct replaces.
 5. When mentioning files, always use *full paths*, e.g., `docs/architecture.md`. *always* inside backticks
 """
 # Function to combine prompts

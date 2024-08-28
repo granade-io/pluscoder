@@ -138,7 +138,7 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
                     state_updates = self.process_agent_response(state, llm_response)
                     break
                 except AgentException as e:
-                    io.console.log(f"Error: {str(e)}")
+                    io.console.print(f"Error: {str(e)}")
                     if self.current_deflection < self.max_deflections:
                         self.current_deflection += 1
                         interaction_msgs.append(HumanMessage(content=f"An error ocurrred: {str(e)}"))
@@ -148,7 +148,7 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
                     # Handles unknown exceptions, maybe caused by llm api or wrong state
                     io.console.log(f"An error occurred: {str(e)}", style="bold red")
                     io.console.print("State that causes raise:", style="bold red")
-                    io.console.print(JSON(state), style="bold red")
+                    io.console.print(JSON(str(state)), style="bold red")
                     self.current_deflection += 1
                     if self.current_deflection < self.max_deflections:
                         self.current_deflection += 1

@@ -93,7 +93,13 @@ def user_router(state: OrchestrationState):
     if state["return_to_user"]:
         return "user_input"
     
-    if state[state["chat_agent"] + "_state"]["messages"][-1].content.lower() == "q":
+    user_input = state[state["chat_agent"] + "_state"]["messages"][-1].content.strip().lower()
+    
+    # On empty user inputs return to the user
+    if not user_input:
+        return "user_input"
+
+    if user_input == "q":
         return END
     
     return state["chat_agent"]  # Go to chat agent
