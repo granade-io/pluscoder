@@ -115,17 +115,18 @@ def test_build_assistant_prompt(mock_get_formatted_files_content, agent):
 @patch('pluscoder.agents.base.get_formatted_files_content')
 @patch('pluscoder.agents.base.io')
 @patch('pluscoder.agents.base.file_callback')
-def test_call_agent(mock_file_callback, mock_io, mock_get_formatted_files_content, agent, mock_llm):
+def test_call_agent(mock_file_callback, mock_io, mock_get_formatted_files_content, agent, mock_llm) -> None:
     mock_llm.bind_tools.return_value.return_value = AIMessage(content="AI response with file mention `some_file.txt`")
-    mock_get_formatted_files_content.return_value = "Mocked file content"
+    # mock_get_formatted_files_content.return_value = "Mocked file content"
     state = AgentState(messages=[HumanMessage(content="Hello")], context_files=[])
     
     # mock the file existence to allow file mention
     with patch('pluscoder.agents.base.Path.is_file', return_value=True):
         result = agent.call_agent(state)
     assert "messages" in result
-    assert "context_files" in result
-    assert "some_file.txt" in result["context_files"]
+    
+    # Just IA Message is present in state updates
+    assert len(result["messages"]) == 1
 
 
 
@@ -134,7 +135,7 @@ def test_process_agent_response(agent):
     response = AIMessage(content="Check `new_file.txt`")
     with patch('pluscoder.agents.base.Path.is_file', return_value=True):
         result = agent.process_agent_response(state, response)
-    assert "new_file.txt" in result["context_files"]
+    assert result == {}
 
 @patch.object(Repository, 'run_lint')
 @patch.object(Repository, 'run_test')

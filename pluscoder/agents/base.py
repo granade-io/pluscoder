@@ -15,9 +15,9 @@ from pluscoder.message_utils import get_message_content_str
 from pluscoder.repo import Repository
 from pluscoder.config import config
 from pluscoder.agents.event.config import event_emitter
+from pluscoder.tools import read_files
 from pluscoder.type import AgentState
 from langchain_community.callbacks.manager import get_openai_callback
-from rich.json import JSON
 
 def parse_block(text):
     pattern = r'`([^`\n]+):?`\n{1,2}^```(\w*)\n(.*?)^```'
@@ -51,9 +51,9 @@ class Agent:
         self.state = None
         
     def get_context_files(self, state):
-        state.get("context_files") or []
-        # files = [*self.default_context_files, *state_files]
-        files = [*self.default_context_files]
+        state_files = state.get("context_files") or []
+        files = [*self.default_context_files, *state_files]
+        # files = [*self.default_context_files]
         
         # remove duplicates
         files = list(set(files))
@@ -69,7 +69,7 @@ class Agent:
     def get_files_context_prompt(self, state):
         
         return f"""
-Here are repository files content you already have access to: \n\n{{files_content}}
+Here are repository files latest content that you already have access to read/edit: \n\n{{files_content}}
 
 Here are all repositoy files you don't have access yet: \n\n{self.repo.get_tracked_files()}
 """
@@ -148,7 +148,7 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
                     # Handles unknown exceptions, maybe caused by llm api or wrong state
                     io.console.log(f"An error occurred: {str(e)}", style="bold red")
                     io.console.print("State that causes raise:", style="bold red")
-                    io.console.print(JSON(str(state)), style="bold red")
+                    io.console.print(state, style="bold red")
                     self.current_deflection += 1
                     if self.current_deflection < self.max_deflections:
                         self.current_deflection += 1
@@ -183,12 +183,20 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
         messages = state["messages"]
         last_message = messages[-2]  # Last message that contains ToolMessage with executed tool data. We need to extract tool args from AIMessage at index -2
         tool_data = {}
+        loaded_files = []
         
         for tool_call in last_message.tool_calls:
+            # Extract data if extraction tool was used
             if tool_call['name'] in [tool.name for tool in self.extraction_tools]:
                 tool_data[tool_call['name']] = tool_call["args"]
-        
-        return {**state, "tool_data": tool_data}
+                
+            # Extract files if read_files were used
+            # This is a patch because tools can't read/edit agent state or call agent methods
+            if tool_call['name'] in ["read_files"]:
+                loaded_files = tool_call["args"].get("file_paths", [])
+                io.event(f"> The latest version of these files were added to the chat: {', '.join(loaded_files)}")
+                
+        return {**state, "tool_data": tool_data, "context_files": state["context_files"] + loaded_files}
     
     def parse_tools_router(self, state: AgentState) -> Literal["__end__", "agent"]:
         """Edge to decide where to go after all tools data was extracted"""
@@ -269,7 +277,7 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
         content_text = get_message_content_str(response)
         
         found_blocks = parse_block(content_text)
-        mentioned_files = parse_mentioned_files(content_text)
+        # mentioned_files = parse_mentioned_files(content_text)
         
         # Todo: deprecated at the moment. File mentions doesn't have an specific use right now
         # if mentioned_files:
@@ -277,22 +285,22 @@ Here are all repositoy files you don't have access yet: \n\n{self.repo.get_track
             
         self.process_blocks(found_blocks)
         
-        # handle file mentions
-        context_files = self.get_context_files(state)
+        # DEPRECATED: handle file mentions
+        # context_files = self.get_context_files(state)
         
-        for file_path in mentioned_files:
+        # for file_path in mentioned_files:
             
-            # ignore files that are already in the context
-            if file_path in context_files:
-                continue
+        #     # ignore files that are already in the context
+        #     if file_path in context_files:
+        #         continue
             
-            path = Path(file_path)
-            if not path.is_file():
-                # io.console.print(Text(f"File not found: {path.name}"))
-                continue
+        #     path = Path(file_path)
+        #     if not path.is_file():
+        #         # io.console.print(Text(f"File not found: {path.name}"))
+        #         continue
             
-            context_files = [*context_files, file_path]
-        return {"context_files": context_files}
+        #     context_files = [*context_files, file_path]
+        return {}
             
         
     def process_blocks(self, file_blocks):
