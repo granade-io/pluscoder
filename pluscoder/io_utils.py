@@ -9,6 +9,7 @@ from rich.rule import Rule
 from rich.progress import Progress
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.history import FileHistory
 import sys
 
 from pluscoder.repo import Repository
@@ -119,6 +120,7 @@ class IO:
     
     def input(self, string: str, autocomplete=True) -> Union[str, dict]:
         kb = KeyBindings()
+        history = FileHistory('.plus_coder_input_history')
 
         @kb.add("escape", "c-m", eager=True)
         def _(event):
@@ -145,7 +147,8 @@ class IO:
 
         session = PromptSession(
             key_bindings=kb,
-            completer=completer
+            completer=completer,
+            history=history
         )
         
         try:
