@@ -115,26 +115,24 @@ def test_build_assistant_prompt(mock_get_formatted_files_content, agent):
 @patch('pluscoder.agents.base.get_formatted_files_content')
 @patch('pluscoder.agents.base.io')
 @patch('pluscoder.agents.base.file_callback')
-def test_call_agent(mock_file_callback, mock_io, mock_get_formatted_files_content, agent, mock_llm):
+def test_call_agent(mock_file_callback, mock_io, mock_get_formatted_files_content, agent, mock_llm) -> None:
     mock_llm.bind_tools.return_value.return_value = AIMessage(content="AI response with file mention `some_file.txt`")
-    mock_get_formatted_files_content.return_value = "Mocked file content"
+    # mock_get_formatted_files_content.return_value = "Mocked file content"
     state = AgentState(messages=[HumanMessage(content="Hello")], context_files=[])
     
-    # mock the file existence to allow file mention
-    with patch('pluscoder.agents.base.Path.is_file', return_value=True):
-        result = agent.call_agent(state)
+    result = agent.call_agent(state)
     assert "messages" in result
-    assert "context_files" in result
-    assert "some_file.txt" in result["context_files"]
+    
+    # Just IA Message is present in state updates
+    assert len(result["messages"]) == 1
 
 
 
 def test_process_agent_response(agent):
     state = AgentState(context_files=[])
     response = AIMessage(content="Check `new_file.txt`")
-    with patch('pluscoder.agents.base.Path.is_file', return_value=True):
-        result = agent.process_agent_response(state, response)
-    assert "new_file.txt" in result["context_files"]
+    result = agent.process_agent_response(state, response)
+    assert result == {}
 
 @patch.object(Repository, 'run_lint')
 @patch.object(Repository, 'run_test')
@@ -174,7 +172,7 @@ def test_agent_router_return_tools(agent):
     assert result == "tools"
 
 def test_agent_router_return_end_on_max_deflections(agent):
-    agent.current_deflection = agent.max_deflections
+    agent.current_deflection = agent.max_deflections + 1
     message = AIMessage(content="")
     message.tool_calls = True  # Just to simulate a tool call message
     state = AgentState(messages=[message])
@@ -226,6 +224,8 @@ async def test_graph_node_max_deflections_no_recover(mock_invoke_llm_chain, mock
     initial_state = AgentState(messages=[HumanMessage(content="Hello")])
     result = await agent.graph_node(initial_state)
     
-    assert "Edit response" in str(result["messages"][-1].content)
-    assert agent.current_deflection == agent.max_deflections
-    assert len(result["messages"]) == 7
+    # Last message should be the persistent error
+    assert "Persistent error" in str(result["messages"][-1].content)
+    # 1 deflection means 1 more try, so more tries occurs at max_deflections + 1
+    assert agent.current_deflection == agent.max_deflections + 1
+    assert len(result["messages"]) == 8
