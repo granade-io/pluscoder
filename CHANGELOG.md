@@ -1,3 +1,10 @@
+# [1.7.0](https://gitlab.com/codematos/pluscoder/compare/v1.6.3...v1.7.0) (2024-08-29)
+
+
+### Features
+
+* input history support to auto-complete input with history on pressing up key ([445e24d](https://gitlab.com/codematos/pluscoder/commit/445e24d39ada3e837d4a00c5e2309d719eb92068))
+
 ## [1.6.3](https://gitlab.com/codematos/pluscoder/compare/v1.6.2...v1.6.3) (2024-08-29)
 
 
