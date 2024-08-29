@@ -1,3 +1,11 @@
+## [1.6.3](https://gitlab.com/codematos/pluscoder/compare/v1.6.2...v1.6.3) (2024-08-29)
+
+
+### Bug Fixes
+
+* context files are now excluded from non-loaded files prompt, max deflections now executes the correct amount of retries ([f7c0c14](https://gitlab.com/codematos/pluscoder/commit/f7c0c148d64199dbd0fd97befca63b7a750458b7))
+* file management now load entire files body just one time and replaces its every time is loaded, reducing tokens and code duplication in prompt ([9ce5d90](https://gitlab.com/codematos/pluscoder/commit/9ce5d9036374bfb6787df778e5a31b6761602127))
+
 ## [1.6.2](https://gitlab.com/codematos/pluscoder/compare/v1.6.1...v1.6.2) (2024-08-28)
 
 
