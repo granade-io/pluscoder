@@ -120,9 +120,7 @@ def test_call_agent(mock_file_callback, mock_io, mock_get_formatted_files_conten
     # mock_get_formatted_files_content.return_value = "Mocked file content"
     state = AgentState(messages=[HumanMessage(content="Hello")], context_files=[])
     
-    # mock the file existence to allow file mention
-    with patch('pluscoder.agents.base.Path.is_file', return_value=True):
-        result = agent.call_agent(state)
+    result = agent.call_agent(state)
     assert "messages" in result
     
     # Just IA Message is present in state updates
@@ -133,8 +131,7 @@ def test_call_agent(mock_file_callback, mock_io, mock_get_formatted_files_conten
 def test_process_agent_response(agent):
     state = AgentState(context_files=[])
     response = AIMessage(content="Check `new_file.txt`")
-    with patch('pluscoder.agents.base.Path.is_file', return_value=True):
-        result = agent.process_agent_response(state, response)
+    result = agent.process_agent_response(state, response)
     assert result == {}
 
 @patch.object(Repository, 'run_lint')
@@ -175,7 +172,7 @@ def test_agent_router_return_tools(agent):
     assert result == "tools"
 
 def test_agent_router_return_end_on_max_deflections(agent):
-    agent.current_deflection = agent.max_deflections
+    agent.current_deflection = agent.max_deflections + 1
     message = AIMessage(content="")
     message.tool_calls = True  # Just to simulate a tool call message
     state = AgentState(messages=[message])
@@ -227,6 +224,8 @@ async def test_graph_node_max_deflections_no_recover(mock_invoke_llm_chain, mock
     initial_state = AgentState(messages=[HumanMessage(content="Hello")])
     result = await agent.graph_node(initial_state)
     
-    assert "Edit response" in str(result["messages"][-1].content)
-    assert agent.current_deflection == agent.max_deflections
-    assert len(result["messages"]) == 7
+    # Last message should be the persistent error
+    assert "Persistent error" in str(result["messages"][-1].content)
+    # 1 deflection means 1 more try, so more tries occurs at max_deflections + 1
+    assert agent.current_deflection == agent.max_deflections + 1
+    assert len(result["messages"]) == 8
