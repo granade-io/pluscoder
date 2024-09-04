@@ -2,6 +2,18 @@
 - Requires python 3.12
 - AWS Creds with Bedrock proper permissions
 
+## Usage:
+
+Use pluscoder inside a git repository:
+
+   ```bash
+   # Install pluscoder
+   pip install --no-cache git+https://gitlab.com/codematos/pluscoder.git
+
+   # Run
+   plus-coder --auto-commits f --model claude-3-5-sonnet-20240620 --provider anthropic
+   ```
+
 ## Development
 
 1. Create a virtual environment and activate it:
@@ -50,7 +62,7 @@ PlusCoder supports the following commands during interaction:
 
 ## Configuration
 
-PlusCoder can be configured using environment variables, command-line arguments, or the `/config` command during runtime. Here are the available configuration options:
+PlusCoder can be configured using environment variables (you can use your `.env`), command-line arguments, or the `/config` command during runtime. Here are the available configuration options:
 
 ### Application Behavior
 - `STREAMING`: Enable/disable LLM streaming (default: True)
@@ -65,11 +77,10 @@ PlusCoder can be configured using environment variables, command-line arguments,
 
 ### Model and API Settings
 - `MODEL`: LLM model to use (default: "anthropic.claude-3-5-sonnet-20240620-v1:0")
-- `PROVIDER`: Provider to use. If none, provider will be selected based on environment variables. Options: aws_bedrock, openai, litellm, anthropic (default: None)
+- `PROVIDER`: Provider to use. If none, provider will be selected based on available credentaial variables. Options: aws_bedrock, openai, litellm, anthropic (default: None)
 - `OPENAI_API_KEY`: OpenAI API key
 - `OPENAI_API_BASE`: OpenAI API base URL
-
-### AWS Settings
+- `ANTHROPIC_API_KEY`: Anthropic API key
 - `AWS_ACCESS_KEY_ID`: AWS Access Key ID
 - `AWS_SECRET_ACCESS_KEY`: AWS Secret Access Key
 - `AWS_PROFILE`: AWS profile name (default: "default")
