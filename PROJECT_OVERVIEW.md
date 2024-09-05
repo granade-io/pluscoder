@@ -59,6 +59,63 @@ This project aims to develop a system that uses a composition of LLM agents, lev
     - Enhances agents' ability to interact with the development environment
     - Supports project setup, dependency management, and other development tasks
 
+14. Repomap feature
+    - Generates a structured overview of the project's codebase
+    - Configurable include and exclude patterns for file selection
+    - Adjustable detail level for code analysis
+    - Enhances agents' understanding of the project structure and contents
+
+1. Multi-agent system with orchestration capabilities
+   - Includes specialized agents (Domain Stakeholder, Domain Expert, Planning, Developer)
+   - Orchestrator Agent manages workflow between agents
+
+2. Task-based agent orchestration
+   - Breaks down user requirements into manageable tasks
+   - Executes tasks using appropriate agents
+
+3. Agent chat loop and orchestration
+   - Allows direct interaction with individual agents
+   - Supports complex multi-agent workflows with max interactions to avoid infinite loops.
+
+4. User approvals for key points in the workflow
+   - Task list approval before execution
+   - Agent selection at the start of the application
+
+5. Automated file editing by agents
+   - Agents can read and update project files based on their specialized knowledge
+
+6. Auto-commit feature using Git event handler
+   - Automatically creates Git commits for file changes made by agents
+   - Enhances traceability and allows for easy review or reversion of modifications
+
+7. Cost and token tracking for LLM interactions
+   - Tracks token usage and calculates real-time cost information
+   - Supports various LLM models with different pricing structures
+
+8. Flexible configuration system
+   - Configurable through command-line arguments, environment variables, and default values
+   - Enhances project flexibility and ease of use
+
+9. Support for multiple LLM models
+   - Integration with LLMLite, OpenAI, and AWS Bedrock
+   - Allows for easy switching between different LLM providers
+
+10. Enhanced user interaction
+    - Command-line interface with rich console output
+    - Auto-completion for files and commands in user input
+    - Slash commands for quick actions
+
+11. Task execution progress display
+    - Real-time updates on task status and agent activities
+
+12. LLM input/output logging to file
+    - Captures all interactions with LLM models for analysis and debugging
+
+13. Command execution feature
+    - Allows agents to execute system commands
+    - Enhances agents' ability to interact with the development environment
+    - Supports project setup, dependency management, and other development tasks
+
 ## Technology Stack
 - Primary Language: Python
 - Key Libraries: Langchain, LangGraph

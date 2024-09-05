@@ -380,6 +380,8 @@ async def run_workflow():
         "developer_state": AgentState.default(),
         "domain_expert_state": AgentState.default(),
         "accumulated_token_usage": TokenUsage.default(),
+        "current_agent_deflections": 0,
+        "max_agent_deflections": 3,
         }
     
     async for event in app.astream_events(state, config={"recursion_limit": 100}, version="v1"):

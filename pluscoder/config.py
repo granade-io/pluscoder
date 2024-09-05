@@ -1,7 +1,7 @@
 import os
 import argparse
 import dotenv
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 dotenv.load_dotenv(dotenv.find_dotenv(usecwd=True), override=True)
 
@@ -11,6 +11,13 @@ def str2bool(v: Any) -> bool:
     if isinstance(v, str):
         return v.lower() in ("yes", "true", "t", "1")
     return bool(v)
+
+def str2list(v: Any) -> List[str]:
+    if isinstance(v, list):
+        return v
+    if isinstance(v, str):
+        return [item.strip() for item in v.split(',') if item.strip()]
+    return []
 
 class Config:
 
@@ -57,6 +64,12 @@ class Config:
         self.auto_run_linter_fix = False
         self.lint_fix_command = None
 
+        # Repomap settings
+        self.use_repomap = True
+        self.repomap_level = 2
+        self.repomap_exclude_files = []
+        self.repomap_include_files = []
+
     def update_from_env(self):
         for key in vars(self):
             env_var = f"{key.upper()}"
@@ -64,6 +77,8 @@ class Config:
                 value = os.environ[env_var]
                 if isinstance(getattr(self, key), bool):
                     setattr(self, key, str2bool(value))
+                elif isinstance(getattr(self, key), list):
+                    setattr(self, key, str2list(value))
                 else:
                     default = getattr(self, key)
                     setattr(self, key, type(default)(value) if default else value)
@@ -73,6 +88,8 @@ class Config:
             if value is not None:
                 if isinstance(getattr(self, key), bool):
                     setattr(self, key, str2bool(value))
+                elif isinstance(getattr(self, key), list):
+                    setattr(self, key, str2list(value))
                 else:
                     setattr(self, key, value)
 
@@ -124,6 +141,11 @@ def parse_args():
     parser.add_argument("--lint-command", type=str, default=None, help="Command to run linter")
     parser.add_argument("--auto-run-linter-fix", type=str2bool, default=None, help="Automatically run linter fix before linting")
     parser.add_argument("--lint-fix-command", type=str, default=None, help="Command to run linter fix")
+
+    # Repomap settings
+    parser.add_argument("--use-repomap", type=str2bool, default=None, help="Enable/disable repomap feature")
+    parser.add_argument("--repomap-level", type=int, default=None, help="Set the level of detail for repomap")
+    parser.add_argument("--repomap-exclude-files", type=str2list, default=None, help="Comma-separated list of files to exclude from repomap")
 
     return parser.parse_args()
 

@@ -72,11 +72,20 @@ class Agent:
     def get_files_context_prompt(self, state):
         files_not_in_context = self.get_files_not_in_context(state)
         
-        return f"""
+        prompt = f"""
 Here is the latest content of those repository files that you already have access to read/edit: \n\n{{files_content}}
 
 Here are all repository files you don't have access yet: \n\n{files_not_in_context}
 """
+
+        if config.use_repomap:
+            repomap = self.get_repomap()
+            prompt += f"\n\nHere is the repository map summary so you can handle request better:\n\n{repomap}\n"
+
+        return prompt
+
+    def get_repomap(self):
+        return self.repo.generate_repomap()
 
     def get_system_message(self, state: AgentState):
         return self.system_message
