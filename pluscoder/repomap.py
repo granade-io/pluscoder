@@ -35,7 +35,7 @@ def should_include_file(file_path: str, tracked_files: set, include_patterns: Li
     relative_path = os.path.relpath(file_path, start=repo_working_tree_dir)
     return (
         (relative_path in tracked_files) and
-        any(re.match(pattern, os.path.basename(file_path)) for pattern in include_patterns) and
+        any(re.match(re.compile(pattern), os.path.basename(file_path)) for pattern in include_patterns) and
         not any(re.match(re.compile(pattern), os.path.basename(file_path)) for pattern in exclude_patterns)
     )
 
