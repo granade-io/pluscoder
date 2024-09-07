@@ -6,6 +6,8 @@ from git import Actor, Repo
 from git import GitCommandError
 from pluscoder.config import config
 
+from pluscoder.repomap import LANGUAGE_MAP, generate_tree
+
 class Repository:
     def __init__(self, io=None):
         self.repo = Repo(os.getcwd(), search_parent_directories=True)
@@ -175,9 +177,31 @@ class Repository:
             error_message += e.stderr if e.stderr else ''  # Append stderr to error message
             return f"Tests failed:\n\n{error_message}"
 
+    def generate_repomap(self) -> Optional[str]:
+        """
+        Generate a repository map using the logic from repomap2.py.
+        
+        Returns:
+            Optional[str]: The generated repomap as a string if use_repomap is True,
+                           None otherwise.
+        """
+        if not config.use_repomap:
+            return None
+
+        include_patterns = config.repomap_include_files or [r'.*\.(' + '|'.join(LANGUAGE_MAP.keys()) + ')$']
+        exclude_patterns = config.repomap_exclude_files
+        level = config.repomap_level
+
+        tracked_files = self.get_tracked_files()
+        return generate_tree(self.repo.working_tree_dir, include_patterns, exclude_patterns, level, tracked_files, self.io)
+
 
 if __name__ == "__main__":
     repo = Repository()
+    print("Tree:")
     pprint.pprint(repo.get_tracked_files())
+    
+    print("\n\nRepomap:")
+    print(repo.generate_repomap())
     
     repo.run_test()

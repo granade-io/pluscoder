@@ -72,11 +72,19 @@ class Agent:
     def get_files_context_prompt(self, state):
         files_not_in_context = self.get_files_not_in_context(state)
         
-        return f"""
+        prompt = f"""
 Here is the latest content of those repository files that you already have access to read/edit: \n\n{{files_content}}
 
 Here are all repository files you don't have access yet: \n\n{files_not_in_context}
 """
+
+        if config.use_repomap:
+            prompt += "\n\nHere is the repository map summary so you can handle request better:\n\n{repomap}\n"
+
+        return prompt
+
+    def get_repomap(self):
+        return self.repo.generate_repomap()
 
     def get_system_message(self, state: AgentState):
         return self.system_message
@@ -95,7 +103,8 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         files_content = get_formatted_files_content(context_files)
         assistant_prompt = RunnableMap({
             "messages": lambda x: state["messages"] + deflection_messages,
-            "files_content": lambda x: files_content
+            "files_content": lambda x: files_content,
+            "repomap": lambda x: self.get_repomap() if config.use_repomap else "",
             }) | ChatPromptTemplate.from_messages([
                 ("system", self.get_system_message(state)),
                 # Context files
@@ -132,14 +141,14 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         # io.event(self.get_context_files_panel(context_files))
         
         interaction_msgs = []
-        state_updates = {}
+        post_process_state = {}
         
         with get_openai_callback() as cb:
             while self.current_deflection <= self.max_deflections:
                 try:
                     llm_response = self._invoke_llm_chain(state, interaction_msgs)
                     interaction_msgs.append(llm_response)
-                    state_updates = self.process_agent_response(state, llm_response)
+                    post_process_state = self.process_agent_response(state, llm_response)
                     break
                 except AgentException as e:
                     io.console.print(f"Error: {str(e)}")
@@ -148,6 +157,7 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                         interaction_msgs.append(HumanMessage(content=f"An error ocurrred: {str(e)}"))
                 except Exception as e:
                     # Handles unknown exceptions, maybe caused by llm api or wrong state
+                    raise e
                     io.console.log(f"An error occurred: {str(e)}", style="bold red")
                     io.console.print("State that causes raise:", style="bold red")
                     io.console.print(state, style="bold red")
@@ -161,7 +171,7 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                         "completion_tokens": cb.completion_tokens,
                         "total_cost": cb.total_cost
                     },
-                     **state_updates
+                     **post_process_state
                      }
         return new_state
     

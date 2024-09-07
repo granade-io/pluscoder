@@ -303,6 +303,8 @@ Example 3: Project Analysis and overview
 Objective: {task["objective"]}
 Details: {task["details"]}
 
+Load relevant files mentioned in completed or current tasks to help you achieve the objective.
+
 """
         return instruction
     

@@ -103,10 +103,10 @@ class CustomProgress(Progress):
         return renderable
 
 class IO:
+    DEBUG_FILE = ".plus_coder.debug"
     def __init__(self, log_level=logging.INFO):
         self.console = Console()
         self.error_console = Console(stderr=True, style="bold red")
-        self.file_console = Console(file=".plus_coderlog.txt", style="cyan")
         self.progress = None
         self.ctrl_c_count = 0
         self.last_input = ""
@@ -159,6 +159,9 @@ class IO:
         except KeyboardInterrupt:
             sys.exit(0)
     
+    def log_to_debug_file(self, message: str) -> None:
+        with open(self.DEBUG_FILE, "a") as f:
+            f.write(f"{message}\n")
     
     def set_progress(self, progress: Progress | Live) -> None:
         self.progress = progress
@@ -175,7 +178,7 @@ class IO:
             self.console.print("")
             return
         if self.progress.started:
-            io.console.print(self.progress.get_stream_renderable())
+            self.console.print(self.progress.get_stream_renderable())
             self.progress.chunks = []
             # self.progress.stop()
         
