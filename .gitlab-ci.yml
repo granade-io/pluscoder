@@ -1,20 +1,47 @@
 image: node:latest
 
 stages:
+  - build
   - test
   - release
 
 variables:
   GIT_DEPTH: "0"
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
-before_script:
-  - python --version
-  - pip install --upgrade pip
-  - pip install -r requirements.txt
+create_wheel:
+  stage: build
+  script:
+    - pip wheel tree-sitter-language-pack==0.2.0 --wheel-dir ./wheels
+  artifacts:
+    paths:
+      - ./wheels/*.whl
+    expire_in: 2 week
+  cache:
+    key: 
+      files:
+        - requirements.txt  # Asume que tienes un archivo de requerimientos
+    paths:
+      - ./wheels
+      - $PIP_CACHE_DIR
+    policy: pull-push
 
 test:
   image: python:3.12
   stage: test
+  cache:
+    key: 
+      files:
+        - requirements.txt
+    paths:
+      - ./wheels
+      - $PIP_CACHE_DIR
+    policy: pull
+  before_script:
+    - python --version
+    - pip install --upgrade pip
+    - pip install --no-index --find-links=./wheels tree-sitter-language-pack==0.2.0
+    - pip install -r requirements.txt
   script:
     - pytest
 
