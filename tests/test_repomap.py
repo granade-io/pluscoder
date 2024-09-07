@@ -76,6 +76,7 @@ class Calculator {
     }
 
     public addToValue(addend: number): number {
+        /* add to value function */
         return this.initialValue + addend;
     }
 }
@@ -92,6 +93,7 @@ function addNumbers(a: number, b: number): number {
 // A class component with a method in TSX
 class Calculator extends React.Component<{ initialValue: number }, {}> {
     addToValue(addend: number): number {
+        /* add to value function */
         return this.props.initialValue + addend;
     }
 
@@ -240,3 +242,181 @@ function ExampleComponent({ prop }) {
     mock_walk.assert_called_once_with('/repo_root')
     mock_should_include.assert_called_once_with('/repo_root/example.jsx', ['example.jsx'], ['*.jsx'], [], '/repo_root')
     mock_file_open.assert_called_once_with('/repo_root/example.jsx', 'rb')
+    
+@patch('pluscoder.repomap.os.walk')
+@patch('pluscoder.repomap.open', new_callable=mock_open)
+@patch('pluscoder.repomap.should_include_file')
+def test_generate_tree_ts(mock_should_include, mock_file_open, mock_walk, mock_ts_file_content):
+    # Mock os.walk to return one TypeScript file
+    mock_walk.return_value = [
+        ('/repo_root', [], ['example.ts'])
+    ]
+
+    # Mock should_include_file to return True for our file
+    mock_should_include.return_value = True
+
+    # Mock file open to return our example content
+    mock_file_open.return_value.read.return_value = mock_ts_file_content
+
+    # Call generate_tree
+    result = generate_tree(
+        repo_path='/repo_root',
+        include_patterns=['*.ts'],
+        exclude_patterns=[],
+        level=2,
+        tracked_files=['example.ts'],
+        io=io
+    )
+
+    # Define expected output
+    expected_output = """
+example.ts
+==========
+function addNumbers(a: number, b: number): number {
+class Calculator {
+    constructor(initialValue: number) {
+    public addToValue(addend: number): number {
+==========
+"""
+
+    # Assert the result matches the expected output
+    assert result.strip() == expected_output.strip()
+
+    # Verify that the mocks were called correctly
+    mock_walk.assert_called_once_with('/repo_root')
+    mock_should_include.assert_called_once_with('/repo_root/example.ts', ['example.ts'], ['*.ts'], [], '/repo_root')
+    mock_file_open.assert_called_once_with('/repo_root/example.ts', 'rb')
+
+@patch('pluscoder.repomap.os.walk')
+@patch('pluscoder.repomap.open', new_callable=mock_open)
+@patch('pluscoder.repomap.should_include_file')
+def test_generate_tree_tsx(mock_should_include, mock_file_open, mock_walk, mock_tsx_file_content):
+    # Mock os.walk to return one TSX file
+    mock_walk.return_value = [
+        ('/repo_root', [], ['example.tsx'])
+    ]
+
+    # Mock should_include_file to return True for our file
+    mock_should_include.return_value = True
+
+    # Mock file open to return our example content
+    mock_file_open.return_value.read.return_value = mock_tsx_file_content
+
+    # Call generate_tree
+    result = generate_tree(
+        repo_path='/repo_root',
+        include_patterns=['*.tsx'],
+        exclude_patterns=[],
+        level=2,
+        tracked_files=['example.tsx'],
+        io=io
+    )
+
+    # Define expected output
+    expected_output = """
+example.tsx
+===========
+function addNumbers(a: number, b: number): number {
+class Calculator extends React.Component<{ initialValue: number }, {}> {
+    addToValue(addend: number): number {
+    render() {
+===========
+"""
+
+    # Assert the result matches the expected output
+    assert result.strip() == expected_output.strip()
+
+    # Verify that the mocks were called correctly
+    mock_walk.assert_called_once_with('/repo_root')
+    mock_should_include.assert_called_once_with('/repo_root/example.tsx', ['example.tsx'], ['*.tsx'], [], '/repo_root')
+    mock_file_open.assert_called_once_with('/repo_root/example.tsx', 'rb')
+    
+@patch('pluscoder.repomap.os.walk')
+@patch('pluscoder.repomap.open', new_callable=mock_open)
+@patch('pluscoder.repomap.should_include_file')
+def test_generate_tree_ts(mock_should_include, mock_file_open, mock_walk, mock_ts_file_content):
+    # Mock os.walk to return one TypeScript file
+    mock_walk.return_value = [
+        ('/repo_root', [], ['example.ts'])
+    ]
+
+    # Mock should_include_file to return True for our file
+    mock_should_include.return_value = True
+
+    # Mock file open to return our example content
+    mock_file_open.return_value.read.return_value = mock_ts_file_content
+
+    # Call generate_tree
+    result = generate_tree(
+        repo_path='/repo_root',
+        include_patterns=['*.ts'],
+        exclude_patterns=[],
+        level=2,
+        tracked_files=['example.ts'],
+        io=io
+    )
+
+    # Define expected output
+    expected_output = """
+example.ts
+==========
+function addNumbers(a: number, b: number): number {
+class Calculator {
+    constructor(initialValue: number) {
+    public addToValue(addend: number): number {
+        /* add to value function */
+==========
+"""
+
+    # Assert the result matches the expected output
+    assert result.strip() == expected_output.strip()
+
+    # Verify that the mocks were called correctly
+    mock_walk.assert_called_once_with('/repo_root')
+    mock_should_include.assert_called_once_with('/repo_root/example.ts', ['example.ts'], ['*.ts'], [], '/repo_root')
+    mock_file_open.assert_called_once_with('/repo_root/example.ts', 'rb')
+
+@patch('pluscoder.repomap.os.walk')
+@patch('pluscoder.repomap.open', new_callable=mock_open)
+@patch('pluscoder.repomap.should_include_file')
+def test_generate_tree_tsx(mock_should_include, mock_file_open, mock_walk, mock_tsx_file_content):
+    # Mock os.walk to return one TSX file
+    mock_walk.return_value = [
+        ('/repo_root', [], ['example.tsx'])
+    ]
+
+    # Mock should_include_file to return True for our file
+    mock_should_include.return_value = True
+
+    # Mock file open to return our example content
+    mock_file_open.return_value.read.return_value = mock_tsx_file_content
+
+    # Call generate_tree
+    result = generate_tree(
+        repo_path='/repo_root',
+        include_patterns=['*.tsx'],
+        exclude_patterns=[],
+        level=2,
+        tracked_files=['example.tsx'],
+        io=io
+    )
+
+    # Define expected output
+    expected_output = """
+example.tsx
+===========
+function addNumbers(a: number, b: number): number {
+class Calculator extends React.Component<{ initialValue: number }, {}> {
+    addToValue(addend: number): number {
+        /* add to value function */
+    render() {
+===========
+"""
+
+    # Assert the result matches the expected output
+    assert result.strip() == expected_output.strip()
+
+    # Verify that the mocks were called correctly
+    mock_walk.assert_called_once_with('/repo_root')
+    mock_should_include.assert_called_once_with('/repo_root/example.tsx', ['example.tsx'], ['*.tsx'], [], '/repo_root')
+    mock_file_open.assert_called_once_with('/repo_root/example.tsx', 'rb')

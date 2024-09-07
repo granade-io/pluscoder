@@ -48,9 +48,6 @@ def analyze_file_with_tree_sitter(file_path: str, level: int, io) -> str:
     language, parser = get_language_and_parser(file_extension, io)
     tree = parser.parse(content)
     
-    if 'jsx' in file_extension:
-        print(f"Analyzing JSX file: {file_path}")
-
     summary = []
     
     def process_node(node, indent=''):
