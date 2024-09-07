@@ -5,7 +5,7 @@ from tree_sitter_language_pack import get_language, get_parser
 
 # Map file extensions to languages
 LANGUAGE_MAP = {
-    'py': 'python', 'js': 'javascript', 'jsx': 'javascript', 'ts': 'typescript', 'tsx': 'typescript',
+    'py': 'python', 'js': 'javascript', 'jsx': 'javascript', 'ts': 'typescript', 'tsx': 'tsx',
     'java': 'java', 'c': 'c', 'cpp': 'cpp', 'cs': 'c_sharp', 'go': 'go',
     'rb': 'ruby', 'php': 'php', 'swift': 'swift', 'rs': 'rust', 'kt': 'kotlin',
     'scala': 'scala', 'lua': 'lua', 'sh': 'bash', 'html': 'html', 'css': 'css',
