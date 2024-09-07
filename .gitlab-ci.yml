@@ -10,6 +10,7 @@ variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
 create_wheel:
+  image: python:3.12
   stage: build
   script:
     - pip wheel tree-sitter-language-pack==0.2.0 --wheel-dir ./wheels
