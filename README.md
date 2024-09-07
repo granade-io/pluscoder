@@ -36,18 +36,37 @@ Use pluscoder inside a git repository:
 
 4. Edit the `.env` file and set the appropriate values for your environment.
 
-5. Run:
-
+5. Set up pre-commit hooks:
    ```bash
-   python -m pluscoder.main [options]
-   # plus-coder [options]
+   # Install pre-commit
+   pip install pre-commit
+
+   # Install the git hook scripts
+   pre-commit install
    ```
 
-6. Test:
+6. Run:
+
+   ```bash
+   # as python module
+   python -m pluscoder.main [options]
+   
+   # as bash command
+   plus-coder [options]
+   ```
+
+7. Test:
 
    ```bash
    pytest
    ```
+
+## Setting up Pre-commit
+
+The `setup_precommit.sh` script will:
+1. Install pre-commit
+2. Set up the git hooks
+3. Add the necessary environment variables to the `.env` file
 
 ## Available Commands
 

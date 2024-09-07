@@ -2,6 +2,7 @@
 
 ## Bugs:
 - Sometimes agents propose changes that appends new content without replacing previous one, generating duplicated content
+- Sometimes agents propose changes two times, one for explaining and another time for making the changes. This started to happend recenly. We will have to improve the prompt or give new shot examples.
 
 ## High Priority Features
 
@@ -78,9 +79,13 @@
 - Develop image pasting functionality in the console or from url/path.
 - Add conversation history management features (cleaning, switching contexts, etc.)
 
-### ther features
+### Other features
 - Regularly review and update the PROJECT_OVERVIEW.md file automatically
 - Generate/Convert task list from/into github/gitlab issues
 - Chat persistence to resume chat from previous conversation
 - Auto-complete configs when using /config command
-- 
+- Implement structured handling of development and testing dependencies:
+  - Create separate requirements files for production, development, and testing
+  - Consider using dependency management tools like pip-tools or poetry
+  - Update documentation and CI/CD pipelines to reflect the new dependency structure
+  - Encourage use of separate virtual environments for different purposes 
