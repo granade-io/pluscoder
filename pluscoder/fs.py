@@ -30,6 +30,10 @@ def apply_block_update(file_path: str, block_content: str):
     matches = list(block_pattern.finditer(block_content))
 
     if matches:
+        # debug log
+        io.log_to_debug_file(f"Found blocks to update {file_path}")
+        io.log_to_debug_file(f"Whole block: {block_content}")
+        
         # Read the current file content
         if path.exists():
             current_content = path.read_text()
@@ -38,6 +42,10 @@ def apply_block_update(file_path: str, block_content: str):
 
         # Process all block updates
         for match in matches:
+            # debug log
+            io.log_to_debug_file.print(f"Applying block to {file_path}")
+            io.log_to_debug_file.print(f"Block: {block_content}")
+            
             find_content = match.group(1).strip()
             replace_content = match.group(2).strip()
             

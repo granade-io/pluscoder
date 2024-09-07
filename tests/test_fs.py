@@ -1,8 +1,9 @@
 from unittest.mock import patch, mock_open
 from pluscoder.fs import apply_block_update
 
+@patch('pluscoder.fs.io')
 @patch('pluscoder.fs.Path')
-def test_apply_block_update_multiple_updates(mock_path):
+def test_apply_block_update_multiple_updates(mock_path, mock_io):
     # Test multiple updates in the same block
     mock_file = mock_open(read_data="print('Hello')\nx = 5\n")
     mock_path.return_value.exists.return_value = True
@@ -47,8 +48,9 @@ x = 10
     assert "Couldn't replace previous content at file `test.py`" in str(error_msg)
    
 
+@patch('pluscoder.fs.io')
 @patch('pluscoder.fs.Path')
-def test_apply_block_update_new_file_block(mock_path):
+def test_apply_block_update_new_file_block(mock_path, mock_io):
     # Test create a new file from proper block
     mock_file = mock_open(read_data="")
     mock_path.return_value.exists.return_value = False
