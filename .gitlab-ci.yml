@@ -45,6 +45,11 @@ test:
     - pip install -r requirements.txt
   script:
     - pytest
+  rules:
+    - changes:
+        - pluscoder/**/*
+        - tests/**/*
+        - requirements.txt
 
 release:
   image: node:latest
@@ -52,7 +57,7 @@ release:
     PYPI_TOKEN: ${CI_JOB_TOKEN}
     PYPI_USERNAME: gitlab-ci-token
     PYPI_REPO_URL: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi
-    GITLAB_TOKEN: $GITLAB_TOKEN
+#     GITLAB_TOKEN: $GITLAB_TOKEN
   stage: release
   before_script:
     - apt-get update && apt-get install -y --no-install-recommends git-core ca-certificates
