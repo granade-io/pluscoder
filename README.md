@@ -36,18 +36,37 @@ Use pluscoder inside a git repository:
 
 4. Edit the `.env` file and set the appropriate values for your environment.
 
-5. Run:
-
+5. Set up pre-commit hooks:
    ```bash
-   python -m pluscoder.main [options]
-   # plus-coder [options]
+   # Install pre-commit
+   pip install pre-commit
+
+   # Install the git hook scripts
+   pre-commit install
    ```
 
-6. Test:
+6. Run:
+
+   ```bash
+   # as python module
+   python -m pluscoder.main [options]
+   
+   # as bash command
+   plus-coder [options]
+   ```
+
+7. Test:
 
    ```bash
    pytest
    ```
+
+## Setting up Pre-commit
+
+The `setup_precommit.sh` script will:
+1. Install pre-commit
+2. Set up the git hooks
+3. Add the necessary environment variables to the `.env` file
 
 ## Available Commands
 
@@ -96,6 +115,12 @@ PlusCoder can be configured using environment variables (you can use your `.env`
 - `LINT_COMMAND`: Command to run linter (default: None)
 - `AUTO_RUN_LINTER_FIX`: Automatically run linter fix before linting (default: False)
 - `LINT_FIX_COMMAND`: Command to run linter fix (default: None)
+
+### Repomap Settings
+- `USE_REPOMAP`: Enable/disable repomap feature (default: True)
+- `REPOMAP_LEVEL`: Set the level of detail for repomap (default: 2)
+- `REPOMAP_INCLUDE_FILES`: Comma-separated list of files to include in repomap (default: None)
+- `REPOMAP_EXCLUDE_FILES`: Comma-separated list of files to exclude from repomap (default: None)
 
 You can set these options using environment variables, command-line arguments (e.g., `--streaming false`), or the `/config` command during runtime (e.g., `/config streaming false`).
 

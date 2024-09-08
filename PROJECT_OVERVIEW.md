@@ -59,6 +59,12 @@ This project aims to develop a system that uses a composition of LLM agents, lev
     - Enhances agents' ability to interact with the development environment
     - Supports project setup, dependency management, and other development tasks
 
+14. Repomap feature
+    - Generates a structured overview of the project's codebase
+    - Configurable include and exclude patterns for file selection
+    - Adjustable detail level for code analysis
+    - Enhances agents' understanding of the project structure and contents
+
 ## Technology Stack
 - Primary Language: Python
 - Key Libraries: Langchain, LangGraph

@@ -26,10 +26,14 @@ def apply_block_update(file_path: str, block_content: str):
     path = Path(file_path)
     
     # Check if the block content matches the specific format using regex
-    block_pattern = re.compile(r'>>> FIND\n(.*?)\n?===\n(.*?)\n<<< REPLACE', re.DOTALL)
+    block_pattern = re.compile(r'>>> FIND\n(.*?\n|\n{0})===\n(.*?)\n<<< REPLACE', re.DOTALL)
     matches = list(block_pattern.finditer(block_content))
 
     if matches:
+        # debug log
+        io.log_to_debug_file(f"FOUND BLOCK FOR {file_path}\n")
+        io.log_to_debug_file(f"{"<-- START OF WHOLE BLOCK -->"}\n{block_content}\n{"<-- END OF WHOLE BLOCK -->"}\n\n")
+        
         # Read the current file content
         if path.exists():
             current_content = path.read_text()
@@ -38,6 +42,10 @@ def apply_block_update(file_path: str, block_content: str):
 
         # Process all block updates
         for match in matches:
+            # debug log
+            io.log_to_debug_file(f"APPLYING BLOCK CHUNK TO {file_path}\n")
+            io.log_to_debug_file(f"{"<-- START OF BLOCK CHUNK -->"}{block_content}\n{"<-- END OF BLOCK CHUNK -->"}\n\n")
+            
             find_content = match.group(1).strip()
             replace_content = match.group(2).strip()
             

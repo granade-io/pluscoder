@@ -102,8 +102,10 @@ def test_get_context_files_panel(agent):
     panel = agent.get_context_files_panel(files)
     assert "file1.txt file2.txt file3.txt" in panel
 
+@patch.object(Repository, 'generate_repomap')
 @patch('pluscoder.agents.base.get_formatted_files_content')
-def test_build_assistant_prompt(mock_get_formatted_files_content, agent):
+def test_build_assistant_prompt(mock_get_formatted_files_content, mock_generate_repomap, agent):
+    mock_generate_repomap.return_value = "My Repomap"
     mock_get_formatted_files_content.return_value = "file content"
     state = AgentState(
         messages=[HumanMessage(content="Hello")],
@@ -112,15 +114,18 @@ def test_build_assistant_prompt(mock_get_formatted_files_content, agent):
     prompt = agent.build_assistant_prompt(state, [])
     assert isinstance(prompt, object)  # Check if it returns a RunnableMap object
 
+# @patch.object(Repository, 'generate_repomap')
 @patch('pluscoder.agents.base.get_formatted_files_content')
 @patch('pluscoder.agents.base.io')
 @patch('pluscoder.agents.base.file_callback')
 def test_call_agent(mock_file_callback, mock_io, mock_get_formatted_files_content, agent, mock_llm) -> None:
+    # mock_generate_repomap.return_value = "My Repomap"
     mock_llm.bind_tools.return_value.return_value = AIMessage(content="AI response with file mention `some_file.txt`")
     # mock_get_formatted_files_content.return_value = "Mocked file content"
     state = AgentState(messages=[HumanMessage(content="Hello")], context_files=[])
     
     result = agent.call_agent(state)
+    print(result)
     assert "messages" in result
     
     # Just IA Message is present in state updates

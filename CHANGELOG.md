@@ -1,3 +1,17 @@
+# [1.8.0-rc.1](https://gitlab.com/codematos/pluscoder/compare/v1.7.0...v1.8.0-rc.1) (2024-09-08)
+
+
+### Bug Fixes
+
+* block regex for file edition fixed for some use cases ([0f27874](https://gitlab.com/codematos/pluscoder/commit/0f27874d8fd30c3da83199e15d2337dfaebd83fb))
+
+
+### Features
+
+* added repomap tree tp agent prompts and related config variables ([9d0709c](https://gitlab.com/codematos/pluscoder/commit/9d0709c539c07c1a43e4f2a77b8c0fbc91e4b90b))
+* debug to file feature added to io utils ([5026482](https://gitlab.com/codematos/pluscoder/commit/502648218f9a923ec350587e4f64675bde551625))
+* repomap feature is built for python, js and jsx, and passed to the prompt of all agents. Added related config parameters ([3947213](https://gitlab.com/codematos/pluscoder/commit/3947213efffbd5b76a695b0115eaacff9e2c4b25))
+
 # [1.7.0](https://gitlab.com/codematos/pluscoder/compare/v1.6.3...v1.7.0) (2024-08-29)
 
 
