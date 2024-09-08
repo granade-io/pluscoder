@@ -1,4 +1,4 @@
-# [1.8.0-rc.1](https://gitlab.com/codematos/pluscoder/compare/v1.7.0...v1.8.0-rc.1) (2024-09-08)
+# [1.8.0](https://gitlab.com/codematos/pluscoder/compare/v1.7.0...v1.8.0) (2024-09-08)
 
 
 ### Bug Fixes

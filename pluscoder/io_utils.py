@@ -85,7 +85,7 @@ class CustomProgress(Progress):
             full_text = ''.join(self.chunks) + parts[0]
             
             # Print the full text
-            self.console.print(full_text, style="dark_blue")
+            self.console.print(full_text, style="blue")
             
             # Clear the chunks list and add only the remainder (if any)
             self.chunks.clear()
@@ -95,7 +95,7 @@ class CustomProgress(Progress):
             self.chunks.append(chunk)
         
     def get_stream_renderable(self) -> ConsoleRenderable | RichCast | str:
-        return Text(''.join(self.chunks), style="dark_blue")
+        return Text(''.join(self.chunks), style="blue")
         
     def get_renderable(self) -> ConsoleRenderable | RichCast | str:
         
@@ -185,7 +185,7 @@ class IO:
         
     def stream(self, chunk: str) -> None:
         if not self.progress:
-            self.console.print(chunk, style="dark_blue", end="")
+            self.console.print(chunk, style="blue", end="")
             return
         
         self.progress.stream(chunk)
