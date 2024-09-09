@@ -18,7 +18,7 @@ from pluscoder.type import AgentState
 from langchain_community.callbacks.manager import get_openai_callback
 
 def parse_block(text):
-    pattern = r'`([^`\n]+):?`\n{1,2}^```(\w*)\n(.*?)^```'
+    pattern = r'`([^`\n]+):?`\n{1,2}^```(\w*)\n(>>> FIND.*?===.*?<<< REPLACE|.*?)\n^```$'
     matches = re.findall(pattern, text, re.DOTALL | re.MULTILINE)
     return [{'file_path': m[0], 'language': m[1], 'content': m[2].strip()} for m in matches]
 
