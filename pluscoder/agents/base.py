@@ -203,9 +203,10 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                 
             # Extract files if read_files were used
             # This is a patch because tools can't read/edit agent state or call agent methods
-            if tool_call['name'] in ["read_files"]:
-                loaded_files = tool_call["args"].get("file_paths", [])
-                io.event(f"> The latest version of these files were added to the chat: {', '.join(loaded_files)}")
+            # DEPRECATED: files body are inyected by the tool because performance decreases significantly using this method
+            # if tool_call['name'] in ["read_files"]:
+            #     loaded_files = tool_call["args"].get("file_paths", [])
+            #     io.event(f"> The latest version of these files were added to the chat: {', '.join(loaded_files)}")
                 
         return {**state, "tool_data": tool_data, "context_files": state["context_files"] + loaded_files}
     

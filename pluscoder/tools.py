@@ -2,6 +2,7 @@ import os
 from typing import Annotated, Dict, List, Literal
 from langchain_core.tools import tool
 import re
+from pluscoder.fs import get_formatted_file_content
 from pluscoder.io_utils import io
 from pluscoder.type import AgentTask
 
@@ -45,9 +46,23 @@ def read_files(
     file_paths: Annotated[List[str], "The paths to the files you want to read."]
 ) -> str:
     """Read the contents of multiple files at once"""
-    message = f"The latest version of these files were added to the chat: {', '.join(file_paths)}"
-    # io.event(message)
-    return message
+    result = ""
+    errors = []
+    loaded_files = []
+    
+    for file_path in file_paths:
+        try:
+            result += get_formatted_file_content(file_path)
+            loaded_files.append(file_path)
+        except Exception as e:
+            errors.append(f"Error reading file {file_path}. Maybe the path is wrong or the file never existed: {str(e)}")
+    
+    if errors:
+        result += "\n\nErrors:\n" + "\n".join(errors)
+    
+    io.event(f"> Added files: {", ".join(loaded_files)}")
+    
+    return result.strip()
 
 @tool
 def move_file(
