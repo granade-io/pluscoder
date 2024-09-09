@@ -8,13 +8,10 @@
 
 ### Repository Initialization and Enhancement Command
 - Implement an 'init' command for first-time pluscoder setup or forced execution via slash command
-- Perform repository improvements prior to using pluscoder:
-  - Auto-generate or update overview file by reading key repository files
-  - Apply and detect linting/test commands
+- Perform repository improvements prior to using pluscoder calling orchestration agent and telling him to:
+  - Auto-generate or update overview file by telling the agent to read key files to sumarize them in the overview
+  - Detect linting/test commands of the repo telling the agent in the same prompt to also detect those commands
   - Iterate over files and use an agent to improve docstrings
-- Make sub-features configurable and independently executable:
-  - Allow skipping of linting/testing
-  - Provide option to exclude documentation updates that edit multiple files
 - Implement as both a startup process and a slash command for on-demand execution
 
 ### Improve Orchestrator's flexibility and feedback mechanism

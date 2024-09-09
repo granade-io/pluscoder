@@ -129,7 +129,6 @@ The project follows a well-organized structure:
 1. Root Directory:
    - `.env.example`: Example environment variables file (not tracked in version control)
    - `PROJECT_OVERVIEW.md`: This file, containing the project overview
-   - `main.py`: The entry point of the application, sets up the LangGraph workflow
    - `CODING_GUIDELINES.md`: Guidelines for code development
    - `README.md`: Project readme file
    - `ROADMAP.md`: Project roadmap
@@ -137,6 +136,8 @@ The project follows a well-organized structure:
    - `CHANGELOG.md`: Tracks version changes and updates to the project
 
 2. Core Functionality:
+   - `main.py`: The entry point of the application, executes the workflow with an state
+   - `workflow.py`: Entire agents workflow
    - `agents/`: Directory containing agent-related files
      - `base.py`: Contains the base Agent class and core agent functionality
      - `core.py`: Defines specific agent types
