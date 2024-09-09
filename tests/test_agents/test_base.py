@@ -125,7 +125,6 @@ def test_call_agent(mock_file_callback, mock_io, mock_get_formatted_files_conten
     state = AgentState(messages=[HumanMessage(content="Hello")], context_files=[])
     
     result = agent.call_agent(state)
-    print(result)
     assert "messages" in result
     
     # Just IA Message is present in state updates

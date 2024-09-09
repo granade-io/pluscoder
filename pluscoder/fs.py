@@ -62,6 +62,10 @@ def apply_block_update(file_path: str, block_content: str):
 
         new_content = current_content
     else:
+        # debug log
+        io.log_to_debug_file(f"FOUND FULL FILE BLOCK FOR {file_path}\n")
+        io.log_to_debug_file(f"{"<-- START OF FULL FILE WHOLE BLOCK -->"}\n{block_content}\n{"<-- END OF FULL FILE WHOLE BLOCK -->"}\n\n")
+        
         # Treat as a full content update
         new_content = block_content.strip()
         
