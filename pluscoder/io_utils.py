@@ -13,6 +13,7 @@ from prompt_toolkit.history import FileHistory
 import sys
 
 from pluscoder.repo import Repository
+from pluscoder.config import config
 
 logging.getLogger().setLevel(logging.ERROR) # hide warning log
 
@@ -115,6 +116,9 @@ class IO:
         return self.console.print(string, style="yellow")
     
     def confirm(self, message: str) -> bool:
+        if config.auto_confirm:
+            io.event("Auto-confirming...")
+            return True
         # return Confirm.ask(f"{message}", console=self.console)
         return input(f'{message} (y/n):').lower().strip() == 'y'
     
