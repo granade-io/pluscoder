@@ -1,6 +1,7 @@
 import os
 import logging
-from typing import Union
+from typing import Union, Optional
+import json
 from prompt_toolkit import PromptSession
 from rich.console import Console, Group, ConsoleRenderable, RichCast
 from rich.live import Live
@@ -163,9 +164,16 @@ class IO:
         except KeyboardInterrupt:
             sys.exit(0)
     
-    def log_to_debug_file(self, message: str) -> None:
+    def log_to_debug_file(self, message: Optional[str] = None, json_data: Optional[dict] = None) -> None:
+        if json_data is not None:
+            content = json.dumps(json_data, indent=2)
+        elif message is not None:
+            content = message
+        else:
+            raise ValueError("Either message or json_data must be provided")
+
         with open(self.DEBUG_FILE, "a") as f:
-            f.write(f"{message}\n")
+            f.write(f"{content}\n")
     
     def set_progress(self, progress: Progress | Live) -> None:
         self.progress = progress
