@@ -7,7 +7,7 @@ from langgraph.graph import StateGraph, END, START
 from langchain_core.messages import HumanMessage
 from pluscoder.agents.base import Agent, AgentState
 from pluscoder.state_utils import accumulate_token_usage
-from pluscoder.type import OrchestrationState
+from pluscoder.type import OrchestrationState, TokenUsage
 from pluscoder.agents.core import DeveloperAgent, DomainStakeholderAgent, PlanningAgent, DomainExpertAgent
 from rich.rule import Rule
 from langchain_core.globals import set_debug
@@ -177,7 +177,9 @@ async def orchestrator_agent_node(state: OrchestrationState, agent: Orchestrator
     def update_global_state(_agent_id, _updated_state):
         _global_state = accumulate_token_usage(global_state, _updated_state)
         _current_state = _global_state[_agent_id + "_state"]
-        _global_state[_agent_id + "_state"] = {**_current_state, **_updated_state}
+        
+        # Token usage becomes none to avoid counting twice
+        _global_state[_agent_id + "_state"] = {**_current_state, **_updated_state, "token_usage": TokenUsage.default()}
         
         return _global_state
     
@@ -203,6 +205,9 @@ async def orchestrator_agent_node(state: OrchestrationState, agent: Orchestrator
         task = orchestrator_agent.get_current_task(state)
         
         if task:
+            # Log task list
+            io.log_to_debug_file(json_data=orchestrator_agent.get_task_list(state))
+            
             # Ask the user for confirmation to proceed
             if not io.confirm("Do you want to proceed?"):
                 state = orchestrator_agent.remove_task_list_data(state)
@@ -213,7 +218,6 @@ async def orchestrator_agent_node(state: OrchestrationState, agent: Orchestrator
             
             # Task was found means the tool was successful called while in active mode and we need to delegate it to other agents
             await event_emitter.emit("new_agent_instructions", agent_instructions=orchestrator_agent.get_agent_instructions(state))
-            io.log_to_debug_file(orchestrator_agent.get_task_list(state))
             target_agent = task["agent"]
             
             # Gets the state of the target agent
