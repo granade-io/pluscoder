@@ -118,6 +118,8 @@ Example 3: Project Analysis and overview
     An user requested you a task, and you delegated it to an agent to solve it.
     Your work is to tell if a task/instruction solven by the agent was fully executed and if the expected outcome was achieved.
     
+    Agents can read and write files by theirselves, so don't question the agent's actions, just evaluate their procedure and thinking.
+    
     *Instructions*:
     1. If the task/instruction was not fully executed, explain why it was not fully executed, what is missing. End the response with "Not fully executed."
     2. If the task/instruction was fully executed, explain how the agent achieved the expected outcome. End the response with "Fully executed."
@@ -238,10 +240,6 @@ Example 3: Project Analysis and overview
     
     def get_agent_instructions(self, state: AgentState) -> AgentInstructions:
         return AgentInstructions(**state["tool_data"][tools.delegate_tasks.name])
-
-    
-    def get_task_list_objective(self, state: AgentState) -> str:
-        return state["tool_data"][tools.delegate_tasks.name]["general_objective"]
     
     def validate_current_task_completed(self, state: AgentState) -> bool:
         """
@@ -286,24 +284,30 @@ Example 3: Project Analysis and overview
         return {**state, "tool_data": tool_data}
     
     def task_to_instruction(self, task: dict, state: AgentState) -> str:
+        general_objective = state["tool_data"][tools.delegate_tasks.name]["general_objective"]
+        
         completed_tasks = self.get_completed_tasks(state)
         completed_tasks_info = "\n".join([
             f"- Completed: {t['objective']}\n  {t['details']}" 
             for t in completed_tasks
         ])
         
-        instruction = f"""Given these completed tasks as context:
+        instruction = f"""Your are requested to solve an specific task related to the objective: {general_objective}.
+        
+        These task were already completed:
 
 *Context (completed tasks):*
 {completed_tasks_info}
 
 
-*Execute/Complete the ONLY following task*:
+*You must execute/complete only following task:*
 
 Objective: {task["objective"]}
 Details: {task["details"]}
 
-Load relevant files mentioned in completed or current tasks to help you achieve the objective.
+Load relevant files mentioned in your task or the completed ones to help you achieve the objective.
+
+Think step by step to solve your task.
 
 """
         return instruction

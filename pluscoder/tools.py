@@ -120,7 +120,7 @@ def delegate_tasks(
     The 'agent' value must be one of: "domain_stakeholder", "planning", "developer", or "domain_expert".
     The 'is_finished' value is a boolean indicating whether the task has been completed.
     """
-    return {general_objective: task_list}
+    return f"Task '{general_objective}' about to be delegated. \n\n{task_list}"
 
 @tool
 def is_task_completed(
