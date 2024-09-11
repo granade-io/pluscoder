@@ -18,9 +18,9 @@ from pluscoder.type import AgentState
 from langchain_community.callbacks.manager import get_openai_callback
 
 def parse_block(text):
-    pattern = r'`([^`\n]+):?`\n{1,2}^```(\w*)\n(>>> FIND.*?===.*?<<< REPLACE|.*?)\n^```$'
+    pattern = r'`([^`\n]+):?`\n{1,2}^<source>\n(>>> FIND.*?===.*?<<< REPLACE|.*?)\n^<\/source>$'
     matches = re.findall(pattern, text, re.DOTALL | re.MULTILINE)
-    return [{'file_path': m[0], 'language': m[1], 'content': m[2].strip()} for m in matches]
+    return [{'file_path': m[0], 'content': m[1].strip()} for m in matches]
 
 def parse_mentioned_files(text):
     # Extract filenames from the text within `` blocks
@@ -157,7 +157,6 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                         interaction_msgs.append(HumanMessage(content=f"An error ocurrred: {str(e)}"))
                 except Exception as e:
                     # Handles unknown exceptions, maybe caused by llm api or wrong state
-                    raise e
                     io.console.log(f"An error occurred: {str(e)}", style="bold red")
                     io.console.print("State that causes raise:", style="bold red")
                     io.console.print(state, style="bold red")
@@ -225,7 +224,7 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         
         
     def get_graph(self):
-        tool_node = ToolNode(self.tools)
+        tool_node = ToolNode(self.tools + self.extraction_tools)
         
         workflow = StateGraph(self.state_schema)
         
@@ -301,7 +300,6 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         for block in file_blocks:
             file_path = block["file_path"]
             content = block["content"]
-            block["language"]
             
             if file_path.startswith("/"):
                 file_path = file_path[1:]

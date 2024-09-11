@@ -17,34 +17,41 @@ FILE_OPERATIONS_PROMPT = """
 2. To create/update files, YOU *must* respond with the following format:
 
     `<relative_file_path>`
-    ```<file_language>
+    <source>
     >>> FIND
     <content_to_replace>
     ===
     <new_content>
     <<< REPLACE
-    ``
+    </source>
     
     I.e: Create a file:
     
     `src/code.py`
-    ```python
+    <source>
     print("Hello!")
-    ```
+    </source>
     
     I.e: Update a file:
     
     `src/code.py`
-    ```python
+    <source>
     >>> FIND
     print("Hello!")
     ===
     print("Hello, World!")
     <<< REPLACE
-    ```
+    </source>
+    
+    I.e: Markdown file:
+    
+    `file.md`
+    <source>
+    # Title
+    </source>
 
 3. Multiple replacements in a single file are allowed.
-4. Keep file edits to a minimum, use minimum <content_to_replace> as possible to replace/insert new content, but ALWAYS include few more lines of context to generate correct replaces.
+4. Keep file edits to a minimum, use minimum <content_to_replace> as possible to replace/insert new content, but ALWAYS include few more lines of context to generate correct replaces and avoid duplicates.
 5. When mentioning files, always use *full paths*, e.g., `docs/architecture.md`. *always* inside backticks
 """
 # Function to combine prompts

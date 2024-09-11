@@ -8,27 +8,25 @@ from pluscoder.repo import Repository
 def test_parse_block():
     test_input = """
 `file1.py`
-```python
+<source>
 def hello():
     print("Hello, World!")
-```
+</source>
 
 `file2.txt`
-```
+<source>
 This is some plain text content.
 Multiple lines are supported.
-```
+</source>
 """
     
     expected_output = [
         {
             'file_path': 'file1.py',
-            'language': 'python',
             'content': 'def hello():\n    print("Hello, World!")'
         },
         {
             'file_path': 'file2.txt',
-            'language': '',
             'content': 'This is some plain text content.\nMultiple lines are supported.'
         }
     ]
@@ -38,15 +36,15 @@ Multiple lines are supported.
 def test_parse_block_no_blocks():
     test_input = """
 `file1.py`
-    ```python
+    <source>
     def hello():
         print("Hello, World!")
-    ```
+    </source>
 
-```
+<source>
 This is some plain text content.
 Multiple lines are supported.
-```
+</source>
 """
     assert parse_block(test_input) == []
 

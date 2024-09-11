@@ -4,11 +4,13 @@ from typing import List
 from pluscoder.io_utils import io
 
 BLOCK_FORMAT = """
+<source>
 >>> FIND
 <old_content>
 ===
 <new_content>
 <<< REPLACE
+</source>
 """
 MSG_WRONG_FORMAT = f"""Invalid file update format when updating '%s' file. Please use the format: 
 {BLOCK_FORMAT}
