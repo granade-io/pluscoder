@@ -12,32 +12,71 @@ from pluscoder.workflow import run_workflow
 INIT_FILE = '.plus_coder.json'
 
 SETUP_PROMPT = """
-Your objective is to understand this repository, edit some files to improve readability and to generate/update some relevant core .md files.add()
+Your objective is to fully understand this repository, add md files to improve readability, detect coding standards, and generate/update relevant core .md files. You will delegate tasks to sub-agents who will complete specific aspects of this mission.
 
 For that:
-1. Read key files of this repository to understand what is this about. Read config files, Dockerfiles, dependencies, etc. ANY file to understand the project, its cicd, deployment, infrastucture, etc.
-2. Generate a Task List to:
-    1. Create/Update PROJECT_OVERVIEW.md:
-        - Summarize the project's purpose, goals, key features, related infrastructure & stack
-        - Include the path of core files the description in the instructions of this task
-    2. Add core file tree to PROJECT_OVERVIEW.md:
-        - Suggest the agent to read key files, and provide them suggested paths for the task.
-        - Ask him to append a file tree with descriptions of each file to the PROJECT_OVERVIEW.md file (or update current file tree if exists)
-    3. Create/Update CODING_GUIDELINES.md:
-        - Detect some patterns, standards and practices present in the codebase (like docstrings type, repo structure, coding style, utilities, logging, etc.)
-        - Include the path of key files that can help with that task
-    4. Create/Update .env files with pluscoder configurations only:
-        - Based on the project type (python, javascript, node, etc.), requirements and some config files, detect these 3 command: running tests, linting and linting fix
-        - Load .env file (or create it if doesn't exist) and append these values:
-            RUN_TESTS_AFTER_EDIT=false
-            RUN_LINT_AFTER_EDIT=false
-            TEST_COMMAND=<detected_test_command>
-            LINT_COMMAND=<detected_lint_command>
-            AUTO_RUN_LINTER_FIX=false
-            LINT_FIX_COMMAND=<detected_lint_fix_command>
-    
-Based on the previous requirement, you must read key files, and only then generate a task list, with these 4 tasks to delegate.
-* WRITE THE PLAN AND DELEGATE THESE TASK TO THE AGENTS INMEDIATELY WITHOUT CONFIRMATION.*
+1. **Read and analyze** key files of this repository to understand its purpose, structure, and functionality. This includes:
+   - **Configuration files**: such as `docker-compose.yml`, `Dockerfile`, `.gitlab-ci.yml`
+   - **Dependency files**: such as `requirements.txt`, `package.json`, etc
+   - **Source files**: located in `src/`, `app/`, etc.
+   - **Tests and utilities**: located in `tests/`, `src/utils/`, etc.
+
+2. **Adapt, Generate and Delegate Task List**: You will delegate the following tasks to sub-agents to assist with this analysis. Adapt each task with real file paths of this repository, specific objectives, and detailed instructions about your previous analysis you did the code base. 
+    - Only `PROJECT_OVERVIEW.md`, `CODING_GUIDELINES.md`, and env files are allowed to be updated/edited in this process.
+    - Update tasks in the list below to include context of this project and file paths
+    - DO NOT add any new task to the list
+
+### Task Delegation:
+
+General Objective: Understand this new project repository and its key points
+
+### [1] **Understand the Project and Generate Project Overview**:
+   - **Objective**: Provide a clear, high-level summary of the repository’s purpose, key features, and stack.
+   - **Details**: Read the following key files to gather the necessary information:
+      - `README.md` or any existing project documentation (for initial context).
+      - Configuration files such as `docker-compose.yml`, `Dockerfile`, `.gitlab-ci.yml` to understand the deployment, CI/CD structure.
+      - Review source files in `src/` or `app/` to identify the core functionality.
+      - Summarize the project’s purpose, goals, infrastructure, and key technologies in `PROJECT_OVERVIEW.md`. Ensure relationships with other core files are included (e.g., how the `Dockerfile` supports deployment or how `.gitlab-ci.yml` relates to CI/CD).
+   - **Agent**: Stakeholder Agent
+
+### [2] **Create Core File Descriptions**:
+   - **Objective**: Append descriptions for core project files in the `PROJECT_OVERVIEW.md` to assist future developers.
+   - **Details**: Analyze and document the key files in the project:
+      - Critical files include: <INCLUDE RECOMMENDED FILES HERE>
+      - Provide concise explanations of what each file does, and how they interact within the project. These explanations will help maintainers understand the flow and structure of the repository.
+      - Reference any files or summaries generated in Task 1 to ensure consistency between tasks.
+   - **Agent**: Stakeholder Agent
+
+### [3] **Define and Update Coding Guidelines**:
+   - **Objective**: Identify coding practices and standards used within the codebase and document them in `CODING_GUIDELINES.md`.
+   - **Details**: The agent must:
+      - Analyze files focusing on existing patterns, utilities, reusable functions, clases or variables that are already being reused in some files.
+      - Analyze also commenting styles, docstring formats, testing, error handling, logging, or any pattern **explicitly present** in the code base.
+      - Only write coding standards that are **explicitly present in the code**. For example, if docstrings follow a specific format like PEP257, this should be noted with a **brief** description and **code example**.
+      - Ensure the guidelines remain concise and directly applicable to this repository. Do not introduce general standards—focus only on **what is visible in the code**.
+      - Path examples to inspect: `src/utils/`, `tests/`, `src/main.py`, `src/config.py`
+      - Ensure that the `CODING_GUIDELINES.md` integrates seamlessly with `PROJECT_OVERVIEW.md` created in Task 1.
+   - **Agent**: Stakeholder Agent
+
+### [4] **Update `.env` Configuration for Developer Tools**:
+   - **Objective**: Create or update a `.env` file with configurations for running tests, linting, and automated lint fixes.
+   - **Details**: Based on the repository setup, the agent must:
+      - Identify the test command used by inspecting files such as `package.json` (Node.js), `setup.py` (Python), requirements or other relevante files
+      - Detect linting tools and relevant commands (`eslint`, `flake8`, `pylint`, etc).
+      - Inspect paths like `package.json`, `requirements.txt`, `tests/`, `.gitlab-ci.yml` to determine the correct commands for running tests, linting, and lint fixes.
+      - Check CODING_GUIDELINES.md file for any testing information
+      - Insert the following values into the `.env` file (create it if it doesn’t exist):
+        ```
+        RUN_TESTS_AFTER_EDIT=false
+        RUN_LINT_AFTER_EDIT=false
+        TEST_COMMAND=<detected_test_command>
+        LINT_COMMAND=<detected_lint_command>
+        AUTO_RUN_LINTER_FIX=false
+        LINT_FIX_COMMAND=<detected_lint_fix_command>
+        ```
+   - **Agent**: Stakeholder Agent
+
+*After analyzing files and adapt the plan delegate it inmediately the more complete possible without further confirmation.*
 """
 
 def initialize_repository():
@@ -45,7 +84,9 @@ def initialize_repository():
     
     # Setup config to automatize agents calls
     auto_confirm = config.auto_confirm
+    use_repomap = config.use_repomap
     config.auto_confirm = True
+    config.use_repomap = True
     
     initial_state = OrchestrationState(**{
         "return_to_user": False,
@@ -67,6 +108,7 @@ def initialize_repository():
     
     # Restore config values
     config.auto_confirm = auto_confirm
+    config.use_repomap = use_repomap
     
     Path(INIT_FILE).touch()
 
