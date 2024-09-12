@@ -87,6 +87,7 @@ PlusCoder can be configured using environment variables (you can use your `.env`
 - `STREAMING`: Enable/disable LLM streaming (default: True)
 - `USER_FEEDBACK`: Enable/disable user feedback (default: True)
 - `DISPLAY_INTERNAL_OUTPUTS`: Display internal agent outputs (default: False)
+- `AUTO_CONFIRM`: Enable/disable auto confirmation of pluscoder execution (default: False)
 
 ### File Paths
 - `OVERVIEW_FILENAME`: Filename for project overview (default: "PROJECT_OVERVIEW.md")

@@ -85,7 +85,7 @@ def test_get_completed_tasks_mixed(orchestrator_agent):
 
 def test_task_to_instruction_no_completed_tasks(orchestrator_agent):
     task = {"objective": "Current task", "details": "Task details"}
-    state = AgentState(tool_data={tools.delegate_tasks.name: {"task_list": []}})
+    state = AgentState(tool_data={tools.delegate_tasks.name: {"general_objective": "Objective", "task_list": []}})
     instruction = orchestrator_agent.task_to_instruction(task, state)
     assert "Current task" in instruction
     assert "Task details" in instruction
@@ -96,6 +96,7 @@ def test_task_to_instruction_with_completed_tasks(orchestrator_agent):
     task = {"objective": "Current task", "details": "Task details"}
     state = AgentState(tool_data={
         tools.delegate_tasks.name: {
+            "general_objective": "Objective",
             "task_list": [
                 {"is_finished": True, "objective": "Completed task 1", "details": "Details 1"},
                 {"is_finished": True, "objective": "Completed task 2", "details": "Details 2"},
