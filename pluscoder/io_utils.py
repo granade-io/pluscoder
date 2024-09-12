@@ -166,7 +166,10 @@ class IO:
     
     def log_to_debug_file(self, message: Optional[str] = None, json_data: Optional[dict] = None) -> None:
         if json_data is not None:
-            content = json.dumps(json_data, indent=2)
+            try:
+                content = json.dumps(json_data, indent=2)
+            except Exception:
+                content = message
         elif message is not None:
             content = message
         else:
