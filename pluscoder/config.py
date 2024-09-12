@@ -33,6 +33,8 @@ class Config:
         self.streaming = True
         self.user_feedback = True
         self.display_internal_outputs = False
+        self.auto_confirm = False
+        self.user_input = ""
 
         # File paths
         self.overview_filename = "PROJECT_OVERVIEW.md"
@@ -111,6 +113,8 @@ def parse_args():
     parser.add_argument("--streaming", type=str2bool, default=None, help="Enable/disable LLM streaming")
     parser.add_argument("--user-feedback", type=str2bool, default=None, help="Enable/disable user feedback")
     parser.add_argument("--display-internal-outputs", type=str2bool, default=None, help="Display internal agent outputs")
+    parser.add_argument("--auto-confirm", type=str2bool, default=None, help="Enable/disable auto confirmation of pluscoder execution")
+    parser.add_argument("--user-input", type=str, default="", help="Predefined user input")
 
     # File paths
     parser.add_argument("--overview-filename", type=str, default=None, help="Filename for project overview")

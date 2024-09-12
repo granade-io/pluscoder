@@ -19,6 +19,18 @@ def get_llm():
     if model_id is None:
         raise ValueError("No 'model' specified. Please set the 'model' environment variable, .env, or use --model argument.")
     
+    # Check AWS Bedrock
+    if config.provider == "aws_bedrock" and not config.aws_access_key_id:
+        io.console.print("AWS Bedrock provider defined but AWS access key ID is not configured or empty.", style="bold red")
+    
+    # Check Anthropic
+    if config.provider == "anthropic" and not config.anthropic_api_key:
+        io.console.print("Anthropic provider defined but Anthropic API key is not configured or empty.", style="bold red")
+    
+    # Check OpenAI
+    if config.provider == "openai" and not config.openai_api_key:
+        io.console.print("OpenAI provider defined but OpenAI API key is not configured or empty.", style="bold red")
+    
     # Uses aws bedrock if available
     if config.aws_access_key_id and (not config.provider or config.provider == "aws_bedrock"):
         io.event(f"> Using model '{model_id}' with AWS Bedrock")
@@ -29,7 +41,7 @@ def get_llm():
             credentials_profile_name=config.aws_profile
         )
         
-    # Uses aws bedrock if available
+    # Uses Anthropic if available
     if config.anthropic_api_key and (not config.provider or config.provider == "anthropic"):
         io.event(f"> Using model '{model_id}' with Anthropic")
         return ChatAnthropic(    

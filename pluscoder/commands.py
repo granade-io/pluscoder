@@ -143,6 +143,17 @@ def run_command(state: OrchestrationState, *args) -> OrchestrationState:
     
     return state
 
+@command_registry.register("init")
+def _init(state: OrchestrationState):
+    """Force repository initialization"""
+    if io.confirm("This will take about 1 minute to understand the repo using agents and to improve its content to improve pluscoder performance in the repository. Proceed?"):
+        from pluscoder.setup import force_init
+        force_init()
+        io.event("Repository initialization completed.")
+    else:
+        io.event("Repository initialization cancelled.")
+    return state
+
 def is_command(command: Union[str, dict]) -> bool:
     if isinstance(command, str):
         return command.strip().startswith('/')

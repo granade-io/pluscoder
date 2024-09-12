@@ -158,7 +158,7 @@ def test_setup_all_files_exist(mock_open, mock_isfile, mock_input, mock_repo):
 @patch('builtins.input', side_effect=['y', 'y'])
 @patch('pluscoder.repo.config')
 def test_setup_missing_files_user_agrees(mock_config, mock_input, mock_open, mock_isfile, mock_repo):
-    mock_isfile.side_effect = [False, False, False]  # For overview, guidelines, and .gitignore
+    mock_isfile.side_effect = [False, False, False, False, False]  # For overview, guidelines, and .gitignore
     mock_config.overview_file_path = 'mocked_overview.md'
     mock_config.guidelines_file_path = 'mocked_guidelines.md'
 

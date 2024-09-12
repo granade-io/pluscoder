@@ -52,6 +52,9 @@ class OrchestrationState(AgentState, total=False):
     return_to_user: bool
     chat_agent: str
     
+    # Tell is the workflow is being run from task list to avoid user interactions
+    is_task_list_workflow: bool = False
+    
     # Max times to additionally delegate same task to an agent to complete it properly
     max_agent_deflections: int = 2
     
@@ -63,6 +66,8 @@ class AgentTask(BaseModel):
     details: str
     agent: Literal["domain_stakeholder", "planning", "developer", "domain_expert"]
     is_finished: bool
+    restrictions: str = ""
+    outcome: str = ""
 
 class AgentInstructions(BaseModel):
     general_objective: str
@@ -76,3 +81,16 @@ class AgentInstructions(BaseModel):
     
     def get_current_task(self) -> AgentTask:
         return next((task for task in self.task_list if not task.is_finished), None)
+
+    def to_markdown(self) -> str:
+        markdown = f"# General Objective\n\n{self.general_objective}\n\n## Task List\n\n"
+        for i, task in enumerate(self.task_list, 1):
+            status = "✅" if task.is_finished else "⏳"
+            markdown += f"{i}. {status} **{task.objective}** (Agent: {task.agent})\n"
+            markdown += f"   - Details: {task.details}\n"
+            if task.restrictions:
+                markdown += f"   - Restrictions: {task.restrictions}\n"
+            if task.outcome:
+                markdown += f"   - Expected Outcome: {task.outcome}\n"
+            markdown += "\n"
+        return markdown

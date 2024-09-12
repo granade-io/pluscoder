@@ -80,6 +80,16 @@ class Repository:
             self.io.console.print(f"An error occurred: {e}", style="bold red")
             return []
     
+    
+    def create_default_files(self):
+        if not os.path.isfile(config.overview_file_path):
+            with open(config.overview_file_path, "w") as f:
+                f.write("")
+        
+        if not os.path.isfile(config.guidelines_file_path):
+            with open(config.guidelines_file_path, "w") as f:
+                f.write("")
+    
     def setup(self):
         """Validates if repository meets requirements to use pluscoder"""
         missing_files = []
@@ -100,11 +110,7 @@ class Repository:
         # Ask y/n to create the files if missing
         if missing_files:
             if input("To proceed, create the missing files? (y/n):").lower().strip() == 'y':
-                with open(config.overview_file_path, "w") as f:
-                    f.write("")
-                
-                with open(config.guidelines_file_path, "w") as f:
-                    f.write("# Coding Guidelines\n\n")
+                self.create_default_files()
             
                 # allow to continue using pluscoder
             

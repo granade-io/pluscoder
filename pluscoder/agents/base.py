@@ -18,9 +18,9 @@ from pluscoder.type import AgentState
 from langchain_community.callbacks.manager import get_openai_callback
 
 def parse_block(text):
-    pattern = r'`([^`\n]+):?`\n{1,2}^```(\w*)\n(.*?)^```'
+    pattern = r'`([^`\n]+):?`\n{1,2}^<source>\n(>>> FIND.*?===.*?<<< REPLACE|.*?)\n^<\/source>$'
     matches = re.findall(pattern, text, re.DOTALL | re.MULTILINE)
-    return [{'file_path': m[0], 'language': m[1], 'content': m[2].strip()} for m in matches]
+    return [{'file_path': m[0], 'content': m[1].strip()} for m in matches]
 
 def parse_mentioned_files(text):
     # Extract filenames from the text within `` blocks
@@ -157,10 +157,11 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                         interaction_msgs.append(HumanMessage(content=f"An error ocurrred: {str(e)}"))
                 except Exception as e:
                     # Handles unknown exceptions, maybe caused by llm api or wrong state
-                    raise e
                     io.console.log(f"An error occurred: {str(e)}", style="bold red")
-                    io.console.print("State that causes raise:", style="bold red")
-                    io.console.print(state, style="bold red")
+                    io.log_to_debug_file("########### CALL AGENT ERROR ###########")
+                    io.log_to_debug_file(f"Error: {str(e)}")
+                    io.log_to_debug_file("State:")
+                    io.log_to_debug_file(json_data=state)
                     if self.current_deflection <= self.max_deflections:
                         self.current_deflection += 1
 
@@ -203,9 +204,10 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                 
             # Extract files if read_files were used
             # This is a patch because tools can't read/edit agent state or call agent methods
-            if tool_call['name'] in ["read_files"]:
-                loaded_files = tool_call["args"].get("file_paths", [])
-                io.event(f"> The latest version of these files were added to the chat: {', '.join(loaded_files)}")
+            # DEPRECATED: files body are inyected by the tool because performance decreases significantly using this method
+            # if tool_call['name'] in ["read_files"]:
+            #     loaded_files = tool_call["args"].get("file_paths", [])
+            #     io.event(f"> The latest version of these files were added to the chat: {', '.join(loaded_files)}")
                 
         return {**state, "tool_data": tool_data, "context_files": state["context_files"] + loaded_files}
     
@@ -224,7 +226,7 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         
         
     def get_graph(self):
-        tool_node = ToolNode(self.tools)
+        tool_node = ToolNode(self.tools + self.extraction_tools)
         
         workflow = StateGraph(self.state_schema)
         
@@ -263,7 +265,8 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                                     # io.console.print(entry["text"], style="bright_green", end="")
                                     io.stream(entry["text"])
                 elif kind == "on_tool_start":
-                    io.console.print(f"> Tool calling: {event['data'].get('input')}", style="blue")
+                    # io.console.print(f"> Tool calling: {event['data'].get('input')}", style="blue")
+                    pass
                 elif kind == "on_tool_end":
                     pass
                     # io.console.print(Text(f"Tool output: {event['data'].get('output')}", style="italic"))
@@ -300,7 +303,6 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         for block in file_blocks:
             file_path = block["file_path"]
             content = block["content"]
-            block["language"]
             
             if file_path.startswith("/"):
                 file_path = file_path[1:]

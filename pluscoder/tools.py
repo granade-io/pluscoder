@@ -2,6 +2,7 @@ import os
 from typing import Annotated, Dict, List, Literal
 from langchain_core.tools import tool
 import re
+from pluscoder.fs import get_formatted_file_content
 from pluscoder.io_utils import io
 from pluscoder.type import AgentTask
 
@@ -45,9 +46,23 @@ def read_files(
     file_paths: Annotated[List[str], "The paths to the files you want to read."]
 ) -> str:
     """Read the contents of multiple files at once"""
-    message = f"The latest version of these files were added to the chat: {', '.join(file_paths)}"
-    # io.event(message)
-    return message
+    result = ""
+    errors = []
+    loaded_files = []
+    
+    for file_path in file_paths:
+        try:
+            result += get_formatted_file_content(file_path)
+            loaded_files.append(file_path)
+        except Exception as e:
+            errors.append(f"Error reading file {file_path}. Maybe the path is wrong or the file never existed: {str(e)}")
+    
+    if errors:
+        result += "\n\nErrors:\n" + "\n".join(errors)
+    
+    io.event(f"> Added files: {", ".join(loaded_files)}")
+    
+    return result.strip()
 
 @tool
 def move_file(
@@ -98,14 +113,16 @@ def extract_files(
 @tool
 def delegate_tasks(
     general_objective: Annotated[str, "The general objective for all tasks."],
-    task_list: Annotated[List[AgentTask], "List of tasks, each task being a dictionary with 'objective', 'details', 'agent', and 'is_finished' keys."]
+    task_list: Annotated[List[AgentTask], "List of tasks, each task being a dictionary with 'objective', 'details', 'agent', 'is_finished', 'restrictions', and 'outcome' keys."]
 ) -> Dict[str, List[AgentTask]]:
     """
-    Delegates tasks to other agents to execute/complete them. Each task in the task_list must be a dict with 4 values: (objective, details, agent, is_finished).
+    Delegates tasks to other agents to execute/complete them. Each task in the task_list must be a dict with 6 values: (objective, details, agent, is_finished, restrictions, outcome).
     The 'agent' value must be one of: "domain_stakeholder", "planning", "developer", or "domain_expert".
     The 'is_finished' value is a boolean indicating whether the task has been completed.
+    The 'restrictions' value is a string describing any limitations or constraints for the task.
+    The 'outcome' value is a string describing the expected result of the task.
     """
-    return {general_objective: task_list}
+    return f"Task '{general_objective}' about to be delegated. \n\n{task_list}"
 
 @tool
 def is_task_completed(

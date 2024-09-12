@@ -10,13 +10,12 @@ def temp_file(tmp_path):
 
 def test_read_file(temp_file):
     content = read_files.run({"file_paths": [str(temp_file)]})
-    assert "The latest version of these files were added to the chat:" in content
+    assert "Initial content" in content
     assert str(temp_file) in content
 
 def test_read_file_nonexistent():
     result = read_files.run({"file_paths": ["nonexistent_file.txt"]})
-    assert "The latest version of these files were added to the chat:" in result
-    assert "nonexistent_file.txt" in result
+    assert "Error reading file" in result
 
 def test_move_file(tmp_path):
     source = tmp_path / "source.txt"

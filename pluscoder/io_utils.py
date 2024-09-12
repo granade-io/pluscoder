@@ -1,6 +1,7 @@
 import os
 import logging
-from typing import Union
+from typing import Union, Optional
+import json
 from prompt_toolkit import PromptSession
 from rich.console import Console, Group, ConsoleRenderable, RichCast
 from rich.live import Live
@@ -13,6 +14,7 @@ from prompt_toolkit.history import FileHistory
 import sys
 
 from pluscoder.repo import Repository
+from pluscoder.config import config
 
 logging.getLogger().setLevel(logging.ERROR) # hide warning log
 
@@ -85,7 +87,7 @@ class CustomProgress(Progress):
             full_text = ''.join(self.chunks) + parts[0]
             
             # Print the full text
-            self.console.print(full_text, style="dark_blue")
+            self.console.print(full_text, style="blue")
             
             # Clear the chunks list and add only the remainder (if any)
             self.chunks.clear()
@@ -95,7 +97,7 @@ class CustomProgress(Progress):
             self.chunks.append(chunk)
         
     def get_stream_renderable(self) -> ConsoleRenderable | RichCast | str:
-        return Text(''.join(self.chunks), style="dark_blue")
+        return Text(''.join(self.chunks), style="blue")
         
     def get_renderable(self) -> ConsoleRenderable | RichCast | str:
         
@@ -115,6 +117,9 @@ class IO:
         return self.console.print(string, style="yellow")
     
     def confirm(self, message: str) -> bool:
+        if config.auto_confirm:
+            io.event("Auto-confirming...")
+            return True
         # return Confirm.ask(f"{message}", console=self.console)
         return input(f'{message} (y/n):').lower().strip() == 'y'
     
@@ -159,9 +164,19 @@ class IO:
         except KeyboardInterrupt:
             sys.exit(0)
     
-    def log_to_debug_file(self, message: str) -> None:
+    def log_to_debug_file(self, message: Optional[str] = None, json_data: Optional[dict] = None) -> None:
+        if json_data is not None:
+            try:
+                content = json.dumps(json_data, indent=2)
+            except Exception:
+                content = message
+        elif message is not None:
+            content = message
+        else:
+            raise ValueError("Either message or json_data must be provided")
+
         with open(self.DEBUG_FILE, "a") as f:
-            f.write(f"{message}\n")
+            f.write(f"{content}\n")
     
     def set_progress(self, progress: Progress | Live) -> None:
         self.progress = progress
@@ -185,7 +200,7 @@ class IO:
         
     def stream(self, chunk: str) -> None:
         if not self.progress:
-            self.console.print(chunk, style="dark_blue", end="")
+            self.console.print(chunk, style="blue", end="")
             return
         
         self.progress.stream(chunk)

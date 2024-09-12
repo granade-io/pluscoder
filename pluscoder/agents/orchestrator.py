@@ -38,8 +38,10 @@ To execute/delegate/complete tasks *use the delegation tool*.
 
 [] <task name>:
    Objective: <task objective>
-   Details: <task details> Details of the task to complete. Always include file paths to give more context, and functions/class/methos names. Always include references to files edited by previous tasks to explain how task are related
+   Details: <task details> Details of the task to complete. Always include file paths to give more context, and functions/class/method names. Always include references to files edited by previous tasks to explain how tasks are related.
    Agent: <agent name> Agent who is responsible for this task.
+   Restrictions: <task restrictions> Any limitations or constraints for the task.
+   Outcome: <expected outcome> The expected result of completing this task.
    
    
 *Examples of task list*:
@@ -116,16 +118,18 @@ Example 3: Project Analysis and overview
 
     validation_system_message = """
     An user requested you a task, and you delegated it to an agent to solve it.
-    Your work is to tell if a task/instruction solven by the agent was fully executed and if the expected outcome was achieved.
-    
+    Your work is to tell if a task/instruction solved by the agent was fully executed and if the expected outcome was achieved.
+
+    Agents can read and write files by themselves, so don't question the agent's actions, just evaluate their procedure and thinking.
+
     *Instructions*:
-    1. If the task/instruction was not fully executed, explain why it was not fully executed, what is missing. End the response with "Not fully executed."
-    2. If the task/instruction was fully executed, explain how the agent achieved the expected outcome. End the response with "Fully executed."
-    
+    1. If the task/instruction was not fully executed, explain why it was not fully executed, what is missing. Consider any restrictions that were placed on the task. End the response with "Not fully executed."
+    2. If the task/instruction was fully executed, explain how the agent achieved the expected outcome. Verify that the outcome matches what was specified for the task. End the response with "Fully executed."
+
     *Output Format*:
     Task: [Task Objective]
     Completed: [True/False]
-    Feedback: [Feedback or response about task completeness]
+    Feedback: [Feedback or response about task completeness, including adherence to restrictions and achievement of the expected outcome]
     """
     
     summarizing_system_message = """
@@ -238,10 +242,6 @@ Example 3: Project Analysis and overview
     
     def get_agent_instructions(self, state: AgentState) -> AgentInstructions:
         return AgentInstructions(**state["tool_data"][tools.delegate_tasks.name])
-
-    
-    def get_task_list_objective(self, state: AgentState) -> str:
-        return state["tool_data"][tools.delegate_tasks.name]["general_objective"]
     
     def validate_current_task_completed(self, state: AgentState) -> bool:
         """
@@ -286,24 +286,32 @@ Example 3: Project Analysis and overview
         return {**state, "tool_data": tool_data}
     
     def task_to_instruction(self, task: dict, state: AgentState) -> str:
+        general_objective = state["tool_data"][tools.delegate_tasks.name]["general_objective"]
+        
         completed_tasks = self.get_completed_tasks(state)
         completed_tasks_info = "\n".join([
             f"- Completed: {t['objective']}\n  {t['details']}" 
             for t in completed_tasks
         ])
         
-        instruction = f"""Given these completed tasks as context:
+        instruction = f"""You are requested to solve a specific task related to the objective: {general_objective}.
+        
+        These tasks were already completed:
 
 *Context (completed tasks):*
 {completed_tasks_info}
 
 
-*Execute/Complete the ONLY following task*:
+*You must execute/complete only the following task:*
 
 Objective: {task["objective"]}
 Details: {task["details"]}
+Restrictions: {task.get("restrictions", "No specific restrictions.")}
+Expected Outcome: {task.get("outcome", "No specific outcome defined.")}
 
-Load relevant files mentioned in completed or current tasks to help you achieve the objective.
+Load relevant files mentioned in your task or the completed ones to help you achieve the objective.
+
+Write you answer step by step, using a <thinking> block for analysis your throughts before giving a response to me and edit files inside a <output> block.
 
 """
         return instruction
