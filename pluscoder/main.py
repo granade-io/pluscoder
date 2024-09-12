@@ -50,7 +50,8 @@ def main():
         "accumulated_token_usage": TokenUsage.default(),
         "current_agent_deflections": 0,
         "max_agent_deflections": 3,
-        "chat_agent": choose_chat_agent_node()
+        "chat_agent": choose_chat_agent_node(),
+        "is_task_list_workflow": False
         }
     
     asyncio.run(run_workflow(state))
