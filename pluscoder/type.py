@@ -52,6 +52,9 @@ class OrchestrationState(AgentState, total=False):
     return_to_user: bool
     chat_agent: str
     
+    # Tell is the workflow is being run from task list to avoid user interactions
+    is_task_list_workflow: bool = False
+    
     # Max times to additionally delegate same task to an agent to complete it properly
     max_agent_deflections: int = 2
     

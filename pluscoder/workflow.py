@@ -41,6 +41,10 @@ def get_chat_agent_state(state: OrchestrationState) -> AgentState:
 
 def user_input(state: OrchestrationState):
     
+    if state["is_task_list_workflow"]:
+        # Handle task list workflow. Do not append any user message
+        return {"return_to_user": False}
+    
     if config.user_input:
         user_input = config.user_input
     else:
@@ -67,6 +71,10 @@ def user_router(state: OrchestrationState):
     if state["return_to_user"]:
         return "user_input"
     
+    if state["is_task_list_workflow"]:
+        # If running a task list workflow, go to the agent
+        return state["chat_agent"]
+    
     user_input = state[state["chat_agent"] + "_state"]["messages"][-1].content.strip().lower()
     
     # On empty user inputs return to the user
@@ -89,9 +97,9 @@ def router(state: OrchestrationState):
     
     task = orchestrator_agent.get_current_task(orch_state)
     
-    # When summarizing result into a response or when there are no more tasks, end the interaction if user_input is defined
+    # When summarizing result into a response or when there are no more tasks, end the interaction if user_input is defined or is a task list workflow
     if orch_state["status"] == "summarizing" or task is None:
-        return END if config.user_input else "user_input"
+        return END if config.user_input or state["is_task_list_workflow"] else "user_input"
     
     # When delegating always delegate to other agents
     if orch_state["status"] == "delegating":
@@ -161,8 +169,10 @@ async def orchestrator_agent_node(state: OrchestrationState, agent: Orchestrator
     state = state[agent.id + "_state"] 
     
     # Active behaviour when orchestrator receives a message
-    if state["status"] == "active":   
-        if not orchestrator_agent.is_agent_response(state):
+    if state["status"] == "active":
+        
+        # If user message and no active task (or are all completed)
+        if not orchestrator_agent.is_agent_response(state) and not global_state["is_task_list_workflow"]:
             
             # Display agent information
             io.console.print(Rule(agent.id))
@@ -173,11 +183,11 @@ async def orchestrator_agent_node(state: OrchestrationState, agent: Orchestrator
             # Messages already appended to the state by previous call
             return update_global_state(agent.id, state_output)
         
-        # Agent message received
+        # Active tasks to delegate to other agents
         # Assume all agent messages are from orchestrator itself
         
+        # Get current task. Task can also exist during active mode if were inyected to the state from another process
         task = orchestrator_agent.get_current_task(state)
-        
         if task:
             # Log task list
             io.log_to_debug_file(json_data=orchestrator_agent.get_task_list(state))

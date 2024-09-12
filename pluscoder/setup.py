@@ -1,7 +1,7 @@
 import asyncio
 from pathlib import Path
-from pluscoder.type import AgentState, OrchestrationState, TokenUsage
-from langchain_core.messages import HumanMessage
+from pluscoder import tools
+from pluscoder.type import AgentInstructions, AgentState, OrchestrationState, TokenUsage
 from pluscoder.config import config
 from pluscoder.io_utils import io
 from pluscoder.repo import Repository
@@ -11,76 +11,121 @@ from pluscoder.workflow import run_workflow
 
 INIT_FILE = '.plus_coder.json'
 
-SETUP_PROMPT = """
-Your objective is to fully understand this repository, add md files to improve readability, detect coding standards, and generate/update relevant core .md files. You will delegate tasks to sub-agents who will complete specific aspects of this mission.
+TASK_LIST_TEST = [
+    {
+        "objective": "Next sequence number 1",
+        "details": "Read test.txt file and append the next number of the sequence, starting from 1 if doesnt exist",
+        "restrictions": "None",
+        "outcome": "Append the next number to test.txt file and update the file",
+        "agent": "developer",
+        "completed": False,
+        "is_finished": False
+     },
+    {
+        "objective": "Next sequence number 1",
+        "details": "Read test.txt file and append the next number of the sequence, starting from 1 if doesnt exist",
+        "restrictions": "None",
+        "outcome": "Append the next number to test.txt file and update the file",
+        "agent": "developer",
+        "completed": False,
+        "is_finished": False
+     }
+]
 
-For that:
-1. **Read and analyze** key files of this repository to understand its purpose, structure, and functionality. This includes:
-   - **Configuration files**: such as `docker-compose.yml`, `Dockerfile`, `.gitlab-ci.yml`
-   - **Dependency files**: such as `requirements.txt`, `package.json`, etc
-   - **Source files**: located in `src/`, `app/`, etc.
-   - **Tests and utilities**: located in `tests/`, `src/utils/`, etc.
-
-2. **Adapt, Generate and Delegate Task List**: You will delegate the following tasks to sub-agents to assist with this analysis. Adapt each task with real file paths of this repository, specific objectives, and detailed instructions about your previous analysis you did the code base. 
-    - Only `PROJECT_OVERVIEW.md`, `CODING_GUIDELINES.md`, and env files are allowed to be updated/edited in this process.
-    - Update tasks in the list below to include context of this project and file paths
-    - DO NOT add any new task to the list
-
-### Task Delegation:
-
-General Objective: Understand this new project repository and its key points
-
-### [1] **Understand the Project and Generate Project Overview**:
-   - **Objective**: Provide a clear, high-level summary of the repository’s purpose, key features, and stack.
-   - **Details**: Read the following key files to gather the necessary information:
-      - `README.md` or any existing project documentation (for initial context).
-      - Configuration files such as `docker-compose.yml`, `Dockerfile`, `.gitlab-ci.yml` to understand the deployment, CI/CD structure.
-      - Review source files in `src/` or `app/` to identify the core functionality.
-      - Summarize the project’s purpose, goals, infrastructure, and key technologies in `PROJECT_OVERVIEW.md`. Ensure relationships with other core files are included (e.g., how the `Dockerfile` supports deployment or how `.gitlab-ci.yml` relates to CI/CD).
-   - **Agent**: Stakeholder Agent
-
-### [2] **Create Core File Descriptions**:
-   - **Objective**: Append descriptions for core project files in the `PROJECT_OVERVIEW.md` to assist future developers.
-   - **Details**: Analyze and document the key files in the project:
-      - Critical files include: <INCLUDE RECOMMENDED FILES HERE>
-      - Provide concise explanations of what each file does, and how they interact within the project. These explanations will help maintainers understand the flow and structure of the repository.
-      - Reference any files or summaries generated in Task 1 to ensure consistency between tasks.
-   - **Agent**: Stakeholder Agent
-
-### [3] **Define and Update Coding Guidelines**:
-   - **Objective**: Identify coding practices and standards used within the codebase and document them in `CODING_GUIDELINES.md`.
-   - **Details**: The agent must:
-      - Analyze files focusing on existing patterns, utilities, reusable functions, clases or variables that are already being reused in some files.
-      - Analyze also commenting styles, docstring formats, testing, error handling, logging, or any pattern **explicitly present** in the code base.
-      - Only write coding standards that are **explicitly present in the code**. For example, if docstrings follow a specific format like PEP257, this should be noted with a **brief** description and **code example**.
-      - Ensure the guidelines remain concise and directly applicable to this repository. Do not introduce general standards—focus only on **what is visible in the code**.
-      - Path examples to inspect: `src/utils/`, `tests/`, `src/main.py`, `src/config.py`
-      - Ensure that the `CODING_GUIDELINES.md` integrates seamlessly with `PROJECT_OVERVIEW.md` created in Task 1.
-   - **Agent**: Stakeholder Agent
-
-### [4] **Update `.env` Configuration for Developer Tools**:
-   - **Objective**: Create or update a `.env` file with configurations for running tests, linting, and automated lint fixes.
-   - **Details**: Based on the repository setup, the agent must:
-      - Identify the test command used by inspecting files such as `package.json` (Node.js), `setup.py` (Python), requirements or other relevante files
-      - Detect linting tools and relevant commands (`eslint`, `flake8`, `pylint`, etc).
-      - Inspect paths like `package.json`, `requirements.txt`, `tests/`, `.gitlab-ci.yml` to determine the correct commands for running tests, linting, and lint fixes.
-      - Check CODING_GUIDELINES.md file for any testing information
-      - Insert the following values into the `.env` file (create it if it doesn’t exist):
-        ```
-        RUN_TESTS_AFTER_EDIT=false
-        RUN_LINT_AFTER_EDIT=false
-        TEST_COMMAND=<detected_test_command>
-        LINT_COMMAND=<detected_lint_command>
-        AUTO_RUN_LINTER_FIX=false
-        LINT_FIX_COMMAND=<detected_lint_fix_command>
-        ```
-   - **Agent**: Stakeholder Agent
-
-*After analyzing files and adapt the plan delegate it inmediately the more complete possible without further confirmation.*
-"""
+TASK_LIST = [
+    {
+        "objective": "Provide a high-level summary of the repository’s purpose, key features, and technology stack to offer clear context for future developers.",
+        "details": """
+        - Review key files that define the project structure, configuration, and deployment. Example files may include:
+            - `README.md` or any existing documentation for an initial understanding of the project.
+            - Configuration files like `docker-compose.yml`, `Dockerfile`, `.gitlab-ci.yml` to analyze how the project is set up for deployment and CI/CD.
+            - Source files located in directories such as `src/` or `app/` to understand the core functionality and implementation.
+        - Document the project's purpose, architecture, infrastructure (e.g., CI/CD pipelines, containerization), and key components in `PROJECT_OVERVIEW.md`.
+        - Ensure the overview includes relationships between core components (e.g., how the Dockerfile facilitates deployment, or how CI/CD pipelines are managed).
+        """,
+        "restrictions": "Use example files for reference, but adapt based on the actual structure of the repository. Do not modify any `.md` files other than `PROJECT_OVERVIEW.md`.",
+        "outcome": "A high-level project summary documented in `PROJECT_OVERVIEW.md`, providing insights into the repository’s architecture, purpose, and structure.",
+        "agent": "domain_stakeholder",
+        "completed": False,
+        "is_finished": False
+    },
+    {
+        "objective": "Provide concise descriptions of the core project files to assist maintainers and future developers in understanding the purpose and structure of the repository.",
+        "details": """
+        - Analyze and document key files that form the backbone of the project. Examples for reference may include:
+            - `docker-compose.yml`, `Dockerfile`, `.gitlab-ci.yml` to explain project setup and deployment.
+            - Dependency files like `requirements.txt`, `package.json` to provide context on the project’s dependencies and libraries.
+            - Core source code files such as those found in `src/main.py`, `app/` directory, or equivalent locations.
+            - Test files in directories like `tests/` and utility files in directories such as `src/utils/`.
+        - For each key file, provide a brief explanation of its purpose, functionality, and how it fits within the overall structure of the project.
+        """,
+        "restrictions": "Use example files for reference only. Adapt to the repository’s actual structure. Do not introduce descriptions for unnecessary files.",
+        "outcome": "A section in `PROJECT_OVERVIEW.md` with descriptions of the key project files, giving future developers a clear understanding of the repository’s structure and file interactions.",
+        "agent": "domain_stakeholder",
+        "completed": False,
+        "is_finished": False
+    },
+    {
+        "objective": "Detect code that is reused or imported multiple times across different files to identify reusable patterns such as constants, functions, or classes. Document these patterns in `CODING_GUIDELINES.md` to provide visibility for future developers.",
+        "details": """
+        - Review files in the repository to locate:
+            - **Reusable constants**: Identify global constants or configuration variables that are reused across multiple files.
+            - **Functions and Classes**: Detect utility functions, helper methods, or classes that are imported or used in multiple parts of the codebase.
+        - Focus only on code that is explicitly reused or imported across different files. Include:
+            - File paths where the code is reused.
+            - A brief description of what the reused code does and why it’s beneficial to reuse in multiple locations.
+        - Document the identified reusable patterns in `CODING_GUIDELINES.md` and provide examples of how to use these patterns effectively in the repository.
+        """,
+        "restrictions": "Only document code that is reused across multiple files. Avoid generalizing patterns unless there is explicit reuse.",
+        "outcome": "A section in `CODING_GUIDELINES.md` that highlights reusable constants, functions, and classes, including their file paths, descriptions, and examples of usage, providing guidance for maintaining reusability in the repository.",
+        "agent": "domain_stakeholder",
+        "completed": False,
+        "is_finished": False
+    },
+    {
+        "objective": "Identify and document specific coding standards, conventions, and patterns within the repository that do not relate to code reuse but provide clear structure and practices for future developers.",
+        "details": """
+        - Focus on the following aspects:
+            - **Class and Function Naming Conventions**: Document naming conventions for classes and functions (e.g., PascalCase for classes, snake_case for functions).
+            - **Code Structure and File Organization**: Identify patterns on how the codebase is structured and organized (e.g., grouping of related functionalities, file naming conventions, or decoupling strategies between business logic and infrastructure).
+            - **Error Handling**: Analyze how errors are handled throughout the codebase (e.g., consistent use of `try/except`, custom error classes, or error logging conventions).
+            - **Logging Practices**: Identify if there are any standards for logging, such as using a centralized logging utility or class (e.g., formatting standards, log levels, or centralized log files).
+            - **Commenting and Documentation**: Identify patterns in docstrings or comments, including preferred formats (e.g., PEP257 for Python or JSDoc for JavaScript). Provide examples of how to correctly document code.
+            - **Configuration and Environment Handling**: Check how environment variables or configuration settings are managed (e.g., in `.env` or config files) and if there are established patterns for handling configurations consistently across the project.
+        - Provide **brief explanations** and **code examples** to clarify each of these patterns and standards for future developers.
+        - Ensure alignment with any findings documented in the `PROJECT_OVERVIEW.md` from Task 1 to provide consistency across the repository's documentation.
+        """,
+        "restrictions": "Focus on non-reuse patterns, avoiding overlap with Task 5, which handles code reuse. Only document explicit standards found in the repository.",
+        "outcome": "An updated `CODING_GUIDELINES.md` providing detailed documentation on naming conventions, error handling, logging, file organization, and documentation practices, with examples to guide future developers.",
+        "agent": "domain_stakeholder",
+        "completed": False,
+        "is_finished": False
+    },
+    {
+        "objective": "Create or update a `.env` file with configurations for running tests, linting, and lint fixes based on the repository setup.",
+        "details": """
+        - Inspect `package.json`, `requirements.txt`, `tests/`, and `.gitlab-ci.yml` to detect relevant test and linting commands.
+        - Identify the correct commands for testing (`<detected_test_command>`), linting (`<detected_lint_command>`), and lint fixes (`<detected_lint_fix_command>`).
+        - Populate the `.env` file or create it with the following values:
+            ```
+            RUN_TESTS_AFTER_EDIT=false
+            RUN_LINT_AFTER_EDIT=false
+            TEST_COMMAND=<detected_test_command>
+            LINT_COMMAND=<detected_lint_command>
+            AUTO_RUN_LINTER_FIX=false
+            LINT_FIX_COMMAND=<detected_lint_fix_command>
+            ```
+        """,
+        "restrictions": "Only add configurations for detected commands. Do not introduce new tools or commands not found in the repository.",
+        "outcome": "An updated `.env` file with accurate commands for running tests, linting, and automated lint fixes based on the repository’s configuration.",
+        "agent": "domain_stakeholder",
+        "completed": False,
+        "is_finished": False
+    }
+]
 
 def initialize_repository():
-    io.event("Starting repository initialization...")
+    io.event("> Starting repository initialization...")
     
     # Setup config to automatize agents calls
     auto_confirm = config.auto_confirm
@@ -88,20 +133,22 @@ def initialize_repository():
     config.auto_confirm = True
     config.use_repomap = True
     
+    orchestrator_state = AgentState.default()
+    orchestrator_state["tool_data"][tools.delegate_tasks.name] = AgentInstructions(
+        general_objective="Number test sequence",
+        task_list=TASK_LIST
+        ).dict()
+    
     initial_state = OrchestrationState(**{
         "return_to_user": False,
-        "orchestrator_state": AgentState(messages=[
-            HumanMessage(content="""Please perform the following initialization tasks for this repository:
-1. Read key files of the project and summarize them in the PROJECT_OVERVIEW.md file.
-2. Detect linting and test commands used in this repository and document them in the PROJECT_OVERVIEW.md file.
-3. Iterate over all Python files in the project and improve their docstrings where necessary.""")
-        ]),
+        "orchestrator_state": orchestrator_state,
         "domain_stakeholder_state": AgentState.default(),
         "planning_state": AgentState.default(),
         "developer_state": AgentState.default(),
         "domain_expert_state": AgentState.default(),
         "accumulated_token_usage": TokenUsage.default(),
         "chat_agent": "orchestrator",
+        "is_task_list_workflow": True,
     })
 
     asyncio.run(run_workflow(initial_state))
@@ -110,20 +157,32 @@ def initialize_repository():
     config.auto_confirm = auto_confirm
     config.use_repomap = use_repomap
     
+    # Check if both files were created
+    if not (Path(config.overview_file_path).exists() and Path(config.guidelines_file_path).exists()):
+        io.console.print("Error: Could not create `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md`. Please try again.", style="bold red")
+        return
+    
+    # Create the initialization file
     Path(INIT_FILE).touch()
+    
+    io.event("> Repository initialization completed.")
+    io.console.print("Files `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md` were generated and will be used as context for Pluscoder.\n")
 
 def setup() -> bool:
+    repo = Repository(io=io)
     
     if not Path(INIT_FILE).exists():
-        if io.confirm("Pluscoder hasn't been initialized for this repository. Do you want to initialize it now?"):
+        io.console.print("Pluscoder hasn't been initialized for this repository.")
+        io.console.print("It takes about 1-2 minutes to analyze the repository for better understanding.")
+        if io.confirm("Do you want to initialize it now? (recommended)"):
+            repo.create_default_files()
             initialize_repository()
         else:
-            io.event("Skipping initialization. You can run it later using the /init command.")
+            io.event("> Skipping initialization. You can run it later using the /init command.")
     
     # Check repository setup
-    repo = Repository(io=io)
     if not repo.setup():
-        io.console.print("Exiting pluscoder", style="bold dark_goldenrod")
+        io.event("> Exiting pluscoder")
         return False
     
     # Warns token cost
