@@ -1,6 +1,23 @@
+# Pluscoder
+
+PlusCoder is an AI-assisted software development tool designed to enhance and streamline the software development process. It leverages multiple specialized AI agents to assist with various aspects of development, from planning and implementation to validation and project management.
+
+## Key Features
+
+1. Automated repository analysis and documentation
+2. Automated context reading and file editing by agents
+3. Multi-agent task-based workflows executions for complex requirements
+4. User approvals for key points in the workflow or fully automated runs
+5. Auto-commit on editions
+6. Cost and token tracking for LLM interactions
+7. Flexible configuration system supporting command-line arguments, environment variables, and default values
+8.  Support for multiple LLM models (LLMLite, OpenAI, AWS Bedrock, Anthropic)
+9.  Enhanced user interaction with rich console output and auto-completion
+10. Real-time task execution progress display
+
 ## Requirements
 - Requires python 3.12
-- AWS Creds with Bedrock proper permissions
+- Credentials for AWS Bedrock, Anthropic, OpenAI or other providers throught LLMLite
 
 ## Usage:
 
@@ -10,63 +27,12 @@ Use pluscoder inside a git repository:
    # Install pluscoder
    pip install --no-cache git+https://gitlab.com/codematos/pluscoder.git
 
-   # Run
-   plus-coder --auto-commits f --model claude-3-5-sonnet-20240620 --provider anthropic
+   # Run, pluscoder will detect credentials automatically
+   plus-coder --auto-commits f --model claude-3-5-sonnet-20240620
    ```
 
-## Development
+> **Note:** First time you run pluscoder in a repo you'll be prompted to initialize the repository through an LLM code base analysis.
 
-1. Create a virtual environment and activate it:
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate
-   ```
-
-2. Install the required packages:
-   ```bash
-   pip install -r requirements.txt
-   # pip install -e path/to/pluscoder/root
-   # pip install -e .
-   ```
-
-3. Create a `.env` file from the example:
-   ```bash
-   cp .env.example .env
-   ```
-
-4. Edit the `.env` file and set the appropriate values for your environment.
-
-5. Set up pre-commit hooks:
-   ```bash
-   # Install pre-commit
-   pip install pre-commit
-
-   # Install the git hook scripts
-   pre-commit install
-   ```
-
-6. Run:
-
-   ```bash
-   # as python module
-   python -m pluscoder.main [options]
-   
-   # as bash command
-   plus-coder [options]
-   ```
-
-7. Test:
-
-   ```bash
-   pytest
-   ```
-
-## Setting up Pre-commit
-
-The `setup_precommit.sh` script will:
-1. Install pre-commit
-2. Set up the git hooks
-3. Add the necessary environment variables to the `.env` file
 
 ## Available Commands
 
@@ -125,3 +91,56 @@ PlusCoder can be configured using environment variables (you can use your `.env`
 
 You can set these options using environment variables, command-line arguments (e.g., `--streaming false`), or the `/config` command during runtime (e.g., `/config streaming false`).
 
+## Development
+
+1. Create a virtual environment and activate it:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate
+   ```
+
+2. Install the required packages:
+   ```bash
+   pip install -r requirements.txt
+   # pip install -e path/to/pluscoder/root
+   # pip install -e .
+   ```
+
+3. Create a `.env` file from the example:
+   ```bash
+   cp .env.example .env
+   ```
+
+4. Edit the `.env` file and set the appropriate values for your environment.
+
+5. Set up pre-commit hooks:
+   ```bash
+   # Install pre-commit
+   pip install pre-commit
+
+   # Install the git hook scripts
+   pre-commit install
+   ```
+
+6. Run:
+
+   ```bash
+   # as python module
+   python -m pluscoder.main [options]
+   
+   # as bash command
+   plus-coder [options]
+   ```
+
+7. Test:
+
+   ```bash
+   pytest
+   ```
+
+## Setting up Pre-commit
+
+The `setup_precommit.sh` script will:
+1. Install pre-commit
+2. Set up the git hooks
+3. Add the necessary environment variables to the `.env` file

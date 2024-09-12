@@ -130,8 +130,10 @@ def initialize_repository():
     # Setup config to automatize agents calls
     auto_confirm = config.auto_confirm
     use_repomap = config.use_repomap
+    auto_commits = config.auto_commits
     config.auto_confirm = True
     config.use_repomap = True
+    config.auto_commits = False
     
     orchestrator_state = AgentState.default()
     orchestrator_state["tool_data"][tools.delegate_tasks.name] = AgentInstructions(
@@ -156,6 +158,7 @@ def initialize_repository():
     # Restore config values
     config.auto_confirm = auto_confirm
     config.use_repomap = use_repomap
+    config.auto_commits = auto_commits
     
     # Check if both files were created
     if not (Path(config.overview_file_path).exists() and Path(config.guidelines_file_path).exists()):
@@ -190,7 +193,3 @@ def setup() -> bool:
         io.console.print(f"Token usage info not available for model `{config.model}`. Cost calculation can be unaccurate.", style="bold dark_goldenrod")
     
     return True
-
-def force_init():
-    io.event("Forcing repository initialization...")
-    initialize_repository()
