@@ -8,7 +8,6 @@ from pluscoder.type import AgentState, OrchestrationState
 from rich.rule import Rule                                                                                                      
 from rich.table import Table
 import subprocess
-from pluscoder.setup import initialize_repository
 
 class CommandRegistry:
     def __init__(self):
@@ -149,6 +148,7 @@ def _init(state: OrchestrationState):
     """Force repository initialization"""
     io.console.print("It takes about 1-2 minutes to analyze the repository for better understanding.")
     if io.confirm("Do you want to initialize it now? (recommended)"):
+        from pluscoder.setup import initialize_repository
         initialize_repository()
     else:
         io.console.print("Repository initialization cancelled.")
