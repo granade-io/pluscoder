@@ -38,8 +38,10 @@ To execute/delegate/complete tasks *use the delegation tool*.
 
 [] <task name>:
    Objective: <task objective>
-   Details: <task details> Details of the task to complete. Always include file paths to give more context, and functions/class/methos names. Always include references to files edited by previous tasks to explain how task are related
+   Details: <task details> Details of the task to complete. Always include file paths to give more context, and functions/class/method names. Always include references to files edited by previous tasks to explain how tasks are related.
    Agent: <agent name> Agent who is responsible for this task.
+   Restrictions: <task restrictions> Any limitations or constraints for the task.
+   Outcome: <expected outcome> The expected result of completing this task.
    
    
 *Examples of task list*:
@@ -116,18 +118,18 @@ Example 3: Project Analysis and overview
 
     validation_system_message = """
     An user requested you a task, and you delegated it to an agent to solve it.
-    Your work is to tell if a task/instruction solven by the agent was fully executed and if the expected outcome was achieved.
-    
-    Agents can read and write files by theirselves, so don't question the agent's actions, just evaluate their procedure and thinking.
-    
+    Your work is to tell if a task/instruction solved by the agent was fully executed and if the expected outcome was achieved.
+
+    Agents can read and write files by themselves, so don't question the agent's actions, just evaluate their procedure and thinking.
+
     *Instructions*:
-    1. If the task/instruction was not fully executed, explain why it was not fully executed, what is missing. End the response with "Not fully executed."
-    2. If the task/instruction was fully executed, explain how the agent achieved the expected outcome. End the response with "Fully executed."
-    
+    1. If the task/instruction was not fully executed, explain why it was not fully executed, what is missing. Consider any restrictions that were placed on the task. End the response with "Not fully executed."
+    2. If the task/instruction was fully executed, explain how the agent achieved the expected outcome. Verify that the outcome matches what was specified for the task. End the response with "Fully executed."
+
     *Output Format*:
     Task: [Task Objective]
     Completed: [True/False]
-    Feedback: [Feedback or response about task completeness]
+    Feedback: [Feedback or response about task completeness, including adherence to restrictions and achievement of the expected outcome]
     """
     
     summarizing_system_message = """
@@ -292,18 +294,20 @@ Example 3: Project Analysis and overview
             for t in completed_tasks
         ])
         
-        instruction = f"""Your are requested to solve an specific task related to the objective: {general_objective}.
+        instruction = f"""You are requested to solve a specific task related to the objective: {general_objective}.
         
-        These task were already completed:
+        These tasks were already completed:
 
 *Context (completed tasks):*
 {completed_tasks_info}
 
 
-*You must execute/complete only following task:*
+*You must execute/complete only the following task:*
 
 Objective: {task["objective"]}
 Details: {task["details"]}
+Restrictions: {task.get("restrictions", "No specific restrictions.")}
+Expected Outcome: {task.get("outcome", "No specific outcome defined.")}
 
 Load relevant files mentioned in your task or the completed ones to help you achieve the objective.
 

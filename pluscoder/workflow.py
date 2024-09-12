@@ -10,11 +10,13 @@ from pluscoder.state_utils import accumulate_token_usage
 from pluscoder.type import OrchestrationState, TokenUsage
 from pluscoder.agents.core import DeveloperAgent, DomainStakeholderAgent, PlanningAgent, DomainExpertAgent
 from rich.rule import Rule
+from rich.markdown import Markdown
 from langchain_core.globals import set_debug
 from pluscoder.message_utils import get_message_content_str
 from pluscoder.model import get_llm
 from pluscoder.agents.event.config import event_emitter
 from pluscoder.commands import handle_command, is_command
+from pluscoder.config import config
 
 set_debug(False)
 
@@ -38,9 +40,13 @@ def get_chat_agent_state(state: OrchestrationState) -> AgentState:
     return state[state.chat_agent + "_state"]
 
 def user_input(state: OrchestrationState):
-    io.console.print()
-    io.console.print("[bold green]Enter your message ('q' to exit, '/help' for commands): [/bold green]")
-    user_input = io.input('')
+    
+    if config.user_input:
+        user_input = config.user_input
+    else:
+        io.console.print()
+        io.console.print("[bold green]Enter your message ('q' to exit, '/help' for commands): [/bold green]")
+        user_input = io.input('')
     
     if is_command(user_input):
         # Commands handles the update to state
@@ -54,34 +60,6 @@ def user_input(state: OrchestrationState):
     return {"return_to_user": False,
             chat_agent_id: {**chat_agent_state, "messages": chat_agent_state["messages"] + [HumanMessage(content=user_input)]}
             }
-
-
-def choose_chat_agent_node(state: OrchestrationState):
-    """Allows the user to choose which agent to chat with."""
-    io.console.print("[bold green]Choose an agent to chat with:[/bold green]")
-    io.console.print("1. Orchestrator: Break down the problem into a list of tasks and delegates it to others agents.")
-    io.console.print("2. Domain Stakeholder: For discussing project details, maintaining the project overview, roadmap, and brainstorming.")
-    io.console.print("3. Planning: For creating detailed, actionable plans for software development tasks.")
-    io.console.print("4. Developer: For implementing code to solve complex software development requirements.")
-    io.console.print("5. Domain Expert: For validating tasks and ensuring alignment with project vision.")
-    io.console.print()
-    choice = io.input("Enter your choice (1-5): ")
-    
-    if choice not in ["1", "2", "3", "4", "5"]:
-        raise ValueError("Invalid choice. Please enter a number between 1 and 5.")
-    
-    # Map user input to agent IDs
-    agent_map = {
-        "1": "orchestrator",
-        "2": "domain_stakeholder",
-        "3": "planning",
-        "4": "developer",
-        "5": "domain_expert"
-    }
-    
-    chosen_agent = agent_map.get(choice, "orchestrator")
-    io.console.print(f"[bold green]Starting chat with {chosen_agent}.")
-    return {**state, "chat_agent": chosen_agent}
 
 def user_router(state: OrchestrationState):
     """Decides where to go after the user input in orchestrate mode."""
@@ -109,21 +87,17 @@ def router(state: OrchestrationState):
     
     orch_state = state[orchestrator_agent.id + "_state"]
     
-    # When summarizing resulto into a response, always comes back to the user/caller
-    if orch_state["status"] == "summarizing":
-        return "user_input"
-    
     task = orchestrator_agent.get_current_task(orch_state)
-    if task is None:
-        # If there's no task, the orchestrator is done, return to the user
-        return "user_input"
     
+    # When summarizing result into a response or when there are no more tasks, end the interaction if user_input is defined
+    if orch_state["status"] == "summarizing" or task is None:
+        return END if config.user_input else "user_input"
     
     # When delegating always delegate to other agents
     if orch_state["status"] == "delegating":
         return task["agent"]
     
-    # When active and a task is available, orchestator runs again add instruction to the executor agent's state
+    # When active and a task is available, orchestrator runs again to add instruction to the executor agent's state
     return orchestrator_agent.id
 
 def agent_router(state: OrchestrationState) -> str:
@@ -207,6 +181,11 @@ async def orchestrator_agent_node(state: OrchestrationState, agent: Orchestrator
         if task:
             # Log task list
             io.log_to_debug_file(json_data=orchestrator_agent.get_task_list(state))
+            
+            # Print task list as Markdown
+            agent_instructions = orchestrator_agent.get_agent_instructions(state)
+            markdown_content = agent_instructions.to_markdown()
+            io.console.print(Markdown(markdown_content))
             
             # Ask the user for confirmation to proceed
             if not io.confirm("Do you want to proceed?"):
@@ -358,7 +337,6 @@ domain_expert_agent_node = functools.partial(agent_node, agent=domain_expert_age
 workflow = StateGraph(OrchestrationState)
 
 # Add nodes
-workflow.add_node("choose_chat_agent_node", choose_chat_agent_node)
 workflow.add_node("user_input", user_input)
 workflow.add_node(orchestrator_agent.id, orchestrator_agent_node)
 # workflow.add_node("state_preparation", orchestrator_agent.state_preparation_node)
@@ -368,8 +346,7 @@ workflow.add_node("developer", developer_agent_node)
 workflow.add_node("domain_expert", domain_expert_agent_node)
 
 # Add edges
-workflow.add_edge(START, "choose_chat_agent_node")
-workflow.add_edge("choose_chat_agent_node", "user_input")
+workflow.add_edge(START, "user_input")
 workflow.add_conditional_edges("user_input", user_router)
 workflow.add_conditional_edges(orchestrator_agent.id, router)
 workflow.add_conditional_edges("domain_stakeholder", agent_router)
@@ -378,7 +355,7 @@ workflow.add_conditional_edges("developer", agent_router)
 workflow.add_conditional_edges("domain_expert", agent_router)
 
 # Set the entrypoint
-# workflow.set_entry_point("choose_chat_agent_node")
+# workflow.set_entry_point("user_input")
 
 # Compile the workflow
 app = workflow.compile()

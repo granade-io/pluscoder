@@ -158,8 +158,10 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                 except Exception as e:
                     # Handles unknown exceptions, maybe caused by llm api or wrong state
                     io.console.log(f"An error occurred: {str(e)}", style="bold red")
-                    io.console.print("State that causes raise:", style="bold red")
-                    io.console.print(state, style="bold red")
+                    io.log_to_debug_file("########### CALL AGENT ERROR ###########")
+                    io.log_to_debug_file(f"Error: {str(e)}")
+                    io.log_to_debug_file("State:")
+                    io.log_to_debug_file(json_data=state)
                     if self.current_deflection <= self.max_deflections:
                         self.current_deflection += 1
 
@@ -263,7 +265,8 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                                     # io.console.print(entry["text"], style="bright_green", end="")
                                     io.stream(entry["text"])
                 elif kind == "on_tool_start":
-                    io.console.print(f"> Tool calling: {event['data'].get('input')}", style="blue")
+                    # io.console.print(f"> Tool calling: {event['data'].get('input')}", style="blue")
+                    pass
                 elif kind == "on_tool_end":
                     pass
                     # io.console.print(Text(f"Tool output: {event['data'].get('output')}", style="italic"))
