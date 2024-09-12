@@ -1,3 +1,24 @@
+# [1.9.0](https://gitlab.com/codematos/pluscoder/compare/v1.8.0...v1.9.0) (2024-09-12)
+
+
+### Bug Fixes
+
+* delegating task crash fix when using multiple agents, improved context for delegated tasks ([249a109](https://gitlab.com/codematos/pluscoder/commit/249a10981f491a4a83ef3e3a902c9e2cfeee3b77))
+* orchestration workflow is not counting tokens twice in some use cases ([33b1178](https://gitlab.com/codematos/pluscoder/commit/33b1178a11f2859010375406db0c0ffe9a2e6d27))
+* parse block now do better parse when files have backticks ([345bd3c](https://gitlab.com/codematos/pluscoder/commit/345bd3c046963c3375822f49532ad007009a9f0f))
+* read files tool restores its original behaviour to load the entire file body ([e45ea6e](https://gitlab.com/codematos/pluscoder/commit/e45ea6e1dbd7f689f58ac3e0bb0179c943a8c1a7))
+* updated default color for brighter agent putputs ([94e7da1](https://gitlab.com/codematos/pluscoder/commit/94e7da1b8b9986536f1d2b9b26eca89d877b6d35))
+* updated edit file block format improving performance when generating code markdown ([bd73bf8](https://gitlab.com/codematos/pluscoder/commit/bd73bf8322dd591525c2ac8381b459c34e223be7))
+
+
+### Features
+
+* add setup task list to automatically generate PROJECT_OVERVIEW.md and CODING_GUIDELINES.md files. Now workflow can run once with pre-defined task list ([9977dff](https://gitlab.com/codematos/pluscoder/commit/9977dff83e74d3ef863e60cfbf064ce59f39c62a))
+* added auto_confirm for automatic approvals on the workflow ([e1bf8fe](https://gitlab.com/codematos/pluscoder/commit/e1bf8fe5c1d861707abfce510d62851cdc07121a))
+* added thinking process to agents prompt ([c739003](https://gitlab.com/codematos/pluscoder/commit/c73900323385bf1d34c25f4601fbf7a2515cfc9b))
+* added user_input config to automate the user input via cmd or env var. Added restrictions and outcome to task items ([0498a0b](https://gitlab.com/codematos/pluscoder/commit/0498a0b97d7112ffc357935fbaa44543bc1b628b))
+* error message is displayed when provider is forced and credentials are not defined ([b76d968](https://gitlab.com/codematos/pluscoder/commit/b76d968f072dcf43cdf90d8a1d030a0616ac516a))
+
 # [1.8.0](https://gitlab.com/codematos/pluscoder/compare/v1.7.0...v1.8.0) (2024-09-08)
 
 
