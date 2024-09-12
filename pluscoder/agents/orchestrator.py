@@ -311,7 +311,7 @@ Expected Outcome: {task.get("outcome", "No specific outcome defined.")}
 
 Load relevant files mentioned in your task or the completed ones to help you achieve the objective.
 
-Think step by step to solve your task.
+Write you answer step by step, using a <thinking> block for analysis your throughts before giving a response to me and edit files inside a <output> block.
 
 """
         return instruction
