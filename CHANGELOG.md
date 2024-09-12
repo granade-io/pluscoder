@@ -1,3 +1,11 @@
+## [1.9.1](https://gitlab.com/codematos/pluscoder/compare/v1.9.0...v1.9.1) (2024-09-12)
+
+
+### Bug Fixes
+
+* add missing init command to commands autocompletion and fixed circular import ([41c8f5d](https://gitlab.com/codematos/pluscoder/commit/41c8f5dbecceee7fa772e566b6a5d32534dca1df))
+* initialization now do not performs auto commits ([c24a170](https://gitlab.com/codematos/pluscoder/commit/c24a1706fbc791c657fa65013e96aa7dc2866333))
+
 # [1.9.0](https://gitlab.com/codematos/pluscoder/compare/v1.8.0...v1.9.0) (2024-09-12)
 
 
