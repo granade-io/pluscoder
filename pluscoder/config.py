@@ -35,6 +35,9 @@ class Config:
         self.display_internal_outputs = False
         self.auto_confirm = False
         self.user_input = ""
+        self.hide_thinking_blocks = False
+        self.hide_output_blocks = False
+        self.hide_source_blocks = False
 
         # File paths
         self.overview_filename = "PROJECT_OVERVIEW.md"
@@ -115,6 +118,9 @@ def parse_args():
     parser.add_argument("--display-internal-outputs", type=str2bool, default=None, help="Display internal agent outputs")
     parser.add_argument("--auto-confirm", type=str2bool, default=None, help="Enable/disable auto confirmation of pluscoder execution")
     parser.add_argument("--user-input", type=str, default="", help="Predefined user input")
+    parser.add_argument("--hide-thinking-blocks", type=str2bool, default=None, help="Hide thinking blocks in output")
+    parser.add_argument("--hide-output-blocks", type=str2bool, default=None, help="Hide output blocks in output")
+    parser.add_argument("--hide-source-blocks", type=str2bool, default=None, help="Hide source blocks in output")
 
     # File paths
     parser.add_argument("--overview-filename", type=str, default=None, help="Filename for project overview")

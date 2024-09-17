@@ -54,6 +54,9 @@ PlusCoder can be configured using environment variables (you can use your `.env`
 - `USER_FEEDBACK`: Enable/disable user feedback (default: True)
 - `DISPLAY_INTERNAL_OUTPUTS`: Display internal agent outputs (default: False)
 - `AUTO_CONFIRM`: Enable/disable auto confirmation of pluscoder execution (default: False)
+- `HIDE_THINKING_BLOCKS`: Hide <thinking> blocks in output (default: False)
+- `HIDE_OUTPUT_BLOCKS`: Hide <output> blocks in output (default: False)
+- `HIDE_SOURCE_BLOCKS`: Hide <source> blocks in output (default: False)
 
 ### File Paths
 - `OVERVIEW_FILENAME`: Filename for project overview (default: "PROJECT_OVERVIEW.md")

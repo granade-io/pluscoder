@@ -1,5 +1,6 @@
 import os
 import logging
+import re
 from typing import Union, Optional
 import json
 from prompt_toolkit import PromptSession
@@ -112,6 +113,16 @@ class IO:
         self.progress = None
         self.ctrl_c_count = 0
         self.last_input = ""
+        self.buffer = ""  # Buffer para acumular los pequeños chunks
+        self.in_block = False  # Indicador de si estamos dentro de un bloque
+        self.block_content = ""  # Contenido dentro de un bloque
+        self.block_type = ""
+    
+    def _check_block_start(self, text):
+        return re.match(r'^<(thinking|output|source)>', text.strip())  # Detectar inicio de bloque
+
+    def _check_block_end(self, text):
+        return re.match(f'^</{self.block_type}>', text.strip())  # Detectar fin de bloque
         
     def event(self, string: str):
         return self.console.print(string, style="yellow")
@@ -120,7 +131,6 @@ class IO:
         if config.auto_confirm:
             io.event("Auto-confirming...")
             return True
-        # return Confirm.ask(f"{message}", console=self.console)
         return input(f'{message} (y/n):').lower().strip() == 'y'
     
     def input(self, string: str, autocomplete=True) -> Union[str, dict]:
@@ -145,10 +155,7 @@ class IO:
                 buf.text = ""
                 buf.cursor_position = 0
             
-        # Autocompleter config
-        completer = None
-        if autocomplete:
-            completer = CombinedCompleter()
+        completer = CombinedCompleter() if autocomplete else None
 
         session = PromptSession(
             key_bindings=kb,
@@ -158,7 +165,7 @@ class IO:
         
         try:
             user_input = session.prompt(string)
-            self.ctrl_c_count = 0  # Reset the counter when input is successfully received
+            self.ctrl_c_count = 0
             self.last_input = user_input
             return user_input
         except KeyboardInterrupt:
@@ -181,30 +188,98 @@ class IO:
     def set_progress(self, progress: Progress | Live) -> None:
         self.progress = progress
     
-    
     def start_stream(self):
-        if not self.progress:
-            return
-        # if not self.progress.started:
-            # self.progress.start()
+        self.in_block = False
+        if self.progress and not self.progress.started:
+            self.progress.start()
         
     def stop_stream(self):
         if not self.progress:
+            self.console.print(self.buffer, style="blue")
             self.console.print("")
+            self.buffer = ""
             return
         if self.progress.started:
+            self.console.print(self.buffer, style="blue")
+            self.buffer = ""
+            
             self.console.print(self.progress.get_stream_renderable())
             self.progress.chunks = []
-            # self.progress.stop()
-        
-        
-    def stream(self, chunk: str) -> None:
+            self.progress.stop()
+
+    def _stream_to_user(self, chunk: str) -> None:
+
         if not self.progress:
+            
             self.console.print(chunk, style="blue", end="")
+        else:
+            self.progress.stream(chunk)
+
+    
+    def get_block_color(self) -> str:
+        return "light_salmon3" if self.block_type == "thinking" else "blue" if self.block_type == "output" else "white"
+    
+    def set_block_type(self, block_type: str) -> None:
+        self.block_type = block_type
+        if config.hide_thinking_blocks and self.block_type == "thinking":
+            return
+        elif config.hide_output_blocks and self.block_type == "output":
+            return
+        elif config.hide_source_blocks and self.block_type == "source":
             return
         
-        self.progress.stream(chunk)
+        io.console.print(f"::{block_type}::", style=self.get_block_color())
+        
+    def add_block_content(self, content: str) -> None:
+        self.block_content += content
+        if config.hide_thinking_blocks and self.block_type == "thinking":
+            return
+        elif config.hide_output_blocks and self.block_type == "output":
+            return
+        elif config.hide_source_blocks and self.block_type == "source":
+            return
+        
+        io.console.print(content, style=self.get_block_color(), end="")
+    
+    def stream(self, chunk: str):
+        
+        self.buffer += chunk  # Añadir el chunk recibido al buffer
+        
+        display_now = "<" not in self.buffer and not self.buffer.endswith("\n")
 
+        if display_now and not self.in_block:
+            self._stream_to_user(self.buffer)  # Imprimir el buffer si no hay bloques abiertos
+            self.buffer = ""  # Limpiar el buffer
+        elif "\n<" in self.buffer and not self.in_block:
+            self._stream_to_user(self.buffer.split("\n<", 1)[0])  # Imprimir el buffer sin bloques abiertos
+            self.buffer = "\n<" + self.buffer.split("\n<", 1)[1]
+        elif ("<" not in self.buffer and not self.buffer.endswith("\n") and \
+            not self.buffer.endswith("\n<") and "\n</" not in self.buffer) and self.in_block:
+            self.add_block_content(self.buffer)
+            self.buffer = ""
+        elif "\n</" in self.buffer and self.in_block:
+            self.add_block_content(self.buffer.split("\n</", 1)[0])
+            self.buffer = "\n</" + self.buffer.split("\n</", 1)[1]
+            
+        if re.search(r'<\w+>', self.buffer) and self._check_block_start(self.buffer) and not self.in_block:
+            # Detectar y abrir un bloque
+            self.set_block_type(self.buffer.split("<", 1)[1].split(">")[0])
+            self.in_block = True
+            self.block_content =  ""
+            self.add_block_content(self.buffer.split("<", 1)[1].split(">")[1])
+            self.buffer = ""
+        if re.search(r'<\/\w+>', self.buffer):
+            if self._check_block_end(self.buffer):
+                # Detectar y cerrar un bloque
+                self.in_block = False
+                #print(self.block_content)
+                self.block_content = ""
+                self._stream_to_user(self.buffer.split(">", 1)[1])  # Imprimir el resto del buffer
+                self.buffer = ""
+                self.buffer = ""
+            else: 
+                self.add_block_content(self.buffer.split(">", 1)[0] + ">")
+                self.buffer = self.buffer.split(">", 1)[1]
         
         
 io = IO()
