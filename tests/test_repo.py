@@ -141,6 +141,23 @@ def test_get_tracked_files_git_error(mock_repo):
 
     assert result == []
 
+@patch('pluscoder.repo.config')
+def test_get_tracked_files_with_exclude_patterns(mock_config, mock_repo):
+    mock_repo_instance = Mock()
+    mock_repo.return_value = mock_repo_instance
+    mock_repo_instance.git.ls_files.return_value = "file1.py\nfile2.txt\ntest.py"
+    mock_repo_instance.git.ls_files.side_effect = [
+        "file1.py\nfile2.txt\ntest.py",  # tracked files
+        ""  # untracked files (none in this case)
+    ]
+    
+    mock_config.repo_exclude_files = [r'.*\.txt$', r'test\..*']
+    
+    repo = Repository(io=io)
+    result = repo.get_tracked_files()
+    
+    assert result == ["file1.py"]
+
 @patch('builtins.input', side_effect=['y', 'y'])
 @patch('pluscoder.repo.os.path.isfile')
 @patch('pluscoder.repo.open', new_callable=MagicMock)
