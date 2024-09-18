@@ -88,6 +88,7 @@ PlusCoder can be configured using environment variables (you can use your `.env`
 - `REPOMAP_LEVEL`: Set the level of detail for repomap (default: 2)
 - `REPOMAP_INCLUDE_FILES`: Comma-separated list of files to include in repomap (default: None)
 - `REPOMAP_EXCLUDE_FILES`: Comma-separated list of files to exclude from repomap (default: None)
+- `REPO_EXCLUDE_FILES`: Comma-separated list of regex patterns to exclude files from repo operations (default: None)
 
 You can set these options using environment variables, command-line arguments (e.g., `--streaming false`), or the `/config` command during runtime (e.g., `/config streaming false`).
 

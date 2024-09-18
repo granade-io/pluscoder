@@ -1,7 +1,8 @@
 import os
 import pprint
+import re
 import subprocess
-from typing import Optional
+from typing import List, Optional
 from git import Actor, Repo
 from git import GitCommandError
 from pluscoder.config import config
@@ -57,12 +58,10 @@ class Repository:
         except GitCommandError as e:
             self.io.console.print(f"Error getting diff: {e}", style="bold red")
             return ""
-    def get_tracked_files(self):
+    def get_tracked_files(self) -> List[str]:
         try:
             # Open the repository
             repo = Repo(os.getcwd(), search_parent_directories=True)
-            
-            # Get the root directory of the repository
             
             # Get all tracked files
             tracked_files = set(repo.git.ls_files().splitlines())
@@ -72,9 +71,15 @@ class Repository:
 
             # Combine and sort the results
             all_files = sorted(tracked_files.union(untracked_files))
-
             
-            return all_files
+            # Filter out files based on repo_exclude_files patterns
+            exclude_patterns = [re.compile(pattern) for pattern in config.repo_exclude_files]
+            filtered_files = [
+                file for file in all_files
+                if not any(pattern.match(file) for pattern in exclude_patterns)
+            ]
+            
+            return filtered_files
         
         except Exception as e:
             self.io.console.print(f"An error occurred: {e}", style="bold red")

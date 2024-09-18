@@ -71,6 +71,7 @@ class Config:
         self.repomap_level = 2
         self.repomap_exclude_files = []
         self.repomap_include_files = []
+        self.repo_exclude_files = []
 
     def update_from_env(self):
         for key in vars(self):
@@ -150,6 +151,7 @@ def parse_args():
     parser.add_argument("--use-repomap", type=str2bool, default=None, help="Enable/disable repomap feature")
     parser.add_argument("--repomap-level", type=int, default=None, help="Set the level of detail for repomap")
     parser.add_argument("--repomap-exclude-files", type=str2list, default=None, help="Comma-separated list of files to exclude from repomap")
+    parser.add_argument("--repo-exclude-files", type=str2list, default=None, help="Comma-separated list of regex patterns to exclude files from repo operations")
 
     return parser.parse_args()
 
