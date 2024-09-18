@@ -1,3 +1,10 @@
+# [1.10.0](https://gitlab.com/codematos/pluscoder/compare/v1.9.1...v1.10.0) (2024-09-18)
+
+
+### Features
+
+* new REPO_EXCLUDE_FILES config to exclude files from repo thats passed to agents prompts ([362ce7b](https://gitlab.com/codematos/pluscoder/commit/362ce7b6ecace449007e0408baf669676935f098))
+
 ## [1.9.1](https://gitlab.com/codematos/pluscoder/compare/v1.9.0...v1.9.1) (2024-09-12)
 
 
