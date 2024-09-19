@@ -1,10 +1,33 @@
-import os
+import shutil
 from typing import Annotated, Dict, List, Literal
 from langchain_core.tools import tool
 import re
 from pluscoder.fs import get_formatted_file_content
 from pluscoder.io_utils import io
 from pluscoder.type import AgentTask
+
+@tool
+def move_files(
+    file_paths: Annotated[List[Dict[str, str]], "List of dictionaries, each containing 'from' and 'to' keys for the source and destination paths of each file to be moved."]
+) -> str:
+    """Move multiple files from their current locations to new locations."""
+    results = []
+    for file_path in file_paths:
+        from_path = file_path['from']
+        to_path = file_path['to']
+        try:
+            shutil.move(from_path, to_path)
+            results.append(f"Successfully moved {from_path} to {to_path}")
+        except Exception as e:
+            results.append(f"Failed to move {from_path} to {to_path}: {str(e)}")
+    
+    success_count = sum(1 for result in results if result.startswith("Successfully"))
+    failure_count = len(results) - success_count
+    
+    summary = f"Moved {success_count} file(s) successfully. {failure_count} file(s) failed to move."
+    details = "\n".join(results)
+    
+    return f"{summary}\n\nDetails:\n{details}"
 
 @tool
 def select_agent(
@@ -63,18 +86,6 @@ def read_files(
     io.event(f"> Added files: {", ".join(loaded_files)}")
     
     return result.strip()
-
-@tool
-def move_file(
-    source_path: Annotated[str, "The current path of the file."],
-    destination_path: Annotated[str, "The new path where you want to move the file."]
-) -> str:
-    """Move a file from one location to another."""
-    try:
-        os.rename(source_path, destination_path)
-        return f"File moved successfully from {source_path} to {destination_path}"
-    except Exception as e:
-        return f"Error moving file: {str(e)}"
 
 @tool
 def update_file(
