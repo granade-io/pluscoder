@@ -58,7 +58,8 @@ def get_llm():
             model=model_id.replace("openai/", ""),
             cache=SQLiteCache(database_path=".langchain.db"),
             base_url=config.openai_api_base,
-            api_key=config.openai_api_key
+            api_key=config.openai_api_key,
+            max_tokens=4096
         )
     
     # Return ChatLiteLLM
