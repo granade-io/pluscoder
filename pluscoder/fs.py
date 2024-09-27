@@ -30,6 +30,7 @@ def apply_block_update(file_path: str, block_content: str):
     # Check if the block content matches the specific format using regex
     block_pattern = re.compile(r'>>> FIND\n(.*?\n|\n{0})===\n(.*?)\n<<< REPLACE', re.DOTALL)
     matches = list(block_pattern.finditer(block_content))
+    original_content = ""
 
     if matches:
         # debug log
@@ -39,6 +40,7 @@ def apply_block_update(file_path: str, block_content: str):
         # Read the current file content
         if path.exists():
             current_content = path.read_text()
+            original_content = current_content
         else:
             current_content = ""
 
@@ -80,10 +82,11 @@ def apply_block_update(file_path: str, block_content: str):
     
     # Create the directory if it doesn't exist
     path.parent.mkdir(parents=True, exist_ok=True)
-    
-    # Write the updated content back to the file
-    path.write_text(new_content)
-    io.console.print(f"`{file_path}` file updated. ", style="yellow")
+
+    if new_content != original_content:
+        # Write the updated content back to the file
+        path.write_text(new_content)
+        io.console.print(f"`{file_path}` file updated. ", style="green")
     
     # False means no error
     return False

@@ -44,6 +44,7 @@ PlusCoder supports the following commands during interaction:
 - `/undo`: Revert last commit and remove last message from chat history.
 - `/agent`: Start a conversation with a new agent from scratch.
 - `/help`: Display help information for available commands.
+- `/init`: (Re)Initialize repository understanding the code base to generate project overview and code guidelines md files.
 
 ## Configuration
 

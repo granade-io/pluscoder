@@ -36,15 +36,15 @@ TASK_LIST = [
     {
         "objective": "Provide a high-level summary of the repository’s purpose, key features, and technology stack to offer clear context for future developers.",
         "details": """
-        - Review key files that define the project structure, configuration, and deployment. Example files may include:
+        - Review key files that define the project detailed description, structure, configuration, and deployment. Example files may include:
             - `README.md` or any existing documentation for an initial understanding of the project.
-            - Configuration files like `docker-compose.yml`, `Dockerfile`, `.gitlab-ci.yml` to analyze how the project is set up for deployment and CI/CD.
             - Source files located in directories such as `src/` or `app/` to understand the core functionality and implementation.
+            - Configuration files like `docker-compose.yml`, `Dockerfile`, `.gitlab-ci.yml` to analyze how the project is set up for deployment and CI/CD.
         - Document the project's purpose, architecture, infrastructure (e.g., CI/CD pipelines, containerization), and key components in `PROJECT_OVERVIEW.md`.
         - Ensure the overview includes relationships between core components (e.g., how the Dockerfile facilitates deployment, or how CI/CD pipelines are managed).
         """,
         "restrictions": "Use example files for reference, but adapt based on the actual structure of the repository. Do not modify any `.md` files other than `PROJECT_OVERVIEW.md`.",
-        "outcome": "A high-level project summary documented in `PROJECT_OVERVIEW.md`, providing insights into the repository’s architecture, purpose, and structure.",
+        "outcome": "A high-level project summary documented in `PROJECT_OVERVIEW.md`, providing details into the repository’s architecture, purpose, and structure aimed for other developers to understand the project.",
         "agent": "domain_stakeholder",
         "completed": False,
         "is_finished": False
@@ -52,15 +52,16 @@ TASK_LIST = [
     {
         "objective": "Provide concise descriptions of the core project files to assist maintainers and future developers in understanding the purpose and structure of the repository.",
         "details": """
+        - Read the current `PROJECT_OVERVIEW.md` file and identify any additional key files to read to provide context on the project’s structure.
         - Analyze and document key files that form the backbone of the project. Examples for reference may include:
-            - `docker-compose.yml`, `Dockerfile`, `.gitlab-ci.yml` to explain project setup and deployment.
+            - Most important files: Core source code files such as those found in `src/main.py`, `app/` directory, or equivalent locations.
+            - `docker-compose.yml`, `Dockerfile`, CI/CD files, scripts, etc to explain project setup, config, deployment and infrastructure.
             - Dependency files like `requirements.txt`, `package.json` to provide context on the project’s dependencies and libraries.
-            - Core source code files such as those found in `src/main.py`, `app/` directory, or equivalent locations.
             - Test files in directories like `tests/` and utility files in directories such as `src/utils/`.
         - For each key file, provide a brief explanation of its purpose, functionality, and how it fits within the overall structure of the project.
         """,
-        "restrictions": "Use example files for reference only. Adapt to the repository’s actual structure. Do not introduce descriptions for unnecessary files.",
-        "outcome": "A section in `PROJECT_OVERVIEW.md` with descriptions of the key project files, giving future developers a clear understanding of the repository’s structure and file interactions.",
+        "restrictions": "Focus on source code files. Use example files for reference only. Adapt to the repository’s actual structure. Do not introduce descriptions for unnecessary files.",
+        "outcome": "A new section in `PROJECT_OVERVIEW.md` with descriptions of the key project files, giving future developers a clear understanding of the repository’s structure and file interactions.",
         "agent": "domain_stakeholder",
         "completed": False,
         "is_finished": False
@@ -101,27 +102,27 @@ TASK_LIST = [
         "completed": False,
         "is_finished": False
     },
-    {
-        "objective": "Create or update a `.env` file with configurations for running tests, linting, and lint fixes based on the repository setup.",
-        "details": """
-        - Inspect `package.json`, `requirements.txt`, `tests/`, and `.gitlab-ci.yml` to detect relevant test and linting commands.
-        - Identify the correct commands for testing (`<detected_test_command>`), linting (`<detected_lint_command>`), and lint fixes (`<detected_lint_fix_command>`).
-        - Populate the `.env` file or create it with the following values:
-            ```
-            RUN_TESTS_AFTER_EDIT=false
-            RUN_LINT_AFTER_EDIT=false
-            TEST_COMMAND=<detected_test_command>
-            LINT_COMMAND=<detected_lint_command>
-            AUTO_RUN_LINTER_FIX=false
-            LINT_FIX_COMMAND=<detected_lint_fix_command>
-            ```
-        """,
-        "restrictions": "Only add configurations for detected commands. Do not introduce new tools or commands not found in the repository.",
-        "outcome": "An updated `.env` file with accurate commands for running tests, linting, and automated lint fixes based on the repository’s configuration.",
-        "agent": "domain_stakeholder",
-        "completed": False,
-        "is_finished": False
-    }
+    # {
+    #     "objective": "Create or update a `.env` file with configurations for running tests, linting, and lint fixes based on the repository setup.",
+    #     "details": """
+    #     - Inspect `package.json`, `requirements.txt`, `tests/`, and `.gitlab-ci.yml` to detect relevant test and linting commands.
+    #     - Identify the correct commands for testing (`<detected_test_command>`), linting (`<detected_lint_command>`), and lint fixes (`<detected_lint_fix_command>`).
+    #     - Populate the `.env` file or create it with the following values:
+    #         ```
+    #         RUN_TESTS_AFTER_EDIT=false
+    #         RUN_LINT_AFTER_EDIT=false
+    #         TEST_COMMAND=<detected_test_command>
+    #         LINT_COMMAND=<detected_lint_command>
+    #         AUTO_RUN_LINTER_FIX=false
+    #         LINT_FIX_COMMAND=<detected_lint_fix_command>
+    #         ```
+    #     """,
+    #     "restrictions": "Only add configurations for detected commands. Do not introduce new tools or commands not found in the repository.",
+    #     "outcome": "An updated `.env` file with accurate commands for running tests, linting, and automated lint fixes based on the repository’s configuration.",
+    #     "agent": "domain_stakeholder",
+    #     "completed": False,
+    #     "is_finished": False
+    # }
 ]
 
 def initialize_repository():
@@ -165,9 +166,6 @@ def initialize_repository():
         io.console.print("Error: Could not create `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md`. Please try again.", style="bold red")
         return
     
-    # Create the initialization file
-    Path(INIT_FILE).touch()
-    
     io.event("> Repository initialization completed.")
     io.console.print("Files `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md` were generated and will be used as context for Pluscoder.\n")
 
@@ -176,12 +174,16 @@ def setup() -> bool:
     
     if not Path(INIT_FILE).exists():
         io.console.print("Pluscoder hasn't been initialized for this repository.")
-        io.console.print("It takes about 1-2 minutes to analyze the repository for better understanding.")
+        io.console.print("Initialization will analyze the repository to create/update `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md` files.")
+        io.console.print("It takes about 1-2 minutes to complete.")
         if io.confirm("Do you want to initialize it now? (recommended)"):
             repo.create_default_files()
             initialize_repository()
         else:
             io.event("> Skipping initialization. You can run it later using the /init command.")
+            
+        # Create the initialization file even if the user doesn't want to initialize
+        Path(INIT_FILE).touch()
     
     # Check repository setup
     if not repo.setup():

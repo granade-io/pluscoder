@@ -118,7 +118,7 @@ class IO:
     
     def confirm(self, message: str) -> bool:
         if config.auto_confirm:
-            io.event("Auto-confirming...")
+            io.event("> Auto-confirming...")
             return True
         # return Confirm.ask(f"{message}", console=self.console)
         return input(f'{message} (y/n):').lower().strip() == 'y'

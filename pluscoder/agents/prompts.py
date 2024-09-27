@@ -25,21 +25,28 @@ FILE_OPERATIONS_PROMPT = """
     <<< REPLACE
     </source>
     
-    I.e: Create a file:
+    I.e: Create a new file. No need for FIND and REPLACE when creating new files.
     
     `src/code.py`
     <source>
     print("Hello!")
+    print("World!")
     </source>
     
-    I.e: Update a file:
+    I.e: Update a file. Including few aditional lines to avoid duplications.
     
     `src/code.py`
     <source>
     >>> FIND
-    print("Hello!")
+    def sum(x, y):
+        return x + y
+    print(sum(1, 2))
     ===
-    print("Hello, World!")
+    def sum(x, y):
+        return x + y
+    def sub(x, y):
+        return x - y
+    print(sum(1, 2))
     <<< REPLACE
     </source>
     
@@ -47,14 +54,27 @@ FILE_OPERATIONS_PROMPT = """
     
     `file.md`
     <source>
+    >>> FIND
     # Title
+    ## Section
+    Section description
+    ===
+    # Title
+    ## New section
+    New section description
+    ## Section
+    Section description
+    <<< REPLACE
     </source>
 
 3. Multiple replacements in a single file are allowed.
-4. Keep file edits to a minimum, use minimum <content_to_replace> as possible to replace/insert new content, but ALWAYS include few more lines of context to generate correct replaces and avoid duplicates.
-5. When mentioning files, always use *full paths*, e.g., `docs/architecture.md`. *always* inside backticks
+4. Keep FIND/REPLACE blocks small always ALWAYS including few more lines of context to generate correct replaces and avoid duplicates.
+5. NEVER use ** rest of code ** or similar placeholder when replacing file content
+6. When mentioning files, always use *full paths*, e.g., `docs/architecture.md`. *always* inside backticks
 
-Inside <thinking> block, decide about files to work on/with. Only update files inside <output> block.
+Inside <thinking> block:
+    - Decide about files to work on/with. Only update files inside <output> block.
+    - Analyze if new files need to be added to get full context to solve each request
 """
 # Function to combine prompts
 def combine_prompts(*prompt_parts):

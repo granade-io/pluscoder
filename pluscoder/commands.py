@@ -146,7 +146,8 @@ def run_command(state: OrchestrationState, *args) -> OrchestrationState:
 @command_registry.register("init")
 def _init(state: OrchestrationState):
     """Force repository initialization"""
-    io.console.print("It takes about 1-2 minutes to analyze the repository for better understanding.")
+    io.console.print("Initialization will analyze the repository to create/update `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md` files.")
+    io.console.print("It takes about 1-2 minutes to complete.")
     if io.confirm("Do you want to initialize it now? (recommended)"):
         from pluscoder.setup import initialize_repository
         initialize_repository()
