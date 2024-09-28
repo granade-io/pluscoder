@@ -49,7 +49,7 @@ def user_input(state: OrchestrationState):
         user_input = config.user_input
     else:
         io.console.print()
-        io.console.print("[bold green]Enter your message ('q' to exit, '/help' for commands): [/bold green]")
+        io.console.print("[bold green]Enter your message ('q' or 'ctrl+c' to exit, '/help' for commands): [/bold green]")
         user_input = io.input('')
     
     if is_command(user_input):

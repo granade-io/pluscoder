@@ -33,6 +33,32 @@ Use pluscoder inside a git repository:
 
 > **Note:** First time you run pluscoder in a repo you'll be prompted to initialize the repository through an LLM code base analysis.
 
+## CLI Interaction
+
+Pluscoder provides an enhanced command-line interface for efficient interaction:
+
+1. **Input History**: Use the up arrow key to recall and reuse previous inputs.
+2. **Multiline Input**: Press Ctrl+Return to start a new line within the input field, allowing for complex multiline commands or descriptions.
+3. **Input Clearing**: Use Ctrl+C to quickly clear the current text in the input field.
+4. **File Autocomplete**: Type any file name (at any directory level) to see suggestions and autocomplete file paths.
+5. **Paste Support**: Easily paste multiline text directly into the input field.
+6. **Quick Confirmation**: Use 'y' or 'Y' to quickly confirm prompts or actions.
+
+These features are designed to streamline your interaction with Pluscoder, making it easier to navigate, input commands, and manage your development workflow.
+
+## Orchestrated Task based executions
+
+1. Start Pluscoder in your terminal and choose the `Orchestrator` agent (option 1).
+2. Ask for a plan with your requirements, review it and give feedback until satisfied.
+3. Tell the orchestrator to `delegate` the plan and approve by typing `y` when prompted.
+4. The Orchestrator will delegate and execute tasks using specialized agents.
+5. Monitor real-time progress updates and type `y` to continue to the next task after each completion.
+6. Review the summary of completed work and changes to project files.
+7. Provide new requirements or iterate for complex projects as needed.
+
+Note: Pluscoder can modify project files; always review changes to ensure alignment with your goals.
+
+Note: Using the '--auto-confirm' flag when starting Pluscoder will automatically confirm any plan and task execution without prompting.
 
 ## Available Commands
 
