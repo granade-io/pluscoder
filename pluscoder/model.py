@@ -2,14 +2,12 @@ from langchain_community.chat_models import ChatLiteLLM
 from langchain_openai import ChatOpenAI
 from langchain_aws import ChatBedrock
 from langchain_anthropic import ChatAnthropic
-from langchain_community.cache import SQLiteCache
-from langchain.globals import set_llm_cache
 from pluscoder.io_utils import io
 from pluscoder.config import config
 
 # Set up caching to reduce cost/time when calling LLM
 # TODO: Fix. Seems not to work along streaming feature
-set_llm_cache(SQLiteCache(database_path=".langchain.db"))
+# set_llm_cache(SQLiteCache(database_path=".langchain.db"))
 
 # TODO: Fix. Llm Invokes works properly but tools are ignored
 def get_llm():
@@ -56,9 +54,10 @@ def get_llm():
         io.event(f"> Using model '{model_id}' with OpenAI")
         return ChatOpenAI(
             model=model_id.replace("openai/", ""),
-            cache=SQLiteCache(database_path=".langchain.db"),
+            # cache=SQLiteCache(database_path=".langchain.db"),
             base_url=config.openai_api_base,
-            api_key=config.openai_api_key
+            api_key=config.openai_api_key,
+            max_tokens=4096
         )
     
     # Return ChatLiteLLM

@@ -7,6 +7,8 @@ from pluscoder.io_utils import io
 from pluscoder.type import AgentState, OrchestrationState
 from rich.rule import Rule                                                                                                      
 from rich.table import Table
+from rich.tree import Tree
+from rich.panel import Panel
 import subprocess
 
 class CommandRegistry:
@@ -146,13 +148,55 @@ def run_command(state: OrchestrationState, *args) -> OrchestrationState:
 @command_registry.register("init")
 def _init(state: OrchestrationState):
     """Force repository initialization"""
-    io.console.print("It takes about 1-2 minutes to analyze the repository for better understanding.")
+    io.console.print("Initialization will analyze the repository to create/update `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md` files.")
+    io.console.print("It takes about 1-2 minutes to complete.")
     if io.confirm("Do you want to initialize it now? (recommended)"):
         from pluscoder.setup import initialize_repository
         initialize_repository()
     else:
         io.console.print("Repository initialization cancelled.")
     return state
+
+@command_registry.register("show_repo")
+def show_repo(state: OrchestrationState = None):
+    """Display information about the repository"""
+    repo = Repository(io=io)
+    tracked_files = repo.get_tracked_files()
+
+    tree = Tree("Repository Structure")
+    for file in tracked_files:
+        tree.add(file)
+
+    io.console.print(Panel(tree, title="Repository Files", expand=False))
+    return state
+
+@command_registry.register("show_repomap")
+def show_repomap(state: OrchestrationState = None):
+    """Display the repository map"""
+    repo = Repository(io=io)
+    repomap = repo.generate_repomap()
+
+    if repomap:
+        io.console.print(Panel(repomap, title="Repository Map", expand=False))
+    else:
+        io.console.print("Repomap is not enabled or could not be generated.")
+    return state
+
+@command_registry.register("show_config")
+def show_config(state: OrchestrationState = None):
+    """Display the current configuration"""
+    table = Table(title="Current Configuration")
+    table.add_column("Setting", style="cyan")
+    table.add_column("Value", style="magenta")
+
+    for key, value in vars(config).items():
+        if key.startswith("_"):  # Skip private attributes
+            continue
+        table.add_row(key, str(value))
+
+    io.console.print(table)
+    return state
+
 
 def is_command(command: Union[str, dict]) -> bool:
     if isinstance(command, str):

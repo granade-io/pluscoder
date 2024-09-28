@@ -21,7 +21,7 @@ logging.getLogger().setLevel(logging.ERROR) # hide warning log
 class CommandCompleter(Completer):
     def __init__(self):
         super().__init__()
-        self.commands = ['/agent', '/clear', '/diff', '/config', '/help', '/undo', '/run', '/init']
+        self.commands = ['/agent', '/clear', '/diff', '/config', '/help', '/undo', '/run', '/init', '/show_repo', '/show_repomap', '/show_config']
 
     def get_completions(self, document, complete_event):
         text = document.text_before_cursor
@@ -118,7 +118,7 @@ class IO:
     
     def confirm(self, message: str) -> bool:
         if config.auto_confirm:
-            io.event("Auto-confirming...")
+            io.event("> Auto-confirming...")
             return True
         # return Confirm.ask(f"{message}", console=self.console)
         return input(f'{message} (y/n):').lower().strip() == 'y'

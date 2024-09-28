@@ -4,6 +4,8 @@ from pluscoder.setup import setup
 from pluscoder.type import AgentState, TokenUsage
 from pluscoder.workflow import run_workflow
 from pluscoder.io_utils import io
+from pluscoder.config import config
+from pluscoder.commands import show_repo, show_repomap, show_config
 
 # Run the workflow
 
@@ -36,6 +38,19 @@ def choose_chat_agent_node():
 
 def main():
     if not setup():
+        return
+    
+    # Check for new command-line arguments
+    if config.show_repo:
+        show_repo()
+        return
+    
+    if config.show_repomap:
+        show_repomap()
+        return
+    
+    if config.show_config:
+        show_config()
         return
     
     state = {
