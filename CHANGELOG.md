@@ -1,3 +1,16 @@
+# [1.11.0](https://gitlab.com/codematos/pluscoder/compare/v1.10.0...v1.11.0) (2024-09-28)
+
+
+### Bug Fixes
+
+* add missing max tokens config to open ai provider, default to 4096 ([0da3393](https://gitlab.com/codematos/pluscoder/commit/0da3393322ec58d9a44c7fb137081059fb8522dd))
+
+
+### Features
+
+* new move files tool to allow agents move files throught the repository ([2e4c2ca](https://gitlab.com/codematos/pluscoder/commit/2e4c2ca0973676c5c9e2b17bf198cd3fe1e168ee))
+* new show repo, repomap and config commands and command line arguments to display relevant pluscoder info that is being used by the agents ([bd10176](https://gitlab.com/codematos/pluscoder/commit/bd10176ae2357e1ded257d573b7b0827eaec2df6))
+
 # [1.10.0](https://gitlab.com/codematos/pluscoder/compare/v1.9.1...v1.10.0) (2024-09-18)
 
 
