@@ -45,6 +45,19 @@ PlusCoder supports the following commands during interaction:
 - `/agent`: Start a conversation with a new agent from scratch.
 - `/help`: Display help information for available commands.
 - `/init`: (Re)Initialize repository understanding the code base to generate project overview and code guidelines md files.
+- `/show_repo`: Display information about the current repository.
+- `/show_repomap`: Show the repository map with file structure and summaries.
+- `/show_config`: Display the current configuration settings.
+
+## Command-line Arguments
+
+In addition to the runtime commands, PlusCoder supports the following command-line arguments:
+
+- `--show-repo`: Display information about the current repository and exit.
+- `--show-repomap`: Show the repository map with file structure and summaries and exit.
+- `--show-config`: Display the current configuration settings and exit.
+
+These arguments can be used when launching PlusCoder to quickly access specific information without entering the interactive mode.
 
 ## Configuration
 
