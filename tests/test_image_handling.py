@@ -24,7 +24,7 @@ class TestImageHandling(unittest.TestCase):
         pass
 
     def test_convert_image_paths_to_base64(self):
-        input_text = f"This is an image: {self.test_image_path}"
+        input_text = f"This is an image: img::{self.test_image_path}"
         result = self.io.convert_image_paths_to_base64(input_text)
         
         self.assertEqual(len(result), 2)
@@ -41,12 +41,10 @@ class TestImageHandling(unittest.TestCase):
     def test_nonexistent_image_path(self):
         input_text = "This is a nonexistent image: /path/to/nonexistent/image.png"
         result = self.io.convert_image_paths_to_base64(input_text)
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0]["type"], "text")
-        self.assertEqual(result[0]["text"], input_text)
+        self.assertEqual(result, input_text)
 
     def test_multiple_image_paths(self):
-        input_text = f"Image1: {self.test_image_path}, Image2: {self.test_image_path}"
+        input_text = f"Image1: img::{self.test_image_path}, Image2: img::{self.test_image_path}"
         result = self.io.convert_image_paths_to_base64(input_text)
         
         self.assertEqual(len(result), 4)
@@ -56,7 +54,7 @@ class TestImageHandling(unittest.TestCase):
         self.assertEqual(result[3]["type"], "image_url")
 
     def test_mixed_input(self):
-        input_text = f"This is text. Here's an image: {self.test_image_path}. More text."
+        input_text = f"This is text. Here's an image: img::{self.test_image_path}. More text."
         result = self.io.convert_image_paths_to_base64(input_text)
         
         self.assertEqual(len(result), 3)
@@ -67,7 +65,7 @@ class TestImageHandling(unittest.TestCase):
         self.assertIn("More text.", result[2]["text"])
 
     def test_input_with_multiple_images_and_text(self):
-        input_text = f"Text1 {self.test_image_path} Text2 {self.test_image_path} Text3"
+        input_text = f"Text1 img::{self.test_image_path} Text2 img::{self.test_image_path} Text3"
         result = self.io.convert_image_paths_to_base64(input_text)
 
         self.assertEqual(len(result), 5)
@@ -78,7 +76,7 @@ class TestImageHandling(unittest.TestCase):
         self.assertEqual(result[4]["type"], "text")
 
     def test_input_starting_and_ending_with_images(self):
-        input_text = f"{self.test_image_path} Text {self.test_image_path}"
+        input_text = f"img::{self.test_image_path} Text img::{self.test_image_path}"
         result = self.io.convert_image_paths_to_base64(input_text)
 
         self.assertEqual(len(result), 3)
@@ -90,12 +88,10 @@ class TestImageHandling(unittest.TestCase):
         input_text = "This is text. Here's a nonexistent image: /path/to/nonexistent/image.png"
         result = self.io.convert_image_paths_to_base64(input_text)
         
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0]["type"], "text")
-        self.assertEqual(result[0]["text"], input_text)
+        self.assertEqual(result, input_text)
 
     def test_nonexistent_image_path_between_existing_images(self):
-        input_text = f"{self.test_image_path} /path/to/nonexistent/image.png {self.test_image_path}"
+        input_text = f"img::{self.test_image_path} /path/to/nonexistent/image.png img::{self.test_image_path}"
         result = self.io.convert_image_paths_to_base64(input_text)
 
         self.assertEqual(len(result), 3)
@@ -105,7 +101,7 @@ class TestImageHandling(unittest.TestCase):
         self.assertEqual(result[2]["type"], "image_url")
 
     def test_mixed_existing_and_nonexistent_image_paths(self):
-        input_text = f"Start {self.test_image_path} Middle /nonexistent1.png /nonexistent2.png {self.test_image_path} End"
+        input_text = f"Start img::{self.test_image_path} Middle /nonexistent1.png /nonexistent2.png img::{self.test_image_path} End"
         result = self.io.convert_image_paths_to_base64(input_text)
 
         self.assertEqual(len(result), 5)

@@ -146,8 +146,8 @@ class IO:
                     self.console.print(f"Error converting image to base64: {e}", style="bold red")
             return None
 
-        # Updated regex pattern to match both Unix and Windows-style paths
-        pattern = r'(?:[a-zA-Z]:)?(?:[\/][a-zA-Z0-9_.-]+)+\.(?:png|jpg|jpeg|gif)'
+        # Updated regex pattern to match the new 'img::' prefix and both Unix and Windows-style paths
+        pattern = r'img::(?:[a-zA-Z]:)?(?:[\/][a-zA-Z0-9_.-]+)+\.(?:png|jpg|jpeg|gif)'
         
         parts = re.split(pattern, input_text)
         matches = re.findall(pattern, input_text)
@@ -160,17 +160,13 @@ class IO:
             if part.strip():
                 result.append({"type": "text", "text": part.strip()})
             if i < len(matches):
-                image_url = image_to_base64(matches[i])
+                image_path = matches[i][5:]  # Remove the 'img::' prefix
+                image_url = image_to_base64(image_path)
                 if image_url:
                     result.append({"type": "image_url", "image_url": {"url": image_url}})
                 else:
-                    # Image doesn't exist, handle according to the new requirements
-                    if result and result[-1]["type"] == "text":
-                        # Append to the last text part
-                        result[-1]["text"] += " " + matches[i]
-                    else:
-                        # Create a new text part with the image path
-                        result.append({"type": "text", "text": matches[i]})
+                    # Image doesn't exist, keep the original text
+                    result.append({"type": "text", "text": matches[i]})
         
         return result
 
@@ -200,7 +196,7 @@ class IO:
         def _(event):
             image_path = self.handle_clipboard_image()
             if image_path:
-                event.current_buffer.insert_text(' ' + image_path + ' ')
+                event.current_buffer.insert_text('img::' + image_path)
             
         # Autocompleter config
         completer = None
