@@ -113,7 +113,6 @@ class IO:
     DEBUG_FILE = ".plus_coder.debug"
     def __init__(self, log_level=logging.INFO):
         self.console = Console()
-        self.error_console = Console(stderr=True, style="bold red")
         self.progress = None
         self.ctrl_c_count = 0
         self.last_input = ""
@@ -130,7 +129,7 @@ class IO:
                 os.close(fd)
                 return path
         except Exception as e:
-            self.error_console.print(f"Error handling clipboard image: {e}")
+            self.console.print(f"Error handling clipboard image: {e}", style="bold red")
         return None
 
     def convert_image_paths_to_base64(self, input_text: str) -> List[Dict[str, Any]]:
@@ -144,7 +143,7 @@ class IO:
                     mime_type = f"image/{file_extension[1:]}" if file_extension in ['.png', '.jpg', '.jpeg', '.gif'] else "image/png"
                     return f"data:{mime_type};base64,{encoded_string}"
                 except Exception as e:
-                    self.error_console.print(f"Error converting image to base64: {e}")
+                    self.console.print(f"Error converting image to base64: {e}", style="bold red")
             return None
 
         # Updated regex pattern to match both Unix and Windows-style paths

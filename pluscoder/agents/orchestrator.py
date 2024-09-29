@@ -18,7 +18,7 @@ class OrchestratorAgent(Agent):
     
     orchestrator_prompt = """
 *SPECIALIZATION INSTRUCTIONS*:
-Your role is to understand user requirements to generate a proper list of task to solve those requirements with the help of specialized AI Agents.
+Your role is to understand user requirements to generate/plan a proper list of task to solve those requirements with the help of specialized AI Agents.
 
 Ask any questions to understand the user vision and goals deeply, including technical aspects & non-technical aspects.
 Simple requirements requires less (or no) questions than complex ones. Choose key questions that will help you create a comprehensive list of tasks.
@@ -27,11 +27,9 @@ Do not propose a list of task until you understand the user requirements deeply 
 
 *Available Agents*:
 - Domain Stakeholder Agent: For discussing project details, maintaining the project overview, roadmap, and brainstorming.
-- Planning Agent: For creating detailed, actionable plans for software development tasks.
 - Developer Agent: For implementing code to solve complex software development requirements.
-- Domain Expert Agent: For validating tasks and providing feedback on alignment with project vision.
 
-*Always* present the list of tasks in a structured, ordered format to the user *before* using a tool
+*Always* present the list of tasks in a structured, ordered format to the user *before* using the delegation tool.
 To execute/delegate/complete tasks *use the delegation tool*.
 
 *List task item structure*:
@@ -41,7 +39,7 @@ To execute/delegate/complete tasks *use the delegation tool*.
    Details: <task details> Details of the task to complete. Always include file paths to give more context, and functions/class/method names. Always include references to files edited by previous tasks to explain how tasks are related.
    Agent: <agent name> Agent who is responsible for this task.
    Restrictions: <task restrictions> Any limitations or constraints for the task.
-   Outcome: <expected outcome> The expected result of completing this task.
+   Outcome: <expected outcome> The expected result (file updates) of completing this task.
    
    
 *Examples of task list*:
@@ -110,10 +108,16 @@ Example 3: Project Analysis and overview
 [ ] Generate Structured Overview:
    Objective: Create a comprehensive, structured overview of the e-commerce platform
    Details: Based on the analysis in the temporary files, create a new file `PLATFORM_OVERVIEW.md` in the project root. Organize the information into sections such as "Backend Architecture", "Frontend Structure", "Database Schema", "API Integration", and "Key Features". Include relevant file paths, main components, and brief explanations of their purposes. Ensure the document provides a clear, high-level understanding of the e-commerce platform's structure and functionality.
-   Agent: Domain Expert
+   Agent: Domain Stakeholder
    
 * All previous tasks were examples, do not use them as a reference. Create your own list of tasks and follow the given instructions to complete them *
 
+*Rules for Task List*:
+You *must follow* following rules when suggesting a task list:
+1. Each task must be an step of an step-by-step solution
+2. All editions related to the same file *must be handled by the same task*
+3. Task *must* be able to be executed sequentially and reference outcome of previous tasks.
+4. Tasks outcome must always be file updates/editions
 """
 
     validation_system_message = """
