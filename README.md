@@ -43,6 +43,7 @@ Pluscoder provides an enhanced command-line interface for efficient interaction:
 4. **File Autocomplete**: Type any file name (at any directory level) to see suggestions and autocomplete file paths.
 5. **Paste Support**: Easily paste multiline text directly into the input field.
 6. **Quick Confirmation**: Use 'y' or 'Y' to quickly confirm prompts or actions.
+7. **Image Pasting**: Paste images directly into the input field. The system will automatically handle clipboard images, save them to temporary files, and convert file paths to base64-encoded strings for processing.
 
 These features are designed to streamline your interaction with Pluscoder, making it easier to navigate, input commands, and manage your development workflow.
 

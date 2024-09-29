@@ -75,7 +75,8 @@ def user_router(state: OrchestrationState):
         # If running a task list workflow, go to the agent
         return state["chat_agent"]
     
-    user_input = state[state["chat_agent"] + "_state"]["messages"][-1].content.strip().lower()
+    user_message = state[state["chat_agent"] + "_state"]["messages"][-1].content
+    user_input = user_message.strip().lower() if type(user_message) is str else user_message
     
     # On empty user inputs return to the user
     if not user_input:

@@ -37,6 +37,9 @@ def choose_chat_agent_node():
     return chosen_agent
 
 def main():
+    """
+    Main entry point for the Pluscoder application.
+    """
     if not setup():
         return
     

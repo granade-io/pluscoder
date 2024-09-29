@@ -12,6 +12,11 @@ from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.history import FileHistory
 import sys
+import tempfile
+import base64
+import re
+from PIL import ImageGrab
+from typing import List, Dict, Any
 
 from pluscoder.repo import Repository
 from pluscoder.config import config
@@ -116,14 +121,61 @@ class IO:
     def event(self, string: str):
         return self.console.print(string, style="yellow")
     
-    def confirm(self, message: str) -> bool:
-        if config.auto_confirm:
-            io.event("> Auto-confirming...")
-            return True
-        # return Confirm.ask(f"{message}", console=self.console)
-        return input(f'{message} (y/n):').lower().strip() == 'y'
-    
-    def input(self, string: str, autocomplete=True) -> Union[str, dict]:
+    def handle_clipboard_image(self):
+        try:
+            image = ImageGrab.grabclipboard()
+            if image:
+                fd, path = tempfile.mkstemp(suffix=".png")
+                image.save(path, "PNG")
+                os.close(fd)
+                return path
+        except Exception as e:
+            self.error_console.print(f"Error handling clipboard image: {e}")
+        return None
+
+    def convert_image_paths_to_base64(self, input_text: str) -> List[Dict[str, Any]]:
+        """Convert images in the input into base64-encoded strings converting the input text into a list of entries suitable for LLM calls"""
+        def image_to_base64(path):
+            if os.path.isfile(path):
+                try:
+                    with open(path, "rb") as image_file:
+                        encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+                    file_extension = os.path.splitext(path)[1].lower()
+                    mime_type = f"image/{file_extension[1:]}" if file_extension in ['.png', '.jpg', '.jpeg', '.gif'] else "image/png"
+                    return f"data:{mime_type};base64,{encoded_string}"
+                except Exception as e:
+                    self.error_console.print(f"Error converting image to base64: {e}")
+            return None
+
+        # Updated regex pattern to match both Unix and Windows-style paths
+        pattern = r'(?:[a-zA-Z]:)?(?:[\/][a-zA-Z0-9_.-]+)+\.(?:png|jpg|jpeg|gif)'
+        
+        parts = re.split(pattern, input_text)
+        matches = re.findall(pattern, input_text)
+        
+        if not matches:
+            return input_text
+        
+        result = []
+        for i, part in enumerate(parts):
+            if part.strip():
+                result.append({"type": "text", "text": part.strip()})
+            if i < len(matches):
+                image_url = image_to_base64(matches[i])
+                if image_url:
+                    result.append({"type": "image_url", "image_url": {"url": image_url}})
+                else:
+                    # Image doesn't exist, handle according to the new requirements
+                    if result and result[-1]["type"] == "text":
+                        # Append to the last text part
+                        result[-1]["text"] += " " + matches[i]
+                    else:
+                        # Create a new text part with the image path
+                        result.append({"type": "text", "text": matches[i]})
+        
+        return result
+
+    def input(self, string: str, autocomplete=True) -> Union[str, List[Dict[str, Any]]]:
         kb = KeyBindings()
         history = FileHistory('.plus_coder_input_history')
 
@@ -144,6 +196,12 @@ class IO:
                 self.ctrl_c_count = 0
                 buf.text = ""
                 buf.cursor_position = 0
+                
+        @kb.add("c-v")
+        def _(event):
+            image_path = self.handle_clipboard_image()
+            if image_path:
+                event.current_buffer.insert_text(' ' + image_path + ' ')
             
         # Autocompleter config
         completer = None
@@ -160,9 +218,16 @@ class IO:
             user_input = session.prompt(string)
             self.ctrl_c_count = 0  # Reset the counter when input is successfully received
             self.last_input = user_input
-            return user_input
+            return self.convert_image_paths_to_base64(user_input)
         except KeyboardInterrupt:
             sys.exit(0)
+    
+    def confirm(self, message: str) -> bool:
+        if config.auto_confirm:
+            io.event("> Auto-confirming...")
+            return True
+        # return Confirm.ask(f"{message}", console=self.console)
+        return input(f'{message} (y/n):').lower().strip() == 'y'
     
     def log_to_debug_file(self, message: Optional[str] = None, json_data: Optional[dict] = None) -> None:
         if json_data is not None:
