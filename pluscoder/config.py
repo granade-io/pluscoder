@@ -72,7 +72,7 @@ class Config:
         self.lint_fix_command = None
 
         # Repomap settings
-        self.use_repomap = True
+        self.use_repomap = False
         self.repomap_level = 2
         self.repomap_exclude_files = []
         self.repomap_include_files = []

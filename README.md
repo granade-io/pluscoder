@@ -126,7 +126,7 @@ PlusCoder can be configured using environment variables (you can use your `.env`
 - `LINT_FIX_COMMAND`: Command to run linter fix (default: None)
 
 ### Repomap Settings
-- `USE_REPOMAP`: Enable/disable repomap feature (default: True)
+- `USE_REPOMAP`: Enable/disable repomap feature (default: False)
 - `REPOMAP_LEVEL`: Set the level of detail for repomap (default: 2)
 - `REPOMAP_INCLUDE_FILES`: Comma-separated list of files to include in repomap (default: None)
 - `REPOMAP_EXCLUDE_FILES`: Comma-separated list of files to exclude from repomap (default: None)
