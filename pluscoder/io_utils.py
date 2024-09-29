@@ -17,6 +17,7 @@ import base64
 import re
 from PIL import ImageGrab
 from typing import List, Dict, Any
+from urllib.parse import urlparse
 
 from pluscoder.repo import Repository
 from pluscoder.config import config
@@ -132,22 +133,24 @@ class IO:
             self.console.print(f"Error handling clipboard image: {e}", style="bold red")
         return None
 
-    def convert_image_paths_to_base64(self, input_text: str) -> List[Dict[str, Any]]:
-        """Convert images in the input into base64-encoded strings converting the input text into a list of entries suitable for LLM calls"""
+    def convert_image_paths_to_base64(self, input_text: str) -> Union[str, List[Dict[str, Any]]]:
+        """Convert images in the input into base64-encoded strings or keep URLs as is, converting the input text into a list of entries suitable for LLM calls"""
         def image_to_base64(path):
-            if os.path.isfile(path):
-                try:
+            try:
+                if os.path.isfile(path):
                     with open(path, "rb") as image_file:
                         encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
                     file_extension = os.path.splitext(path)[1].lower()
                     mime_type = f"image/{file_extension[1:]}" if file_extension in ['.png', '.jpg', '.jpeg', '.gif'] else "image/png"
                     return f"data:{mime_type};base64,{encoded_string}"
-                except Exception as e:
-                    self.console.print(f"Error converting image to base64: {e}", style="bold red")
-            return None
+                else:
+                    return None
+            except Exception as e:
+                self.console.print(f"Error converting image to base64: {e}", style="bold red")
+                return None
 
-        # Updated regex pattern to match the new 'img::' prefix and both Unix and Windows-style paths
-        pattern = r'img::(?:[a-zA-Z]:)?(?:[\/][a-zA-Z0-9_.-]+)+\.(?:png|jpg|jpeg|gif)'
+        # Updated regex pattern to match both file paths and URLs
+        pattern = r'img::(?:(?:https?://)?(?:[a-zA-Z0-9.-]+(?:\.[a-zA-Z]{2,})+)(?:/[^\s]*)?|(?:[a-zA-Z]:)?(?:[\/][a-zA-Z0-9_.-]+)+\.(?:png|jpg|jpeg|gif))'
         
         parts = re.split(pattern, input_text)
         matches = re.findall(pattern, input_text)
@@ -160,15 +163,18 @@ class IO:
             if part.strip():
                 result.append({"type": "text", "text": part.strip()})
             if i < len(matches):
-                image_path = matches[i][5:]  # Remove the 'img::' prefix
-                image_url = image_to_base64(image_path)
-                if image_url:
-                    result.append({"type": "image_url", "image_url": {"url": image_url}})
+                image_path_or_url = matches[i][5:]  # Remove the 'img::' prefix
+                if urlparse(image_path_or_url).scheme in ['http', 'https']:
+                    result.append({"type": "image_url", "image_url": {"url": image_path_or_url}})
                 else:
-                    # Image doesn't exist, keep the original text
-                    result.append({"type": "text", "text": matches[i]})
+                    image_data = image_to_base64(image_path_or_url)
+                    if image_data:
+                        result.append({"type": "image_url", "image_url": {"url": image_data}})
+                    else:
+                        # Image doesn't exist or couldn't be processed, keep the original text
+                        result.append({"type": "text", "text": matches[i]})
         
-        return result
+        return result if any(item['type'] == 'image_url' for item in result) else input_text
 
     def input(self, string: str, autocomplete=True) -> Union[str, List[Dict[str, Any]]]:
         kb = KeyBindings()

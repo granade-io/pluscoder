@@ -112,5 +112,38 @@ class TestImageHandling(unittest.TestCase):
         self.assertEqual(result[3]["type"], "image_url")
         self.assertEqual(result[4]["type"], "text")
 
+    def test_url_image(self):
+        fake_image_url = "https://example.com/fake_image.jpg"
+        input_text = f"This is an image from URL: img::{fake_image_url}"
+        result = self.io.convert_image_paths_to_base64(input_text)
+        
+        self.assertIsInstance(result, list)
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0]["type"], "text")
+        self.assertEqual(result[0]["text"], "This is an image from URL:")
+        self.assertEqual(result[1]["type"], "image_url")
+        self.assertEqual(result[1]["image_url"]["url"], fake_image_url)
+
+    def test_mixed_local_and_url_images(self):
+        fake_image_url = "https://example.com/fake_image.jpg"
+        input_text = f"Local: img::{self.test_image_path}, URL: img::{fake_image_url}"
+        result = self.io.convert_image_paths_to_base64(input_text)
+        
+        self.assertIsInstance(result, list)
+        self.assertEqual(len(result), 4)
+        self.assertEqual(result[0]["type"], "text")
+        self.assertEqual(result[1]["type"], "image_url")
+        self.assertIn("data:image/png;base64,", result[1]["image_url"]["url"])
+        self.assertEqual(result[2]["type"], "text")
+        self.assertEqual(result[3]["type"], "image_url")
+        self.assertEqual(result[3]["image_url"]["url"], fake_image_url)
+
+    def test_invalid_local_image(self):
+        invalid_path = "/path/to/nonexistent/image.jpg"
+        input_text = f"This is an invalid local image: img::{invalid_path}"
+        result = self.io.convert_image_paths_to_base64(input_text)
+        
+        self.assertEqual(result, input_text)
+
 if __name__ == '__main__':
     unittest.main()
