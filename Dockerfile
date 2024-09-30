@@ -17,8 +17,7 @@ COPY requirements.txt .
 COPY wheels /app/wheels
 
 # Install the Python dependencies using local wheels and falling back to PyPI
-RUN pip install --no-cache-dir --find-links=/app/wheels -r requirements.txt && \
-    pip install --no-cache .
+RUN pip install --no-cache-dir --find-links=/app/wheels -r requirements.txt
 
 # Final stage
 FROM python:3.12-slim
@@ -34,6 +33,9 @@ COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/pytho
 
 # Copy the application code
 COPY . .
+
+# Insatll pluscoder
+RUN pip install --no-cache .
 
 # Set the entrypoint to run pluscoder
 ENTRYPOINT ["python", "-m", "pluscoder"]
