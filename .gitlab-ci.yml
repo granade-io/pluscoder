@@ -28,6 +28,9 @@ prepare:
       echo "NEXT VERSION: ${NEXT_VERSION}"
 
       echo "NEXT_VERSION=${NEXT_VERSION}" > build.env
+  artifacts:
+    reports:
+      dotenv: build.env
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH == "develop"
       changes:
