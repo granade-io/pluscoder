@@ -60,6 +60,7 @@ create_wheel:
         - pluscoder/**/*
         - tests/**/*
         - requirements.txt
+        - Dockerfile
 
 test:
   image: python:3.12
