@@ -29,7 +29,7 @@ prepare:
 
       echo "NEXT_VERSION=${NEXT_VERSION}" > build.env
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH or $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH == "develop"
       changes:
         - pluscoder/**/*
         - requirements.txt
@@ -94,7 +94,7 @@ docker-build:
     - docker push $CI_REGISTRY_IMAGE:$NEXT_VERSION
     - docker push $CI_REGISTRY_IMAGE:latest
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH or $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH == "develop"
       changes:
         - pluscoder/**/*
         - requirements.txt
