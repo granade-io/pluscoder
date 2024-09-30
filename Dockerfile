@@ -17,7 +17,8 @@ COPY requirements.txt .
 COPY wheels /app/wheels
 
 # Install the Python dependencies using local wheels and falling back to PyPI
-RUN pip install --no-cache-dir --find-links=/app/wheels -r requirements.txt
+RUN pip install --no-cache-dir --find-links=/app/wheels -r requirements.txt && \
+    pip install --no-cache .
 
 # Final stage
 FROM python:3.12-slim
