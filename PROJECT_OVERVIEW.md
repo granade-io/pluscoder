@@ -174,6 +174,7 @@ The project follows a well-organized structure:
 
 4. CI/CD:
    - `.gitlab-ci.yml`: GitLab CI/CD configuration file
+   - `Dockerfile`: Defines the Docker image for the project
 
 This structure separates concerns effectively, with clear distinctions between agent definitions, utility functions, and testing. The use of a dedicated `agents` directory allows for easy addition of new agent types as the project evolves.
 
