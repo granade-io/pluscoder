@@ -1,3 +1,12 @@
+# [1.12.0](https://gitlab.com/codematos/pluscoder/compare/v1.11.0...v1.12.0) (2024-10-01)
+
+
+### Features
+
+* allow user to paste images to the console input passing them as part of the prompt to multi-modal llms ([cc8c441](https://gitlab.com/codematos/pluscoder/commit/cc8c4411501d089b8ee32888d65bfc1c86d811b0))
+* input now accept img::<url_or_path> url images to send them to multi-modal llms when chatting with agents ([2714070](https://gitlab.com/codematos/pluscoder/commit/2714070b8419c9e2a015cdb453b878da979f599b))
+* start up message to display current number of tracked and ignored git files ([c094e07](https://gitlab.com/codematos/pluscoder/commit/c094e074a00af85cd1705feb4fbc990171d769a4))
+
 # [1.11.0](https://gitlab.com/codematos/pluscoder/compare/v1.10.0...v1.11.0) (2024-09-28)
 
 
