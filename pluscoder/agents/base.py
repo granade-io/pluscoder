@@ -134,9 +134,6 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
     def call_agent(self, state):
         """When entering this agent graph, this function is the first node to be called"""
         
-        # last_message = state["messages"][-1]
-        # io.error_console.print(f"Received message: {last_message.content}")
-        
         self.get_context_files(state)
         # io.event(self.get_context_files_panel(context_files))
         
@@ -161,7 +158,9 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                     io.log_to_debug_file("########### CALL AGENT ERROR ###########")
                     io.log_to_debug_file(f"Error: {str(e)}")
                     io.log_to_debug_file("State:")
-                    io.log_to_debug_file(json_data=state)
+                    io.log_to_debug_file(message=str(state))
+                    io.log_to_debug_file("Deflection messages:")
+                    io.log_to_debug_file(message=str(interaction_msgs))
                     if self.current_deflection <= self.max_deflections:
                         self.current_deflection += 1
 

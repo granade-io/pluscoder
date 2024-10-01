@@ -1,23 +1,52 @@
 image: node:latest
 
 stages:
-  - build
+  - prepare
+  - build-wheel
   - test
+  - docker-build-push
   - release
 
 variables:
   GIT_DEPTH: "0"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  DOCKER_TLS_CERTDIR: "/certs"
+
+prepare:
+  image: node:latest
+  stage: prepare
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends git-core ca-certificates
+    - npm install -g semantic-release @semantic-release/gitlab @semantic-release/git @semantic-release/changelog
+  script:
+    - |
+      # (...)
+      set +e
+      OUTPUT=$(semantic-release --dry-run --no-git-verify)
+      echo "$OUTPUT"
+      NEXT_VERSION=$(echo "$OUTPUT" | grep "next release version is" | awk '{print $NF}') || true
+      echo "NEXT VERSION: ${NEXT_VERSION}"
+
+      echo "NEXT_VERSION=${NEXT_VERSION}" > build.env
+  artifacts:
+    reports:
+      dotenv: build.env
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - pluscoder/**/*
+        - requirements.txt
+        - Dockerfile
 
 create_wheel:
   image: python:3.12
-  stage: build
+  stage: build-wheel
   script:
     - pip wheel tree-sitter-language-pack==0.2.0 --wheel-dir ./wheels
   artifacts:
     paths:
       - ./wheels/*.whl
-    expire_in: 2 week
+    expire_in: 4 week
   cache:
     key: 
       files:
@@ -26,6 +55,12 @@ create_wheel:
       - ./wheels
       - $PIP_CACHE_DIR
     policy: pull-push
+  rules:
+    - changes:
+        - pluscoder/**/*
+        - tests/**/*
+        - requirements.txt
+        - Dockerfile
 
 test:
   image: python:3.12
@@ -50,6 +85,27 @@ test:
         - pluscoder/**/*
         - tests/**/*
         - requirements.txt
+
+docker-build:
+  stage: docker-build-push
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build --build-arg WHEELS_DIR=./wheels -t $CI_REGISTRY_IMAGE:$NEXT_VERSION -t $CI_REGISTRY_IMAGE:latest .
+    - docker push $CI_REGISTRY_IMAGE:$NEXT_VERSION
+    - docker push $CI_REGISTRY_IMAGE:latest
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - pluscoder/**/*
+        - requirements.txt
+        - Dockerfile
+  artifacts:
+    paths:
+      - ./wheels
 
 release:
   image: node:latest

@@ -43,6 +43,8 @@ Pluscoder provides an enhanced command-line interface for efficient interaction:
 4. **File Autocomplete**: Type any file name (at any directory level) to see suggestions and autocomplete file paths.
 5. **Paste Support**: Easily paste multiline text directly into the input field.
 6. **Quick Confirmation**: Use 'y' or 'Y' to quickly confirm prompts or actions.
+7. **Image Uploading**: Write `img::<url>` or `img::<local_path>` to send these files to multi-modal LLMs ad part of the prompt.
+8. **Image Pasting**: Ctrl+V to paste images directly into the input field. The system will automatically handle clipboard images, save them to temporary files, and convert file paths to base64-encoded strings for processing.
 
 These features are designed to streamline your interaction with Pluscoder, making it easier to navigate, input commands, and manage your development workflow.
 
@@ -124,7 +126,7 @@ PlusCoder can be configured using environment variables (you can use your `.env`
 - `LINT_FIX_COMMAND`: Command to run linter fix (default: None)
 
 ### Repomap Settings
-- `USE_REPOMAP`: Enable/disable repomap feature (default: True)
+- `USE_REPOMAP`: Enable/disable repomap feature (default: False)
 - `REPOMAP_LEVEL`: Set the level of detail for repomap (default: 2)
 - `REPOMAP_INCLUDE_FILES`: Comma-separated list of files to include in repomap (default: None)
 - `REPOMAP_EXCLUDE_FILES`: Comma-separated list of files to exclude from repomap (default: None)
