@@ -6,6 +6,23 @@ from pluscoder.workflow import run_workflow
 from pluscoder.io_utils import io
 from pluscoder.config import config
 from pluscoder.commands import show_repo, show_repomap, show_config
+from pluscoder.repo import Repository
+
+def display_initial_messages():
+    """Display initial message with the number of files detected by git and excluded files."""
+    repo = Repository(io)
+    
+    # Get all tracked files (including those in the index) and untracked files
+    all_files = set(repo.repo.git.ls_files().splitlines() +
+                    repo.repo.git.ls_files(others=True, exclude_standard=True).splitlines())
+    
+    # Get tracked files after applying exclusion patterns
+    tracked_files = repo.get_tracked_files()
+    
+    # Calculate the number of excluded files
+    excluded_files_count = len(all_files) - len(tracked_files)
+    
+    io.event(f"> Files detected by git: {len(tracked_files)} (excluded: {excluded_files_count})")
 
 # Run the workflow
 
@@ -42,6 +59,8 @@ def main():
     """
     if not setup():
         return
+    
+    display_initial_messages()
     
     # Check for new command-line arguments
     if config.show_repo:
