@@ -23,6 +23,9 @@ def display_initial_messages():
     excluded_files_count = len(all_files) - len(tracked_files)
     
     io.event(f"> Files detected by git: {len(tracked_files)} (excluded: {excluded_files_count})")
+    io.event(f"> Using model '{config.model}' with {config.provider or 'LLMlite'}")
+    
+    io.console.print("Look at https://gitlab.com/codematos/pluscoder/-/blob/main/README.md for more documentation.")
 
 # Run the workflow
 

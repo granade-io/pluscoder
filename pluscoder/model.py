@@ -31,7 +31,6 @@ def get_llm():
     
     # Uses aws bedrock if available
     if config.aws_access_key_id and (not config.provider or config.provider == "aws_bedrock"):
-        io.event(f"> Using model '{model_id}' with AWS Bedrock")
         return ChatBedrock(    
             model_id=model_id,
             model_kwargs={"temperature": 0.0, "max_tokens": 4096},
@@ -41,7 +40,6 @@ def get_llm():
         
     # Uses Anthropic if available
     if config.anthropic_api_key and (not config.provider or config.provider == "anthropic"):
-        io.event(f"> Using model '{model_id}' with Anthropic")
         return ChatAnthropic(    
             model_name=model_id,
             temperature=0.0,
@@ -51,7 +49,6 @@ def get_llm():
         
     # Prefer using OpenAI if available
     if config.openai_api_key and (not config.provider or config.provider == "openai"):
-        io.event(f"> Using model '{model_id}' with OpenAI")
         return ChatOpenAI(
             model=model_id.replace("openai/", ""),
             # cache=SQLiteCache(database_path=".langchain.db"),
@@ -61,7 +58,6 @@ def get_llm():
         )
     
     # Return ChatLiteLLM
-    io.event(f"> Using model '{model_id}' with ChatLiteLLM")
     return ChatLiteLLM(model=model_id)
 
 # Commented out Bedrock LLM configuration
