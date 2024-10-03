@@ -1,11 +1,11 @@
 import os
 import sys
 from unittest.mock import patch
-from pluscoder.config import parse_args, str2bool, get_config
+from pluscoder.config import Settings
 
 def test_config_default_values():
     with patch.object(sys, 'argv', ['config.py']):
-        config = get_config(reset=True)
+        config = Settings(_env_file=None)
         assert config.streaming is True
         assert config.user_feedback is True
         assert config.display_internal_outputs is False
@@ -22,7 +22,7 @@ def test_update_from_env():
         "LOG_FILENAME": "test.log"
     }, clear=True):
         with patch.object(sys, 'argv', ['config.py']):
-            config = get_config(reset=True)
+            config = Settings(_env_file=None)
             assert config.model == "my_model"
             assert config.streaming is True
             assert config.user_feedback is False
@@ -33,44 +33,18 @@ def test_update_from_env():
 def test_update_from_args():
     test_args = [
         "--streaming=true",
-        "--user-feedback=false",
-        "--display-internal-outputs=true",
-        "--overview-filename=args_overview.md",
-        "--log-filename=args.log"
+        "--user_feedback=false",
+        "--display_internal_outputs=true",
+        "--overview_filename=args_overview.md",
+        "--log_filename=args.log"
     ]
-    with patch.object(sys, 'argv', ['config.py'] + test_args):
-        config = get_config(reset=True)
+    with patch.object(sys, 'argv', [] + test_args):
+        config = Settings(_env_file=None)
         assert config.streaming is True
         assert config.user_feedback is False
         assert config.display_internal_outputs is True
         assert config.overview_filename == "args_overview.md"
         assert config.log_filename == "args.log"
-
-def test_parse_args():
-    test_args = [
-        "--streaming=true",
-        "--user-feedback=false",
-        "--display-internal-outputs=true",
-        "--overview-filename=cli_overview.md",
-        "--log-filename=cli.log"
-    ]
-    with patch.object(sys, 'argv', ['config.py'] + test_args):
-        args = parse_args()
-        assert args.streaming is True
-        assert args.user_feedback is False
-        assert args.display_internal_outputs is True
-        assert args.overview_filename == "cli_overview.md"
-        assert args.log_filename == "cli.log"
-
-def test_str2bool():
-    assert str2bool("yes") is True
-    assert str2bool("true") is True
-    assert str2bool("t") is True
-    assert str2bool("1") is True
-    assert str2bool("no") is False
-    assert str2bool("false") is False
-    assert str2bool("f") is False
-    assert str2bool("0") is False
 
 def test_config_precedence():
     with patch.dict(os.environ, {
@@ -83,9 +57,9 @@ def test_config_precedence():
         with patch.object(sys, 'argv', [
             'config.py',
             '--streaming=true',
-            '--display-internal-outputs=true'
+            '--display_internal_outputs=true'
         ]):
-            config = get_config(reset=True)
+            config = Settings(_env_file=None)
             
             # Command-line args should take precedence over env vars
             assert config.streaming is True
@@ -101,7 +75,7 @@ def test_config_precedence_empty_configs():
     # Test default values when neither env vars nor command-line args are provided
     with patch.dict(os.environ, {}, clear=True):
         with patch.object(sys, 'argv', ['config.py']):
-            config = get_config(reset=True)
+            config = Settings(_env_file=None)
             assert config.streaming is True
             assert config.user_feedback is True
             assert config.display_internal_outputs is False

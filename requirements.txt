@@ -11,6 +11,7 @@ langgraph==0.1.14
 litellm==1.41.6
 pillow==10.4.0
 prompt_toolkit==3.0.47
+pydantic_settings==2.5.2
 pytest==8.3.2
 pytest-asyncio==0.23.8
 python-dotenv==1.0.1
