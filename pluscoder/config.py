@@ -1,5 +1,5 @@
 from pydantic import Field
-from pydantic_settings import BaseSettings, CliImplicitFlag, PydanticBaseSettingsSource, SettingsConfigDict
+from pydantic_settings import BaseSettings, CliImplicitFlag, PydanticBaseSettingsSource, SettingsConfigDict, YamlConfigSettingsSource
 from typing import List, Optional, Tuple, Type
 
 class Settings(BaseSettings):
@@ -58,6 +58,8 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         cli_parse_args=True,
         case_sensitive=False,
+        yaml_file=".pluscoder-config.yml",
+        yaml_file_encoding="utf-8"
     )
     
     @classmethod
@@ -69,6 +71,9 @@ class Settings(BaseSettings):
         dotenv_settings: PydanticBaseSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> Tuple[PydanticBaseSettingsSource, ...]:
+        if not init_settings.init_kwargs.get('ignore_yaml', False):
+            yaml_config = YamlConfigSettingsSource(settings_cls)
+            return init_settings, dotenv_settings, yaml_config, env_settings
         return init_settings, dotenv_settings, env_settings
 
 # Singleton pattern (if needed)

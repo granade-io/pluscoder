@@ -5,7 +5,7 @@ from pluscoder.config import Settings
 
 def test_config_default_values():
     with patch.object(sys, 'argv', ['config.py']):
-        config = Settings(_env_file=None)
+        config = Settings(_env_file=None, ignore_yaml=True)
         assert config.streaming is True
         assert config.user_feedback is True
         assert config.display_internal_outputs is False
@@ -22,7 +22,7 @@ def test_update_from_env():
         "LOG_FILENAME": "test.log"
     }, clear=True):
         with patch.object(sys, 'argv', ['config.py']):
-            config = Settings(_env_file=None)
+            config = Settings(_env_file=None, ignore_yaml=True)
             assert config.model == "my_model"
             assert config.streaming is True
             assert config.user_feedback is False
@@ -39,7 +39,7 @@ def test_update_from_args():
         "--log_filename=args.log"
     ]
     with patch.object(sys, 'argv', [] + test_args):
-        config = Settings(_env_file=None)
+        config = Settings(_env_file=None, ignore_yaml=True)
         assert config.streaming is True
         assert config.user_feedback is False
         assert config.display_internal_outputs is True
@@ -59,7 +59,7 @@ def test_config_precedence():
             '--streaming=true',
             '--display_internal_outputs=true'
         ]):
-            config = Settings(_env_file=None)
+            config = Settings(_env_file=None, ignore_yaml=True)
             
             # Command-line args should take precedence over env vars
             assert config.streaming is True
@@ -75,7 +75,7 @@ def test_config_precedence_empty_configs():
     # Test default values when neither env vars nor command-line args are provided
     with patch.dict(os.environ, {}, clear=True):
         with patch.object(sys, 'argv', ['config.py']):
-            config = Settings(_env_file=None)
+            config = Settings(_env_file=None, ignore_yaml=True)
             assert config.streaming is True
             assert config.user_feedback is True
             assert config.display_internal_outputs is False

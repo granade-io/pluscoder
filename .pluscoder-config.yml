@@ -1,0 +1,4 @@
+allow_dirty_commits: false
+auto_commits: true
+model: openai/claude-3-5-sonnet-20240620
+provider: openai

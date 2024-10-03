@@ -61,7 +61,7 @@ These features are designed to streamline your interaction with Pluscoder, makin
 
 Note: Pluscoder can modify project files; always review changes to ensure alignment with your goals.
 
-Note: Using the '--auto-confirm' flag when starting Pluscoder will automatically confirm any plan and task execution without prompting.
+Note: Using the '--auto_confirm' flag when starting Pluscoder will automatically confirm any plan and task execution without prompting.
 
 ## Available Commands
 
@@ -82,9 +82,9 @@ PlusCoder supports the following commands during interaction:
 
 In addition to the runtime commands, PlusCoder supports the following command-line arguments:
 
-- `--show-repo`: Display information about the current repository and exit.
-- `--show-repomap`: Show the repository map with file structure and summaries and exit.
-- `--show-config`: Display the current configuration settings and exit.
+- `--show_repo`: Display information about the current repository and exit.
+- `--show_repomap`: Show the repository map with file structure and summaries and exit.
+- `--show_config`: Display the current configuration settings and exit.
 
 These arguments can be used when launching PlusCoder to quickly access specific information without entering the interactive mode.
 
