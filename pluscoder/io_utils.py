@@ -8,6 +8,7 @@ from rich.live import Live
 from rich.text import Text
 from rich.rule import Rule
 from rich.progress import Progress
+from rich.prompt import Confirm
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.history import FileHistory
@@ -227,8 +228,7 @@ class IO:
         if config.auto_confirm:
             io.event("> Auto-confirming...")
             return True
-        # return Confirm.ask(f"{message}", console=self.console)
-        return input(f'{message} (y/n):').lower().strip() == 'y'
+        return Confirm.ask(f"{message}", console=self.console, default=True)
     
     def log_to_debug_file(self, message: Optional[str] = None, json_data: Optional[dict] = None) -> None:
         if json_data is not None:

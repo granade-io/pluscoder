@@ -1,36 +1,59 @@
 import asyncio
 from pathlib import Path
+import yaml
 from pluscoder import tools
 from pluscoder.type import AgentInstructions, AgentState, OrchestrationState, TokenUsage
-from pluscoder.config import config
+from pluscoder.config import config, Settings
 from pluscoder.io_utils import io
 from pluscoder.repo import Repository
 from pluscoder.state_utils import get_model_token_info
 
 from pluscoder.workflow import run_workflow
-
-INIT_FILE = '.plus_coder.json'
-
-TASK_LIST_TEST = [
-    {
-        "objective": "Next sequence number 1",
-        "details": "Read test.txt file and append the next number of the sequence, starting from 1 if doesnt exist",
-        "restrictions": "None",
-        "outcome": "Append the next number to test.txt file and update the file",
-        "agent": "developer",
-        "completed": False,
-        "is_finished": False
-     },
-    {
-        "objective": "Next sequence number 1",
-        "details": "Read test.txt file and append the next number of the sequence, starting from 1 if doesnt exist",
-        "restrictions": "None",
-        "outcome": "Append the next number to test.txt file and update the file",
-        "agent": "developer",
-        "completed": False,
-        "is_finished": False
-     }
+from rich.prompt import Prompt
+CONFIG_FILE = '.pluscoder-config.yml'
+CONFIG_OPTIONS = [
+    'model', 'provider', 'auto_commits', 'allow_dirty_commits'
 ]
+
+def get_config_descriptions():
+    return {field: Settings.model_fields[field].description for field in CONFIG_OPTIONS}
+
+def get_config_defaults():
+    return {field: getattr(config, field) for field in CONFIG_OPTIONS}
+
+def read_yaml(file_path):
+    with open(file_path, 'r') as file:
+        return yaml.safe_load(file)
+
+def write_yaml(file_path, data):
+    with open(file_path, 'w') as file:
+        yaml.dump(data, file)
+
+def prompt_for_config():
+    config_data = {}
+    descriptions = get_config_descriptions()
+    defaults = get_config_defaults()
+
+    for option in CONFIG_OPTIONS:
+        description = descriptions[option]
+        default = defaults[option]
+
+        prompt = f"{option} ({description})"
+        
+        if isinstance(default, bool):
+            value = Prompt.ask(prompt, default=str(default).lower(), choices=["true", "false"])
+            value = value.lower() == "true"
+        elif isinstance(default, int):
+            value = Prompt.ask(prompt, default=str(default), validator=int)
+        elif isinstance(default, float):
+            value = Prompt.ask(prompt, default=str(default), validator=float)
+        else:
+            value = Prompt.ask(prompt, default=str(default))
+
+        config_data[option] = value
+
+    return config_data
+
 
 TASK_LIST = [
     {
@@ -172,19 +195,33 @@ def initialize_repository():
 def setup() -> bool:
     repo = Repository(io=io)
     
-    if not Path(INIT_FILE).exists():
-        io.console.print("Pluscoder hasn't been initialized for this repository.")
-        io.console.print("Initialization will analyze the repository to create/update `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md` files.")
-        io.console.print("It takes about 1-2 minutes to complete.")
-        if io.confirm("Do you want to initialize it now? (recommended)"):
-            repo.create_default_files()
+    if not Path(CONFIG_FILE).exists() and config.init:
+        
+        io.console.print("Welcome to Pluscoder! Let's customize your project configuration.", style="bold green")
+        
+        # Prompt for configuration
+        config_data = prompt_for_config()
+        write_yaml(CONFIG_FILE, config_data)
+        repo.create_default_files()
+        
+        io.event(f"> Configuration saved to {CONFIG_FILE}.")
+
+        io.console.print("Initialization will analyze your project for better agent assistance generating `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md` files.")
+        if io.confirm("Do you want to initialize it now (takes ~1min)? (recommended)"):
             initialize_repository()
+            
+            
+            io.event(f"> Configuration saved to {CONFIG_FILE}")
         else:
             io.event("> Skipping initialization. You can run it later using the /init command.")
             
-        # Create the initialization file even if the user doesn't want to initialize
-        Path(INIT_FILE).touch()
-    
+            # Create a default configuration file
+            write_yaml(CONFIG_FILE, {'initialized': False})
+    elif not Path(CONFIG_FILE).exists() and not config.init:
+        io.event("> Skipping initialization due to --no-init flag.")
+        # Path.touch(CONFIG_FILE)
+        
+
     # Check repository setup
     if not repo.setup():
         io.event("> Exiting pluscoder")
@@ -193,5 +230,6 @@ def setup() -> bool:
     # Warns token cost
     if not get_model_token_info(config.model):
         io.console.print(f"Token usage info not available for model `{config.model}`. Cost calculation can be unaccurate.", style="bold dark_goldenrod")
+        
     
     return True

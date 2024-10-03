@@ -4,6 +4,7 @@ from typing import List, Optional, Tuple, Type
 
 class Settings(BaseSettings):
     # Application behavior
+    init: CliImplicitFlag[bool] = Field(True, description="Enable/disable initial setup")
     streaming: bool = Field(True, description="Enable/disable LLM streaming")
     user_feedback: bool = Field(True, description="Enable/disable user feedback")
     display_internal_outputs: bool = Field(False, description="Display internal agent outputs")

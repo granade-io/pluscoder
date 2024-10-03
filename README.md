@@ -90,7 +90,11 @@ These arguments can be used when launching PlusCoder to quickly access specific 
 
 ## Configuration
 
-PlusCoder can be configured using environment variables (you can use your `.env`), command-line arguments, or the `/config` command during runtime. Here are the available configuration options:
+PlusCoder can be configured using several methods:
+1. Environment variables (you can use your `.env` file)
+2. Command-line arguments
+3. The `/config` command during runtime
+4. A .pluscoder-config.yml file for persistent configuration
 
 ### Application Behavior
 - `STREAMING`: Enable/disable LLM streaming (default: True)
