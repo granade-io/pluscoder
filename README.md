@@ -11,9 +11,10 @@ PlusCoder is an AI-assisted software development tool designed to enhance and st
 5. Auto-commit on editions
 6. Cost and token tracking for LLM interactions
 7. Flexible configuration system supporting command-line arguments, environment variables, and default values
-8.  Support for multiple LLM models (LLMLite, OpenAI, AWS Bedrock, Anthropic)
-9.  Enhanced user interaction with rich console output and auto-completion
+8. Support for multiple LLM models (LLMLite, OpenAI, AWS Bedrock, Anthropic)
+9. Enhanced user interaction with rich console output and auto-completion
 10. Real-time task execution progress display
+11. File downloading and context addition during agent interactions
 
 ## Requirements
 - Requires python 3.12

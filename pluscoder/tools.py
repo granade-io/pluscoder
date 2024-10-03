@@ -2,9 +2,23 @@ import shutil
 from typing import Annotated, Dict, List, Literal
 from langchain_core.tools import tool
 import re
+import requests
 from pluscoder.fs import get_formatted_file_content
 from pluscoder.io_utils import io
 from pluscoder.type import AgentTask
+
+@tool
+def download_file(
+    url: Annotated[str, "The URL of the file to download."]
+) -> str:
+    """Download the content of a file from the given URL."""
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        content = response.text
+        return f"Here is the content of the downloaded file:\n\n{content}"
+    except requests.RequestException as e:
+        return f"Error downloading file: {str(e)}"
 
 @tool
 def move_files(
