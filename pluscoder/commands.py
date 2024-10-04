@@ -1,5 +1,6 @@
 from typing import Dict, Union, Callable
 from functools import wraps
+from pydantic import ValidationError
 from rich.syntax import Syntax
 from pluscoder.config import config
 from pluscoder.repo import Repository
@@ -61,14 +62,18 @@ def diff(state: OrchestrationState):
     return state
 
 @command_registry.register("config")
-def config_command(state: OrchestrationState, key: str, value: str):
-    """Override any pluscoder configuration. e.g: `/config auto-commits false`"""
+def config_command(state: OrchestrationState, key: str, value: str, *args):
+    """Override any pluscoder configuration. e.g: `/config auto_commits false`"""
     if key not in config.__dict__:
         io.console.print(f"Error: '{key}' is not a valid configuration option.", style="bold red")
         return state
     old_value = getattr(config, key)
-    new_value = config.update_config(key, value)
-    io.console.print(f"Config updated: {key} = {new_value} (was: {old_value})")
+    try:
+        config.__init__(**{key: value})
+        io.console.print(f"Config updated: {key} = {getattr(config, key)} (was: {old_value})")
+    except ValidationError:
+        io.console.print("Invalid value.", style="bold red")
+    
     return state
 
 @command_registry.register("undo")
