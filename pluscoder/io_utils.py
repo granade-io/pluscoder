@@ -28,15 +28,23 @@ logging.getLogger().setLevel(logging.ERROR) # hide warning log
 class CommandCompleter(Completer):
     def __init__(self):
         super().__init__()
-        self.commands = ['/agent', '/clear', '/diff', '/config', '/help', '/undo', '/run', '/init', '/show_repo', '/show_repomap', '/show_config']
+        self.commands = ['/agent', '/clear', '/diff', '/config', '/help', '/undo', '/run', '/init', '/show_repo', '/show_repomap', '/show_config', '/custom']
 
     def get_completions(self, document, complete_event):
         text = document.text_before_cursor
         if text.startswith('/'):
-            text[1:]  # Remove the leading '/'
-            for command in self.commands:
-                if command.startswith(text):
-                    yield Completion(command, start_position=-len(text))
+            words = text.split()
+            if len(words) == 1:
+                # Complete command names
+                for command in self.commands:
+                    if command.startswith(text):
+                        yield Completion(command, start_position=-len(text))
+            elif len(words) == 2 and words[0] == '/custom':
+                # Complete custom prompt names
+                prompt_name = words[1]
+                for prompt in config.custom_prompt_commands:
+                    if prompt['prompt_name'].startswith(prompt_name) and prompt_name != prompt['prompt_name']:
+                        yield Completion(prompt['prompt_name'], start_position=-len(prompt_name), display_meta=prompt['description'])
 
 class FileNameCompleter(Completer):
     def __init__(self):

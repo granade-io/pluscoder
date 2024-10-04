@@ -1,6 +1,6 @@
 from pydantic import Field
 from pydantic_settings import BaseSettings, CliImplicitFlag, PydanticBaseSettingsSource, SettingsConfigDict, YamlConfigSettingsSource
-from typing import List, Optional, Tuple, Type
+from typing import List, Optional, Tuple, Type, Dict, Any
 
 class Settings(BaseSettings):
     # Application behavior
@@ -51,6 +51,12 @@ class Settings(BaseSettings):
     show_repo: CliImplicitFlag[bool] = Field(False, description="Show repository information")
     show_repomap: CliImplicitFlag[bool] = Field(False, description="Show repository map")
     show_config: CliImplicitFlag[bool] = Field(False, description="Show repository information")
+
+    # Custom prompt commands
+    custom_prompt_commands: List[Dict[str, Any]] = Field(
+        default=[],
+        description="Custom prompt commands with prompt_name, description, and prompt"
+    )
 
     model_config = SettingsConfigDict(
         extra='ignore',

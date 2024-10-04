@@ -2,6 +2,7 @@
 
 ## Bugs:
 - Show warning and ask for confirmation then tests/linter are enabled when making request to agent which can due to unwanted errors
+- Allow custom prompt command to run in different agents from the current one
 
 ## High Priority Features
 

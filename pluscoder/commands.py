@@ -5,6 +5,7 @@ from pluscoder.config import config
 from pluscoder.repo import Repository
 from pluscoder.io_utils import io
 from pluscoder.type import AgentState, OrchestrationState
+from langchain_core.messages import HumanMessage
 from rich.rule import Rule                                                                                                      
 from rich.table import Table
 from rich.tree import Tree
@@ -195,6 +196,29 @@ def show_config(state: OrchestrationState = None):
         table.add_row(key, str(value))
 
     io.console.print(table)
+    return state
+
+@command_registry.register("custom")
+def custom_command(state: OrchestrationState, prompt_name: str, *args):
+    """Execute a custom prompt command"""
+    custom_prompt = next((prompt for prompt in config.custom_prompt_commands if prompt['prompt_name'] == prompt_name), None)
+    if not custom_prompt:
+        io.console.print(f"Error: Custom prompt '{prompt_name}' not found.", style="bold red")
+        return state
+
+    user_input = " ".join(args)
+    combined_prompt = f"{custom_prompt['prompt']} {user_input}"
+
+    # Add the combined prompt as a HumanMessage to the current agent's message history
+    current_agent = state.get("chat_agent", "orchestrator")
+    agent_state = state.get(f"{current_agent}_state", AgentState.default())
+    agent_state["messages"].append(HumanMessage(content=combined_prompt))
+    state[f"{current_agent}_state"] = agent_state
+    
+    # Do not return to the user to execute agent with the added human message
+    state["return_to_user"] = False
+
+    io.event(f"Custom prompt '{prompt_name}' executed and added to {current_agent}'s message history.")
     return state
 
 
