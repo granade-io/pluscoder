@@ -7,8 +7,6 @@ from git import Actor, Repo
 from git import GitCommandError
 from pluscoder.config import config
 
-from pluscoder.repomap import LANGUAGE_MAP, generate_tree
-
 class Repository:
     def __init__(self, io=None):
         self.repo = Repo(os.getcwd(), search_parent_directories=True)
@@ -199,6 +197,7 @@ class Repository:
         if not config.use_repomap:
             return None
 
+        from pluscoder.repomap import LANGUAGE_MAP, generate_tree
         include_patterns = config.repomap_include_files or [r'.*\.(' + '|'.join(LANGUAGE_MAP.keys()) + ')$']
         exclude_patterns = config.repomap_exclude_files
         level = config.repomap_level
@@ -212,7 +211,7 @@ if __name__ == "__main__":
     print("Tree:")
     pprint.pprint(repo.get_tracked_files())
     
-    print("\n\nRepomap:")
-    print(repo.generate_repomap())
+    # print("\n\nRepomap:")
+    # print(repo.generate_repomap())
     
     repo.run_test()

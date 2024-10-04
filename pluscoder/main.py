@@ -23,7 +23,7 @@ def display_initial_messages():
     excluded_files_count = len(all_files) - len(tracked_files)
     
     io.event(f"> Files detected by git: {len(tracked_files)} (excluded: {excluded_files_count})")
-    io.event(f"> Using model '{config.model}' with {config.provider or 'LLMlite'}")
+    io.event(f"> Using model '{config.model}' with provider '{config.provider if config.provider else 'infered'}'")
     
     if config.read_only:
         io.event("> Running on 'read-only' mode")

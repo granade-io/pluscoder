@@ -14,16 +14,22 @@ WORKDIR /app
 
 # Copy the requirements file and wheels folder into the container
 COPY requirements.txt .
-COPY wheels /app/wheels
+# COPY wheels /app/wheels
 
 # Install the Python dependencies using local wheels and falling back to PyPI
-RUN pip install --no-cache-dir --find-links=/app/wheels -r requirements.txt
+# RUN pip install --no-cache-dir --find-links=/app/wheels -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Final stage
-FROM python:3.12-slim
+FROM python:3.12
 
-# Install git (required for the application)
-RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+# Install git and X11 clipboard tools (required for the application)
+RUN apt-get update && apt-get install -y \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up a directory for file-based clipboard (fallback mechanism)
+# RUN mkdir -p /tmp/clipboard && chmod 777 /tmp/clipboard
 
 # Set the working directory in the container
 WORKDIR /app
@@ -38,4 +44,4 @@ COPY . .
 RUN pip install --no-cache .
 
 # Set the entrypoint to run pluscoder
-ENTRYPOINT ["python", "-m", "pluscoder"]
+ENTRYPOINT ["plus-coder"]

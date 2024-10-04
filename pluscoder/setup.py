@@ -214,9 +214,6 @@ def setup() -> bool:
             io.event(f"> Configuration saved to {CONFIG_FILE}")
         else:
             io.event("> Skipping initialization. You can run it later using the /init command.")
-            
-            # Create a default configuration file
-            write_yaml(CONFIG_FILE, {'initialized': False})
     elif not Path(CONFIG_FILE).exists() and not config.init:
         io.event("> Skipping initialization due to --no-init flag.")
         # Path.touch(CONFIG_FILE)
