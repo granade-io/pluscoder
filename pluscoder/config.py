@@ -5,6 +5,7 @@ from typing import List, Optional, Tuple, Type, Dict, Any
 class Settings(BaseSettings):
     # Application behavior
     init: CliImplicitFlag[bool] = Field(True, description="Enable/disable initial setup")
+    read_only: CliImplicitFlag[bool] = Field(False, description="Enable/disable read-only mode")
     streaming: bool = Field(True, description="Enable/disable LLM streaming")
     user_feedback: bool = Field(True, description="Enable/disable user feedback")
     display_internal_outputs: bool = Field(False, description="Display internal agent outputs")

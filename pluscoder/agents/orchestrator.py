@@ -1,10 +1,11 @@
 from pluscoder import tools
 from typing import Annotated, List, Literal
 from pluscoder.agents.base import Agent, AgentState
-from pluscoder.agents.prompts import combine_prompts, BASE_PROMPT, FILE_OPERATIONS_PROMPT
+from pluscoder.agents.prompts import combine_prompts, BASE_PROMPT, FILE_OPERATIONS_PROMPT, READONLY_MODE_PROMPT
 from langchain_core.messages import HumanMessage
 
 from pluscoder.type import AgentInstructions
+from pluscoder.config import config
 
 
 class OrchestratorAgent(Agent):
@@ -145,7 +146,7 @@ You *must follow* following rules when suggesting a task list:
     """
 
     def __init__(self, llm, tools=[tools.read_files], extraction_tools=[tools.delegate_tasks, tools.is_task_completed]):
-        system_message = combine_prompts(BASE_PROMPT, self.orchestrator_prompt, FILE_OPERATIONS_PROMPT)
+        system_message = combine_prompts(BASE_PROMPT, self.orchestrator_prompt, FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT)
         super().__init__(llm, system_message, "Orchestrator Agent", tools=tools, extraction_tools=extraction_tools, default_context_files=["PROJECT_OVERVIEW.md"])
     
     def get_system_message(self, state: AgentState) -> str:

@@ -91,6 +91,7 @@ PlusCoder can be configured using several methods (using this priotity):
 ANY option below can be configured with ANY prefered method.
 
 ### Application Behavior
+- `READ_ONLY`: Enable/disable read-only mode to avoid file editions (default: `False`)
 - `STREAMING`: Enable/disable LLM streaming (default: `True`)
 - `USER_FEEDBACK`: Enable/disable user feedback (default: `True`)
 - `DISPLAY_INTERNAL_OUTPUTS`: Display internal agent outputs (default: `False`)

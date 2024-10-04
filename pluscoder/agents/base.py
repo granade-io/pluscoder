@@ -287,6 +287,10 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         return state_updates
     
     def process_agent_response(self, state, response: AIMessage):
+        if config.read_only:
+            # Ignore file editions when readonly
+            return {}
+        
         content_text = get_message_content_str(response)
         
         found_blocks = parse_block(content_text)

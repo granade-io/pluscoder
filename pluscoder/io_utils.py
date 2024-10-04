@@ -26,8 +26,9 @@ from pluscoder.config import config
 logging.getLogger().setLevel(logging.ERROR) # hide warning log
 
 class CommandCompleter(Completer):
-    def __init__(self):
+    def __init__(self, file_completer):
         super().__init__()
+        self.file_completer = file_completer
         self.commands = ['/agent', '/clear', '/diff', '/config', '/help', '/undo', '/run', '/init', '/show_repo', '/show_repomap', '/show_config', '/custom']
 
     def get_completions(self, document, complete_event):
@@ -45,6 +46,9 @@ class CommandCompleter(Completer):
                 for prompt in config.custom_prompt_commands:
                     if prompt['prompt_name'].startswith(prompt_name) and prompt_name != prompt['prompt_name']:
                         yield Completion(prompt['prompt_name'], start_position=-len(prompt_name), display_meta=prompt['description'])
+            else:
+                yield from (Completion(completion.text, completion.start_position, display=completion.display)
+                            for completion in self.file_completer.get_completions(document, complete_event))
 
 class FileNameCompleter(Completer):
     def __init__(self):
@@ -70,8 +74,8 @@ class FileNameCompleter(Completer):
 
 class CombinedCompleter(Completer):
     def __init__(self):
-        self.command_completer = CommandCompleter()
         self.file_completer = FileNameCompleter()
+        self.command_completer = CommandCompleter(file_completer=self.file_completer)
 
     def get_completions(self, document, complete_event):
         text = document.text_before_cursor

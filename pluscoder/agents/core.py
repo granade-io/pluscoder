@@ -1,6 +1,7 @@
 from pluscoder import tools
 from pluscoder.agents.base import Agent
-from pluscoder.agents.prompts import combine_prompts, BASE_PROMPT, FILE_OPERATIONS_PROMPT
+from pluscoder.agents.prompts import combine_prompts, BASE_PROMPT, FILE_OPERATIONS_PROMPT, READONLY_MODE_PROMPT
+from pluscoder.config import config
 
 class DeveloperAgent(Agent):
     id = "developer"
@@ -30,7 +31,7 @@ Guidelines:
 3. If you encounter any ambiguities or potential issues with the task description, ask for clarification before proceeding.
 """
     def __init__(self, llm, tools=[tools.read_files, tools.move_files, tools.download_file], default_context_files=["PROJECT_OVERVIEW.md", "CODING_GUIDELINES.md"]):
-        system_message = combine_prompts(BASE_PROMPT, self.developer_prompt, FILE_OPERATIONS_PROMPT)
+        system_message = combine_prompts(BASE_PROMPT, self.developer_prompt, FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT)
         super().__init__(llm, system_message, "Developer Agent", tools=tools, default_context_files=default_context_files)
 
 class DomainStakeholderAgent(Agent):
@@ -62,7 +63,7 @@ These are only example questions to help you understand the project vision and g
 - Future Roadmap: What are the key upcoming features or changes planned for the system?  
 """
     def __init__(self, llm, tools=[tools.read_files, tools.move_files, tools.download_file], default_context_files=["PROJECT_OVERVIEW.md"]):
-        system_message = combine_prompts(BASE_PROMPT, self.domain_prompt, FILE_OPERATIONS_PROMPT)
+        system_message = combine_prompts(BASE_PROMPT, self.domain_prompt, FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT)
         super().__init__(llm, system_message, "Domain Stakeholder Agent", tools=tools, default_context_files=default_context_files)
 
 class DomainExpertAgent(Agent):
@@ -99,7 +100,7 @@ Always refer to the `PROJECT_OVERVIEW.md` file for the most up-to-date project v
 THE PROPOSAL NEVER IS FULLY CORRECT, WAS MADE BY AN IA, FIND THOSE DETAILS TO IMPROVE IT. TAKE A DETAILED LOOK TO PROJECT FILES TO DETECT THOSE .
 """
     def __init__(self, llm, tools=[tools.read_files, tools.move_files, tools.download_file], default_context_files=["PROJECT_OVERVIEW.md", "CODING_GUIDELINES.md"  ]):
-        system_message = combine_prompts(BASE_PROMPT, self.domain_prompt, FILE_OPERATIONS_PROMPT)
+        system_message = combine_prompts(BASE_PROMPT, self.domain_prompt, FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT)
         super().__init__(llm, system_message, "Domain Expert Agent", tools=tools, default_context_files=default_context_files)
 
 class PlanningAgent(Agent):
@@ -140,7 +141,7 @@ When creating a plan, follow this structure:
 3. your plans should be detailed enough for implementation by AI agents or junior developers who have read the project overview and coding guidelines.
 """
     def __init__(self, llm, tools=[tools.read_files, tools.move_files, tools.download_file], default_context_files=["PROJECT_OVERVIEW.md", "CODING_GUIDELINES.md"]):
-        system_message = combine_prompts(BASE_PROMPT, self.planning_prompt, FILE_OPERATIONS_PROMPT)
+        system_message = combine_prompts(BASE_PROMPT, self.planning_prompt, FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT)
         super().__init__(llm, system_message, "Planning Agent", tools=tools, default_context_files=default_context_files)
         
         

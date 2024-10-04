@@ -25,6 +25,9 @@ def display_initial_messages():
     io.event(f"> Files detected by git: {len(tracked_files)} (excluded: {excluded_files_count})")
     io.event(f"> Using model '{config.model}' with {config.provider or 'LLMlite'}")
     
+    if config.read_only:
+        io.event("> Running on 'read-only' mode")
+    
     io.console.print("Look at https://gitlab.com/codematos/pluscoder/-/blob/main/README.md for more documentation.")
 
 # Run the workflow
