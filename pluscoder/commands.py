@@ -199,8 +199,13 @@ def show_config(state: OrchestrationState = None):
     return state
 
 @command_registry.register("custom")
-def custom_command(state: OrchestrationState, prompt_name: str, *args):
+def custom_command(state: OrchestrationState, prompt_name: str = "", *args):
     """Execute a custom prompt command"""
+    if not prompt_name:
+        io.console.print("Error: Custom prompt name is required.", style="bold red")
+        io.console.print("Usage: /custom <prompt_name> <additional instructions>")
+        return state
+
     custom_prompt = next((prompt for prompt in config.custom_prompt_commands if prompt['prompt_name'] == prompt_name), None)
     if not custom_prompt:
         io.console.print(f"Error: Custom prompt '{prompt_name}' not found.", style="bold red")
@@ -218,7 +223,7 @@ def custom_command(state: OrchestrationState, prompt_name: str, *args):
     # Do not return to the user to execute agent with the added human message
     state["return_to_user"] = False
 
-    io.event(f"Custom prompt '{prompt_name}' executed and added to {current_agent}'s message history.")
+    io.console.print(f"Custom prompt '{prompt_name}' executed and added to {current_agent}'s message history.")
     return state
 
 

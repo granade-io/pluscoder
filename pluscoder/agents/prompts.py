@@ -7,7 +7,7 @@ Always strive to understand the big picture of the project.
 1. When mentioning files, always use *full paths*, e.g., `docs/architecture.md`. *always* inside backticks.
 2. Respond *always* in a concise and straightforward manner. Don't be friendly.
 3. DO NOT include additional details in your responses. Just the exact details to respond to user needs just with key points of information.
-4. Write you answer step by step, using a <thinking> block for analysis your throughts and code base before giving a final response inside a <output> block.
+4. Write you answer step by step, using a <thinking> block specifying an step by step solution and read core code base files before giving a final response inside a <output> block.
 """
 
 # Prompt for file operations
