@@ -120,19 +120,6 @@ class Repository:
             else:
                 # otherwise, stop using pluscoder
                 return False
-        
-        # Ask to add .pluscoder/ to gitignore. Reads the file or create it if it doesn't exist
-        if not os.path.isfile(".gitignore"):
-            if input("Create the missing .gitignore file? (y/n):").lower().strip() == 'y':
-                with open(".gitignore", "a") as f:
-                    f.write("\n# Pluscoder\n")
-                    f.write(".pluscoder/\n")
-        else:
-            with open(".gitignore", "r+") as f:
-                if ".pluscoder/" not in f.read() and input("Add pluscoder files to gitignore (recommended)? (y/n):").lower().strip() == 'y':
-                    f.write("\n# Pluscoder\n")
-                    f.write(".pluscoder/\n")
-        
         return True
 
     def run_lint(self) -> Optional[str]:

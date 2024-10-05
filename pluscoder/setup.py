@@ -1,6 +1,7 @@
 import asyncio
 from pathlib import Path
 import yaml
+import os
 from pluscoder import tools
 from pluscoder.type import AgentInstructions, AgentState, OrchestrationState, TokenUsage
 from pluscoder.config import config, Settings
@@ -14,6 +15,24 @@ CONFIG_FILE = '.pluscoder-config.yml'
 CONFIG_OPTIONS = [
     'provider', 'model', 'auto_commits', 'allow_dirty_commits'
 ]
+
+def required_setup():
+    git_dir = Path('.git')
+    if not git_dir.is_dir():
+        io.event("> .git directory not found. Make sure you're in a Git repository.")
+        return False
+
+    exclude_file = git_dir / 'info' / 'exclude'
+    exclude_file.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(exclude_file, 'a+') as f:
+        f.seek(0)
+        content = f.read()
+        if '.pluscoder/' not in content:
+            f.write('\n.pluscoder/')
+            # io.event("> Added 'pluscoder/' to .git/info/exclude")
+    
+    return True
 
 def get_config_descriptions():
     return {field: Settings.model_fields[field].description for field in CONFIG_OPTIONS}
@@ -53,6 +72,33 @@ def prompt_for_config():
         config_data[option] = value
 
     return config_data
+
+def additional_config():
+    gitignore_path = '.gitignore'
+    files_to_ignore = ['PROJECT_OVERVIEW.md', 'CODING_GUIDELINES.md']
+
+    if os.path.exists(gitignore_path):
+        with open(gitignore_path, 'r') as f:
+            content = f.read().splitlines()
+
+        files_to_add = [file for file in files_to_ignore if file not in content]
+
+        if files_to_add:
+            if io.confirm(f"Do you want to add {', '.join(files_to_add)} to .gitignore?"):
+                with open(gitignore_path, 'a') as f:
+                    f.write('\n' + '\n'.join(files_to_add) + '\n')
+                io.event(f"> Added {', '.join(files_to_add)} to .gitignore")
+            else:
+                io.event("> No changes made to .gitignore")
+        else:
+            io.event("> PROJECT_OVERVIEW.md and CODING_GUIDELINES.md are already in .gitignore")
+    else:
+        if io.confirm("> .gitignore file not found. Do you want to create it with PROJECT_OVERVIEW.md and CODING_GUIDELINES.md?"):
+            with open(gitignore_path, 'w') as f:
+                f.write('\n'.join(files_to_ignore) + '\n')
+            io.event("> Created .gitignore with PROJECT_OVERVIEW.md and CODING_GUIDELINES.md")
+        else:
+            io.event("> Skipped creating .gitignore")
 
 
 TASK_LIST = [
@@ -194,6 +240,9 @@ def initialize_repository():
     io.console.print("Files `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md` were generated and will be used as context for Pluscoder.\n")
 
 def setup() -> bool:
+    if not required_setup():
+        return False
+
     repo = Repository(io=io)
     
     if not Path(CONFIG_FILE).exists() and config.init:
@@ -207,12 +256,12 @@ def setup() -> bool:
         
         io.event(f"> Configuration saved to {CONFIG_FILE}.")
 
+        # Additional configuration
+        additional_config()
+
         io.console.print("Initialization will analyze your project for better agent assistance generating `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md` files.")
         if io.confirm("Do you want to initialize it now (takes ~1min)? (recommended)"):
             initialize_repository()
-            
-            
-            io.event(f"> Configuration saved to {CONFIG_FILE}")
         else:
             io.event("> Skipping initialization. You can run it later using the /init command.")
     elif not Path(CONFIG_FILE).exists() and not config.init:
