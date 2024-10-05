@@ -60,6 +60,26 @@ def get_llm():
     # Return ChatLiteLLM
     return ChatLiteLLM(model=model_id)
 
+def get_inferred_provider():
+    if config.provider:
+        return config.provider
+    
+    
+    # Uses aws bedrock if available
+    if config.aws_access_key_id:
+        return "aws_bedrock"
+        
+    # Uses Anthropic if available
+    if config.anthropic_api_key:
+        return "anthropic"
+        
+    # Prefer using OpenAI if available
+    if config.openai_api_key:
+        return "openai"
+    
+    return "litellm"
+    
+
 # Commented out Bedrock LLM configuration
 # def get_llm():
 #     model_id = os.getenv('model', None)

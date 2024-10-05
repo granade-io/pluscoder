@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import asyncio
+from pluscoder.model import get_inferred_provider
 from pluscoder.setup import setup
 from pluscoder.type import AgentState, TokenUsage
 from pluscoder.workflow import run_workflow
@@ -24,7 +25,7 @@ def display_initial_messages():
     excluded_files_count = len(all_files) - len(tracked_files)
     
     io.event(f"> Files detected by git: {len(tracked_files)} (excluded: {excluded_files_count})")
-    io.event(f"> Using model '{config.model}' with provider '{config.provider if config.provider else 'inferred'}'")
+    io.event(f"> Using model '{config.model}' with provider '{get_inferred_provider()}'")
     
     if config.read_only:
         io.event("> Running on 'read-only' mode")

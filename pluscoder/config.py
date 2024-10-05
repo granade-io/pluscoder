@@ -3,6 +3,12 @@ from pydantic_settings import BaseSettings, CliImplicitFlag, PydanticBaseSetting
 from typing import List, Optional, Tuple, Type, Dict, Any
 
 class Settings(BaseSettings):
+    
+    def __new__(cls, *args, **kwargs):
+        if not hasattr(cls, '_instance'):
+            cls._instance = super(Settings, cls).__new__(cls)
+        return cls._instance
+    
     # Application behavior
     init: CliImplicitFlag[bool] = Field(True, description="Enable/disable initial setup")
     read_only: CliImplicitFlag[bool] = Field(False, description="Enable/disable read-only mode")
