@@ -11,6 +11,7 @@ from rich.rule import Rule
 from rich.table import Table
 from rich.tree import Tree
 from rich.panel import Panel
+from rich.prompt import Prompt
 import subprocess
 
 class CommandRegistry:
@@ -98,24 +99,39 @@ def undo(state: OrchestrationState):
 @command_registry.register("agent")
 def agent(state: OrchestrationState):
     """Start a conversation with a new agent from scratch"""
-    agents = ["orchestrator", "domain_stakeholder", "planning", "developer", "domain_expert"]
-    io.console.print("Available agents:")
-    for i, agent in enumerate(agents, 1):
-        io.console.print(f"{i}. {agent}")
+    agent_options = [
+        ("Orchestrator", "Break down the problem into a list of tasks and delegates it to other agents"),
+        ("Domain Stakeholder", "Discuss project details, maintain project overview, roadmap, and brainstorm"),
+        ("Planning", "Create detailed, actionable plans for software development tasks"),
+        ("Developer", "Implement code to solve complex software development requirements"),
+        ("Domain Expert", "Validate tasks and ensure alignment with project vision")
+    ]
     
-    choice = io.input("Enter the number of the agent you want to switch to: ")
-    try:
-        index = int(choice) - 1
-        if 0 <= index < len(agents):
-            state["chat_agent"] = agents[index]
-            io.event(f"Switched to `{agents[index]}` agent. Chat history was cleared.")
-        else:
-            io.console.print("Invalid choice. Please enter a number between 1 and 5.", style="bold red")
-    except ValueError:
-        io.console.print("Invalid input. Please enter a number.", style="bold red")
-        
+    io.console.print("[bold green]Choose an agent to chat with:[/bold green]")
+    for i, (agent, description) in enumerate(agent_options, 1):
+        io.console.print(f"{i}. [bold green]{agent}[/bold green]: {description}")
+    
+    choice = Prompt.ask(
+        "Select an agent",
+        choices=[str(i) for i in range(1, len(agent_options) + 1)],
+        default="1"
+    )
+    
+    agent_map = {
+        "1": "orchestrator",
+        "2": "domain_stakeholder",
+        "3": "planning",
+        "4": "developer",
+        "5": "domain_expert"
+    }
+    
+    chosen_agent = agent_map[choice]
+    io.event(f"> Starting chat with {chosen_agent} agent. Chat history was cleared.")
+    
+    state["chat_agent"] = chosen_agent
+    
     # Clear chats to start new conversations
-    cleared_state = _clear(state)  
+    cleared_state = _clear(state)
     return cleared_state
 
 @command_registry.register("help")                                                                                                
