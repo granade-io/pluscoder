@@ -3,6 +3,7 @@ import re
 from typing import List, Literal
 from langgraph.graph import StateGraph
 from langgraph.prebuilt import ToolNode
+from pluscoder.agents.prompts import REMINDER_PREFILL_FILE_OPERATIONS_PROMPT, REMINDER_PREFILL_PROMP
 from pluscoder.exceptions import AgentException
 from pluscoder.io_utils import io
 from pluscoder.logs import file_callback
@@ -90,6 +91,9 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
     def get_system_message(self, state: AgentState):
         return self.system_message
     
+    def get_reminder_prefill(self, state: AgentState) -> str:
+        return REMINDER_PREFILL_PROMP + REMINDER_PREFILL_FILE_OPERATIONS_PROMPT
+    
     def build_assistant_prompt(self, state: AgentState, deflection_messages: list):
         # last_message = state["messages"][-1]
         # check if last message is from a tool
@@ -112,6 +116,7 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                 ("user", self.get_files_context_prompt(state)),
                 AIMessage(content="ok"),
                 ("placeholder", "{messages}"),
+                HumanMessage(content=self.get_reminder_prefill(state)),
             ]# + user_message_list
         )
         return assistant_prompt

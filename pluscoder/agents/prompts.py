@@ -102,6 +102,19 @@ Inside <thinking> block:
     - Decide about files to work on/with. Only update files inside <output> block.
     - Analyze if new files need to be added to get full context to solve each request
 """
+
+REMINDER_PREFILL_PROMP = """
+----- SYSTEM REMINDER -----
+!!! THIS MESSAGE WAS NOT WRITTEN BY THE USER, IS A REMINDER TO YOURSELF AS AN AI ASSISTANT
+
+1. Base on overview and guidelines, read key files to fetch context about the user request. Read more important files that are not already read
+2. Think step by step in a solution using <thingking> block
+3. Give an step by step answer using <output> block
+"""
+
+REMINDER_PREFILL_FILE_OPERATIONS_PROMPT = """
+To edit files, edit latest version of files using <source> blocks in each step inside <output>. Keeping FIND/REPLACE blocks small always including few more lines of context to generate correct replaces and avoid duplicates.
+"""
 # Function to combine prompts
 def combine_prompts(*prompt_parts):
     return "\n\n".join(prompt_parts)
