@@ -24,12 +24,15 @@
 #------------------------------------------------------------------------------
 # Model and API Settings
 #------------------------------------------------------------------------------
-# model: openai/claude-3-5-sonnet-20240620 # LLM model to use
 # model: anthropic.claude-3-5-sonnet-20240620-v1:0 # LLM model to use
-# provider: null           # Provider (aws_bedrock, openai, litellm, anthropic)
-# openai_api_key:          # OpenAI API key
-# openai_api_base:         # OpenAI API base URL
-# anthropic_api_key:       # Anthropic API key
+# orchestrator_model: null            # Model to use for the orchestrator agent (default: same as model)
+# weak_model: null                    # Weaker LLM model for less complex tasks (default: same as model)
+# provider: null                      # Provider (aws_bedrock, openai, litellm, anthropic, azure)
+# orchestrator_model_provider: null   # Provider for orchestrator model (default: same as provider)
+# weak_model_provider: null           # Provider for weak model (default: same as provider)
+# openai_api_key:                     # OpenAI API key
+# openai_api_base:                    # OpenAI API base URL
+# anthropic_api_key:                  # Anthropic API key
 
 #------------------------------------------------------------------------------
 # AWS Settings

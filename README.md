@@ -105,7 +105,11 @@ ANY option below can be configured with ANY prefered method.
 
 ### Model and API Settings
 - `MODEL`: LLM model to use (default: `"anthropic.claude-3-5-sonnet-20240620-v1:0"`)
+- `ORCHESTRATOR_MODEL`: LLM model to use for orchestrator (default: same as `MODEL`)
+- `WEAK_MODEL`: Weaker LLM model to use for less complex tasks (default: same as `MODEL`)
 - `PROVIDER`: Provider to use. If none, provider will be selected based on available credentaial variables. Options: aws_bedrock, openai, litellm, anthropic (default: `None`)
+- `ORCHESTRATOR_MODEL_PROVIDER`: Provider to use for orchestrator model (default: same as `PROVIDER`)
+- `WEAK_MODEL_PROVIDER`: Provider to use for weak model (default: same as `PROVIDER`)
 - `OPENAI_API_KEY`: OpenAI API key
 - `OPENAI_API_BASE`: OpenAI API base URL
 - `ANTHROPIC_API_KEY`: Anthropic API key

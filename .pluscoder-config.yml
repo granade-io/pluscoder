@@ -41,7 +41,7 @@ provider: openai           # Provider (aws_bedrock, openai, litellm, anthropic)
 # Git Settings
 #------------------------------------------------------------------------------
 auto_commits: true       # Enable/disable automatic Git commits
-allow_dirty_commits: false # Allow commits in a dirty repository
+allow_dirty_commits: true # Allow commits in a dirty repository
 
 #------------------------------------------------------------------------------
 # Test and Lint Settings

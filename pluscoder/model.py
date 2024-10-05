@@ -5,32 +5,21 @@ from langchain_anthropic import ChatAnthropic
 from pluscoder.io_utils import io
 from pluscoder.config import config
 
-# Set up caching to reduce cost/time when calling LLM
-# TODO: Fix. Seems not to work along streaming feature
-# set_llm_cache(SQLiteCache(database_path=".langchain.db"))
-
-# TODO: Fix. Llm Invokes works properly but tools are ignored
-def get_llm():
-    model_id = config.model
-    
-    # Raise if no model found
-    if model_id is None:
-        raise ValueError("No 'model' specified. Please set the 'model' environment variable, .env, or use --model argument.")
-    
+def get_llm_base(model_id, provider):
     # Check AWS Bedrock
-    if config.provider == "aws_bedrock" and not config.aws_access_key_id:
+    if provider == "aws_bedrock" and not config.aws_access_key_id:
         io.console.print("AWS Bedrock provider defined but AWS access key ID is not configured or empty.", style="bold red")
     
     # Check Anthropic
-    if config.provider == "anthropic" and not config.anthropic_api_key:
+    if provider == "anthropic" and not config.anthropic_api_key:
         io.console.print("Anthropic provider defined but Anthropic API key is not configured or empty.", style="bold red")
     
     # Check OpenAI
-    if config.provider == "openai" and not config.openai_api_key:
+    if provider == "openai" and not config.openai_api_key:
         io.console.print("OpenAI provider defined but OpenAI API key is not configured or empty.", style="bold red")
     
     # Uses aws bedrock if available
-    if config.aws_access_key_id and (not config.provider or config.provider == "aws_bedrock"):
+    if config.aws_access_key_id and provider == "aws_bedrock":
         return ChatBedrock(    
             model_id=model_id,
             model_kwargs={"temperature": 0.0, "max_tokens": 4096},
@@ -39,7 +28,7 @@ def get_llm():
         )
         
     # Uses Anthropic if available
-    if config.anthropic_api_key and (not config.provider or config.provider == "anthropic"):
+    if config.anthropic_api_key and provider == "anthropic":
         return ChatAnthropic(    
             model_name=model_id,
             temperature=0.0,
@@ -47,23 +36,38 @@ def get_llm():
             streaming=config.streaming
         )
         
-    # Prefer using OpenAI if available
-    if config.openai_api_key and (not config.provider or config.provider == "openai"):
+    # Uses OpenAI if available
+    if config.openai_api_key and provider == "openai":
         return ChatOpenAI(
             model=model_id.replace("openai/", ""),
-            # cache=SQLiteCache(database_path=".langchain.db"),
             base_url=config.openai_api_base,
             api_key=config.openai_api_key,
             max_tokens=4096
         )
+        
+    # Uses Litellm
+    if config.openai_api_key and provider == "litellm":
+        return ChatLiteLLM(model=model_id)
     
-    # Return ChatLiteLLM
-    return ChatLiteLLM(model=model_id)
+    # Return no model
+    return None
+
+def get_llm():
+    return get_llm_base(config.model, config.provider or get_inferred_provider())
+
+def get_orchestrator_llm():
+    model = config.orchestrator_model if config.orchestrator_model else config.model
+    provider = config.orchestrator_model_provider or config.provider or get_inferred_provider()
+    return get_llm_base(model, provider)
+
+def get_weak_llm():
+    model = config.weak_model if config.weak_model else config.model
+    provider = config.weak_model_provider or config.provider or get_inferred_provider()
+    return get_llm_base(model, provider)
 
 def get_inferred_provider():
     if config.provider:
         return config.provider
-    
     
     # Uses aws bedrock if available
     if config.aws_access_key_id:

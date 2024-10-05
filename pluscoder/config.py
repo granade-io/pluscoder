@@ -26,9 +26,13 @@ class Settings(BaseSettings):
 
     # Model and API settings
     model: str = Field("anthropic.claude-3-5-sonnet-20240620-v1:0", description="LLM model to use")
+    orchestrator_model: Optional[str] = Field(None, description="LLM model to use for orchestrator")
+    weak_model: Optional[str] = Field(None, description="Weaker LLM model to use for less complex tasks")
     openai_api_key: Optional[str] = Field(None, description="OpenAI API key")
     openai_api_base: Optional[str] = Field(None, description="OpenAI API base URL")
     provider: Optional[str] = Field(None, description="Provider to use. Options: aws_bedrock, openai, litellm, anthropic")
+    orchestrator_model_provider: Optional[str] = Field(None, description="Provider to use for orchestrator model")
+    weak_model_provider: Optional[str] = Field(None, description="Provider to use for weak model")
     anthropic_api_key: Optional[str] = Field(None, description="Anthropic API key")
 
     # AWS settings

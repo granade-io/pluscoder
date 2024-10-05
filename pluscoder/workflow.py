@@ -13,7 +13,7 @@ from rich.rule import Rule
 from rich.markdown import Markdown
 from langchain_core.globals import set_debug
 from pluscoder.message_utils import get_message_content_str
-from pluscoder.model import get_llm
+from pluscoder.model import get_llm, get_orchestrator_llm
 from pluscoder.agents.event.config import event_emitter
 from pluscoder.commands import handle_command, is_command
 from pluscoder.config import config
@@ -24,9 +24,10 @@ set_debug(False)
 warnings.filterwarnings("ignore")
 
 llm = get_llm()
+orchestrator_llm = get_orchestrator_llm()
 
 # Create the vision agent
-orchestrator_agent = OrchestratorAgent(llm)
+orchestrator_agent = OrchestratorAgent(orchestrator_llm)
 domain_stakeholder_agent = DomainStakeholderAgent(llm)
 planning_agent = PlanningAgent(llm)
 developer_agent = DeveloperAgent(llm)

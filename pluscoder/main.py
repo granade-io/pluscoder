@@ -11,7 +11,7 @@ from pluscoder.repo import Repository
 from rich.prompt import Prompt
 
 def display_initial_messages():
-    """Display initial message with the number of files detected by git and excluded files."""
+    """Display initial message with the number of files detected by git, excluded files, and model information."""
     repo = Repository(io)
     
     # Get all tracked files (including those in the index) and untracked files
@@ -25,7 +25,29 @@ def display_initial_messages():
     excluded_files_count = len(all_files) - len(tracked_files)
     
     io.event(f"> Files detected by git: {len(tracked_files)} (excluded: {excluded_files_count})")
-    io.event(f"> Using model '{config.model}' with provider '{get_inferred_provider()}'")
+    
+    # Get model and provider information
+    main_provider = get_inferred_provider()
+    orchestrator_model = config.orchestrator_model if config.orchestrator_model else config.model
+    orchestrator_provider = config.orchestrator_model_provider or main_provider
+    weak_model = config.weak_model if config.weak_model else config.model
+    weak_provider = config.weak_model_provider or main_provider
+    
+    # Construct model information string
+    model_info = f"main: [green]{config.model}[/green]"
+    if orchestrator_model != config.model:
+        model_info += f", orchestrator: [green]{orchestrator_model}[/green]"
+    if weak_model != config.model:
+        model_info += f", weak: [green]{weak_model}[/green]"
+    
+    # Add provider information
+    provider_info = f"provider: [green]{main_provider}[/green]"
+    if orchestrator_provider != main_provider:
+        provider_info += f", orchestrator: {orchestrator_provider}"
+    if weak_provider != main_provider:
+        provider_info += f", weak: {weak_provider}"
+    
+    io.event(f"> Using models: {model_info} with {provider_info}")
     
     if config.read_only:
         io.event("> Running on 'read-only' mode")
