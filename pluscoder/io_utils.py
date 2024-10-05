@@ -1,5 +1,6 @@
 import os
 import logging
+from pathlib import Path
 from typing import Union, Optional
 import json
 from prompt_toolkit import PromptSession
@@ -24,6 +25,8 @@ from pluscoder.repo import Repository
 from pluscoder.config import config
 
 logging.getLogger().setLevel(logging.ERROR) # hide warning log
+
+INPUT_HISTORY_FILEPATH = '.pluscoder/input_history.txt'
 
 class CommandCompleter(Completer):
     def __init__(self, file_completer):
@@ -124,7 +127,7 @@ class CustomProgress(Progress):
         return renderable
 
 class IO:
-    DEBUG_FILE = ".plus_coder.debug"
+    DEBUG_FILE = ".pluscoder/debug.txt"
     def __init__(self, log_level=logging.INFO):
         self.console = Console()
         self.progress = None
@@ -191,7 +194,11 @@ class IO:
 
     def input(self, string: str, autocomplete=True) -> Union[str, List[Dict[str, Any]]]:
         kb = KeyBindings()
-        history = FileHistory('.plus_coder_input_history')
+        
+        # Create the directory if it doesn't exist
+        path = Path(INPUT_HISTORY_FILEPATH)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        history = FileHistory('.pluscoder/input_history.txt')
 
         @kb.add("escape", "c-m", eager=True)
         def _(event):

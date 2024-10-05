@@ -67,6 +67,31 @@ FILE_OPERATIONS_PROMPT = """
     Section description
     <<< REPLACE
     </source>
+    
+    I.e: Multiple replacements in same file:
+    
+    `utils.js`
+    <source>
+    >>> FIND
+    const useInterval = true;
+    const counter = 0;
+    ===
+    const useInterval = true;
+    const counter = 0;
+    const intervalMilliseconds = 1000;
+    <<< REPLACE
+    </source>
+    
+    `utils.js`
+    <source>
+    >>> FIND
+    // Start the interval
+    const intervalId = setInterval(incrementCounter, 1000);
+    ===
+    // Start the interval
+    const intervalId = setInterval(incrementCounter, intervalMilliseconds);
+    <<< REPLACE
+    </source>
 
 3. Multiple replacements in a single file are allowed.
 4. Keep FIND/REPLACE blocks small always ALWAYS including few more lines of context to generate correct replaces and avoid duplicates.

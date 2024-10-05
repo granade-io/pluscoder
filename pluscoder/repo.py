@@ -121,17 +121,17 @@ class Repository:
                 # otherwise, stop using pluscoder
                 return False
         
-        # Ask to add .plus_coder* to gitignore. Reads the file or create it if it doesn't exist
+        # Ask to add .pluscoder/ to gitignore. Reads the file or create it if it doesn't exist
         if not os.path.isfile(".gitignore"):
             if input("Create the missing .gitignore file? (y/n):").lower().strip() == 'y':
                 with open(".gitignore", "a") as f:
                     f.write("\n# Pluscoder\n")
-                    f.write(".plus_coder*\n")
+                    f.write(".pluscoder/\n")
         else:
             with open(".gitignore", "r+") as f:
-                if ".plus_coder*" not in f.read() and input("Add pluscoder files to gitignore (recommended)? (y/n):").lower().strip() == 'y':
+                if ".pluscoder/" not in f.read() and input("Add pluscoder files to gitignore (recommended)? (y/n):").lower().strip() == 'y':
                     f.write("\n# Pluscoder\n")
-                    f.write(".plus_coder*\n")
+                    f.write(".pluscoder/\n")
         
         return True
 
