@@ -10,6 +10,21 @@ from pluscoder.commands import show_repo, show_repomap, show_config
 from pluscoder.repo import Repository
 from rich.prompt import Prompt
 
+def run_silent_checks():
+    """Run tests and linter silently and return any warnings."""
+    repo = Repository(io)
+    warnings = []
+
+    test_result = repo.run_test()
+    if test_result:
+        warnings.append("Tests are failing. This may lead to issues when editing files.")
+
+    lint_result = repo.run_lint()
+    if lint_result:
+        warnings.append("Linter checks are failing. This may lead to issues when editing files.")
+
+    return warnings
+
 def display_initial_messages():
     """Display initial message with the number of files detected by git, excluded files, and model information."""
     repo = Repository(io)
@@ -99,6 +114,10 @@ def main():
     try:
         if not setup():
             return
+        
+        warnings = run_silent_checks()
+        for warning in warnings:
+            io.console.print(f"Warning: {warning}", style="bold dark_goldenrod")
         
         display_initial_messages()
         

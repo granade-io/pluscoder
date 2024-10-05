@@ -138,7 +138,7 @@ class Repository:
         
         # Run linter fix if configured
         if config.auto_run_linter_fix and config.lint_fix_command:
-            subprocess.run(config.lint_fix_command, shell=True, check=False)
+            subprocess.run(config.lint_fix_command, shell=True, check=False, capture_output=True)
         
         try:
             subprocess.run(config.lint_command, shell=True, check=True, capture_output=True, text=True)
