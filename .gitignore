@@ -64,7 +64,7 @@ output/
 
 # Aider
 .aider*
-.plus_coder*
+.pluscoder/
 CURRENT_TASK_LIST.md
 
 

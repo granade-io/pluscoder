@@ -1,7 +1,8 @@
 import pytest
 from pluscoder.agents.orchestrator import OrchestratorAgent
 from pluscoder.agents.base import AgentState
-from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.messages import AIMessage
+from pluscoder.message_utils import HumanMessage
 from pluscoder import tools
 
 @pytest.fixture
@@ -33,7 +34,7 @@ def test_get_current_task_no_tool_data(orchestrator_agent):
     assert orchestrator_agent.get_current_task(state) is None
 
 def test_get_current_task_empty_task_list(orchestrator_agent):
-    state = AgentState(tool_data={tools.delegate_tasks.name: {"args": {"task_list": []}}})
+    state = AgentState(tool_data={tools.delegate_tasks.name: {"args": {"task_list": [], "resources": []}}})
     assert orchestrator_agent.get_current_task(state) is None
 
 def test_get_current_task_all_finished(orchestrator_agent):
@@ -85,7 +86,7 @@ def test_get_completed_tasks_mixed(orchestrator_agent):
 
 def test_task_to_instruction_no_completed_tasks(orchestrator_agent):
     task = {"objective": "Current task", "details": "Task details"}
-    state = AgentState(tool_data={tools.delegate_tasks.name: {"general_objective": "Objective", "task_list": []}})
+    state = AgentState(tool_data={tools.delegate_tasks.name: {"general_objective": "Objective", "task_list": [], "resources": []}})
     instruction = orchestrator_agent.task_to_instruction(task, state)
     assert "Current task" in instruction
     assert "Task details" in instruction
@@ -101,7 +102,8 @@ def test_task_to_instruction_with_completed_tasks(orchestrator_agent):
                 {"is_finished": True, "objective": "Completed task 1", "details": "Details 1"},
                 {"is_finished": True, "objective": "Completed task 2", "details": "Details 2"},
                 {"is_finished": False, "objective": "Current task", "details": "Task details"}
-            ]
+            ],
+            "resources": []
         }
     })
     instruction = orchestrator_agent.task_to_instruction(task, state)

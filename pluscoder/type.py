@@ -71,6 +71,7 @@ class AgentTask(BaseModel):
 
 class AgentInstructions(BaseModel):
     general_objective: str
+    resources: List[str]
     task_list: List[AgentTask]
 
     def get_task_count(self) -> int:
@@ -93,4 +94,5 @@ class AgentInstructions(BaseModel):
             if task.outcome:
                 markdown += f"   - Expected Outcome: {task.outcome}\n"
             markdown += "\n"
+        markdown += f"**Resources**: {', '.join(self.resources)}"
         return markdown

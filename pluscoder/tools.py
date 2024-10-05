@@ -138,7 +138,8 @@ def extract_files(
 @tool
 def delegate_tasks(
     general_objective: Annotated[str, "The general objective for all tasks."],
-    task_list: Annotated[List[AgentTask], "List of tasks, each task being a dictionary with 'objective', 'details', 'agent', 'is_finished', 'restrictions', and 'outcome' keys."]
+    task_list: Annotated[List[AgentTask], "List of tasks, each task being a dictionary with 'objective', 'details', 'agent', 'is_finished', 'restrictions', and 'outcome' keys."],
+    resources: Annotated[List[str], "List of resources specified by the user external to the repository. (url/links/local files)"]
 ) -> Dict[str, List[AgentTask]]:
     """
     Delegates tasks to other agents to execute/complete them. Each task in the task_list must be a dict with 6 values: (objective, details, agent, is_finished, restrictions, outcome).
@@ -146,6 +147,7 @@ def delegate_tasks(
     The 'is_finished' value is a boolean indicating whether the task has been completed.
     The 'restrictions' value is a string describing any limitations or constraints for the task.
     The 'outcome' value is a string describing the expected result of the task.
+    The 'resources' value contains the list of resources the same exact format the user passed it. Including 'img::' if present.
     """
     return f"Task '{general_objective}' about to be delegated. \n\n{task_list}"
 

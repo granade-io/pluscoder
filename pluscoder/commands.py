@@ -6,7 +6,7 @@ from pluscoder.config import config
 from pluscoder.repo import Repository
 from pluscoder.io_utils import io
 from pluscoder.type import AgentState, OrchestrationState
-from langchain_core.messages import HumanMessage
+from pluscoder.message_utils import HumanMessage
 from rich.rule import Rule                                                                                                      
 from rich.table import Table
 from rich.tree import Tree

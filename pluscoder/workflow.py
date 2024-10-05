@@ -4,7 +4,7 @@ import warnings
 from pluscoder.agents.orchestrator import OrchestratorAgent
 from pluscoder.io_utils import io
 from langgraph.graph import StateGraph, END, START
-from langchain_core.messages import HumanMessage
+from pluscoder.message_utils import HumanMessage
 from pluscoder.agents.base import Agent, AgentState
 from pluscoder.state_utils import accumulate_token_usage
 from pluscoder.type import OrchestrationState, TokenUsage

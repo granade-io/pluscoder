@@ -6,7 +6,7 @@ from langgraph.prebuilt import ToolNode
 from pluscoder.exceptions import AgentException
 from pluscoder.io_utils import io
 from pluscoder.logs import file_callback
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableMap, Runnable
 from pluscoder.fs import apply_block_update, get_formatted_files_content
@@ -16,6 +16,7 @@ from pluscoder.config import config
 from pluscoder.agents.event.config import event_emitter
 from pluscoder.type import AgentState
 from langchain_community.callbacks.manager import get_openai_callback
+from pluscoder.message_utils import HumanMessage
 
 def parse_block(text):
     pattern = r'`([^`\n]+):?`\n{1,2}^<source>\n(>>> FIND.*?===.*?<<< REPLACE|.*?)\n^<\/source>$'

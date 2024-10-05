@@ -12,7 +12,7 @@ from pluscoder.workflow import run_workflow
 from rich.prompt import Prompt
 CONFIG_FILE = '.pluscoder-config.yml'
 CONFIG_OPTIONS = [
-    'model', 'provider', 'auto_commits', 'allow_dirty_commits'
+    'provider', 'model', 'auto_commits', 'allow_dirty_commits'
 ]
 
 def get_config_descriptions():
@@ -162,7 +162,8 @@ def initialize_repository():
     orchestrator_state = AgentState.default()
     orchestrator_state["tool_data"][tools.delegate_tasks.name] = AgentInstructions(
         general_objective="Number test sequence",
-        task_list=TASK_LIST
+        task_list=TASK_LIST,
+        resources=[]
         ).dict()
     
     initial_state = OrchestrationState(**{
