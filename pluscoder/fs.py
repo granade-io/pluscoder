@@ -7,7 +7,7 @@ BLOCK_FORMAT = """
 `filepath`
 <source>
 >>> FIND
-<old_content>
+<exact_match_old_content>
 ===
 <new_content>
 <<< REPLACE
@@ -21,7 +21,7 @@ MSG_FIND_NOT_FOUND = f"""Couldn't replace previous content at file `{{file_path}
 Remember to use the format:
 {BLOCK_FORMAT}
 
-Remember to read `{{file_path}}` file content before editing and perform exact content match.
+Remember to read `{{file_path}}` file content before editing and perform exact content match for replacements.
 """
 
 def apply_block_update(file_path: str, block_content: str):

@@ -23,7 +23,7 @@ Your internal thinking process step by step to solve/accomplish the user request
 
 <output>
 Your step by step solution to the display to the user.
-</outpu>
+</output>
 
 `filepath`
 <source>
@@ -43,7 +43,7 @@ Your internal thinking process step by step to solve/accomplish the user request
 
 <output>
 Some step of the solution
-</outpu>
+</output>
 
 `Filepath.txt`
 <source>
@@ -73,6 +73,10 @@ FILE_OPERATIONS_PROMPT = """
     
     I.e: Create a new file. No need for FIND and REPLACE when creating new files.
     
+    <output>
+    ... explanation of the solution step ...
+    </output>
+    
     `src/code.py`
     <source>
     print("Hello!")
@@ -80,6 +84,10 @@ FILE_OPERATIONS_PROMPT = """
     </source>
     
     I.e: Update a file. Including few aditional lines to avoid duplications.
+    
+    <output>
+    ... explanation of the solution step ...
+    </output>
     
     `src/code.py`
     <source>
@@ -98,6 +106,10 @@ FILE_OPERATIONS_PROMPT = """
     
     I.e: Markdown file:
     
+    <output>
+    ... explanation of the solution step ...
+    </output>
+    
     `file.md`
     <source>
     >>> FIND
@@ -114,6 +126,10 @@ FILE_OPERATIONS_PROMPT = """
     </source>
     
     I.e: Multiple replacements in same file:
+    
+    <output>
+    ... explanation of the solution step ...
+    </output>
     
     `utils.js`
     <source>
@@ -148,9 +164,9 @@ FILE_OPERATIONS_PROMPT = """
 REMINDER_PREFILL_PROMP = """
 ----- SYSTEM REMINDER -----
 !!! THIS MESSAGE WAS NOT WRITTEN BY THE USER, IS A REMINDER TO YOURSELF AS AN AI ASSISTANT
-Respond to the user requirement above. Consider when aswering: 
-1. Base on overview and guidelines, read key files to fetch context about the user request. Read more important files that are not already read
-2. Think step by step a solution using <thingking> block
+Respond to the user's requirement above. Consider when aswering: 
+1. Base on overview and guidelines, read key files to fetch context about the user request. Read more important files that are *not* already read
+2. Think step by step a solution using <thinking> block
 3. Give an step by step answer using <output> block and <source> blocks
 """
 

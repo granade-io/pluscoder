@@ -66,7 +66,7 @@ class Settings(BaseSettings):
     # Output display settings
     hide_thinking_blocks: CliImplicitFlag[bool] = Field(True, description="Hide thinking blocks in LLM output")
     hide_output_blocks: CliImplicitFlag[bool] = Field(False, description="Hide output blocks in LLM output")
-    hide_source_blocks: CliImplicitFlag[bool] = Field(False, description="Hide source blocks in LLM output")
+    hide_source_blocks: CliImplicitFlag[bool] = Field(True, description="Hide source blocks in LLM output")
 
     # Custom prompt commands
     custom_prompt_commands: List[Dict[str, Any]] = Field(

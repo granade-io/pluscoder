@@ -19,6 +19,7 @@ import tempfile
 from PIL import ImageGrab
 from typing import List, Dict, Any
 
+from pluscoder.display_utils import display_file_diff
 from pluscoder.repo import Repository
 from pluscoder.config import config
 
@@ -264,16 +265,25 @@ class IO:
     def start_block(self, block_type: str) -> None:
         # starts new block
         self.block_type = block_type
+        self.in_block = True
         
         # Display block header
         if block_type == "thinking":
             io.console.print(f"::{block_type}::", style=self.get_block_color())
+        elif block_type == "source":
+            print("---\n" + self.filepath_buffer + "---\n", flush=True)
+            
 
         
     def end_block(self) -> None:
+        if self.block_type == "source":
+            display_file_diff(self.block_content, self.current_filepath)
+
         self.in_block = False
         self.block_type = None
         self.current_filepath = None
+        self.current_filepath = None
+        self.block_content = ""
         
         
     def stream_block_chunk(self, chunk: str) -> None:
@@ -285,10 +295,6 @@ class IO:
         elif config.hide_source_blocks and self.block_type == "source":
             return
         
-        if self.block_type == "source" and self.current_filepath:
-            io.console.print(f"File: {self.current_filepath}", style="bold green")
-            self.current_filepath = ""  # Reset the filepath after displaying
-        
         io.console.print(chunk, style=self.get_block_color(), end="")
     
     def stream(self, chunk: str):
@@ -299,15 +305,15 @@ class IO:
         # Check for filepath pattern in filepath_buffer
         filepath_match = re.search(r'`([^`\n]+):?`\n{1,2}^<source>', self.filepath_buffer, re.MULTILINE)
         if filepath_match:
-            print(f"Match: {filepath_match.group(1)}", flush=True)
             self.current_filepath = filepath_match.group(1)
             self.filepath_buffer = self.filepath_buffer.replace(filepath_match.group(0), '<source>')
         
         # Update main buffer
         self.buffer += chunk
         
-        display_now = "<" not in self.buffer and not self.buffer.endswith("\n")
+        display_now = "\n<" not in self.buffer and not self.buffer.endswith("\n")
 
+        # Display right now
         if display_now and not self.in_block:
             self._stream_to_user(self.buffer)
             self.buffer = ""
@@ -323,23 +329,20 @@ class IO:
             self.buffer = "\n</" + self.buffer.split("\n</", 1)[1]
             
         if re.search(r'<\w+>', self.buffer) and self._check_block_start(self.buffer) and not self.in_block:
-            self.start_block(self.buffer.split("<", 1)[1].split(">")[0])
-            self.in_block = True
-            self.block_content = ""
-            self.stream_block_chunk(self.buffer.split("<", 1)[1].split(">")[1])
-            self.buffer = ""
+            block_type = self.buffer.split("<", 1)[1].split(">", 1)[0]
+            if block_type in ["thinking", "source", "output"]:
+                self.start_block(block_type)
+                self.stream_block_chunk(self.buffer.split("<", 1)[1].split(">", 1)[1])
+                self.buffer = ""
         
         # Keep buffer small
         self.buffer = self.buffer[-20:]  # Keep only last 20 characters
         if re.search(r'<\/\w+>', self.buffer):
             if self._check_block_end(self.buffer):
                 # Detectar y cerrar un bloque
-                self.in_block = False
-                #print(self.block_content)
-                self.block_content = ""
-                self._stream_to_user(self.buffer.split(">", 1)[1])  # Imprimir el resto del buffer
+                # Imprimir el resto del buffer
+                self._stream_to_user(self.buffer.split(">", 1)[1])
                 self.buffer = ""
-                
                 self.end_block()
             else: 
                 self.stream_block_chunk(self.buffer.split(">", 1)[0] + ">")
