@@ -2,6 +2,7 @@ import asyncio
 from pathlib import Path
 import yaml
 import os
+import re
 from pluscoder import tools
 from pluscoder.type import AgentInstructions, AgentState, OrchestrationState, TokenUsage
 from pluscoder.config import config, Settings
@@ -41,15 +42,31 @@ def get_config_defaults():
     return {field: getattr(config, field) for field in CONFIG_OPTIONS}
 
 def read_yaml(file_path):
-    with open(file_path, 'r') as file:
-        return yaml.safe_load(file)
+    try:
+        with open(file_path, 'r') as file:
+            return yaml.safe_load(file)
+    except FileNotFoundError:
+        return {}
+
+def read_file_as_text(file_path):
+    try:
+        with open(file_path, 'r') as file:
+            return file.read()
+    except FileNotFoundError:
+        return ""
+
+def load_example_config():
+    content = read_file_as_text('.pluscoder-config-example.yml')
+    io.console.print("[DEBUG] Example config content:", style="bold yellow")
+    io.console.print(content, style="yellow")
+    return content
 
 def write_yaml(file_path, data):
     with open(file_path, 'w') as file:
-        yaml.dump(data, file)
+        file.write(data)
 
 def prompt_for_config():
-    config_data = {}
+    example_config_text = load_example_config()
     descriptions = get_config_descriptions()
     defaults = get_config_defaults()
 
@@ -69,9 +86,26 @@ def prompt_for_config():
         else:
             value = Prompt.ask(prompt, default=str(default))
 
-        config_data[option] = value
+        io.console.print(f"[DEBUG] User input for {option}: {value}", style="bold cyan")
 
-    return config_data
+        # Update the config text with the new value
+        old_config_text = example_config_text
+        example_config_text = re.sub(
+            rf"^#?\s*{option}:.*$",
+            f"{option}: {value}",
+            example_config_text,
+            flags=re.MULTILINE
+        )
+
+        if old_config_text == example_config_text:
+            io.console.print(f"[DEBUG] No change in config for {option}", style="bold red")
+        else:
+            io.console.print(f"[DEBUG] Updated config for {option}", style="bold green")
+
+    io.console.print("[DEBUG] Final config content:", style="bold yellow")
+    io.console.print(example_config_text, style="yellow")
+
+    return example_config_text
 
 def additional_config():
     gitignore_path = '.gitignore'
@@ -249,12 +283,22 @@ def setup() -> bool:
         
         io.console.print("Welcome to Pluscoder! Let's customize your project configuration.", style="bold green")
         
-        # Prompt for configuration
+        # Load example config and prompt for configuration
         config_data = prompt_for_config()
+        
+        io.console.print("[DEBUG] Config data to be written:", style="bold magenta")
+        io.console.print(config_data, style="magenta")
+        
+        # Write the updated config
         write_yaml(CONFIG_FILE, config_data)
         repo.create_default_files()
         
         io.event(f"> Configuration saved to {CONFIG_FILE}.")
+
+        # Verify the written config
+        written_config = read_file_as_text(CONFIG_FILE)
+        io.console.print("[DEBUG] Written config content:", style="bold blue")
+        io.console.print(written_config, style="blue")
 
         # Additional configuration
         additional_config()
