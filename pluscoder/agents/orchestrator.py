@@ -331,7 +331,7 @@ Load all files mentioned, then analyze if need to load any else to complete the 
 {images_instruction}
 {resources_instruction}
 
-Write you answer step by step, using a <thinking> block for analysis your throughts before giving a response to me and edit files inside a <output> block.
+Write you answer step by step, using a <thinking> block for analysis your throughts before giving a response to me using <output> and edit files using <source> blocks.
 
 """
         return instruction

@@ -328,7 +328,7 @@ class IO:
             
         if re.search(r'<\w+>', self.buffer) and self._check_block_start(self.buffer) and not self.in_block:
             block_type = self.buffer.split("<", 1)[1].split(">", 1)[0]
-            if block_type in ["thinking", "source", "output"]:
+            if block_type in ["thinking", "source"]:
                 self.start_block(block_type)
                 self.stream_block_chunk(self.buffer.split("<", 1)[1].split(">", 1)[1])
                 self.buffer = ""
