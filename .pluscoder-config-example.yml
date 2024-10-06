@@ -71,6 +71,9 @@
 # show_repo: false             # Show repository information
 # show_repomap: false          # Show repository map
 # show_config: false           # Show configuration information
+# hide_thinking_blocks: false  # Hide thinking blocks in LLM output
+# hide_output_blocks: false    # Hide output blocks in LLM output
+# hide_source_blocks: false    # Hide source blocks in LLM output
 
 #------------------------------------------------------------------------------
 # Custom Prompt Commands

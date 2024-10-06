@@ -99,7 +99,7 @@ def read_files(
     
     io.event(f"> Added files: {", ".join(loaded_files)}")
     
-    return result.strip()
+    return "Here are the files content:\n\n" + result.strip()
 
 @tool
 def update_file(

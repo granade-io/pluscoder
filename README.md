@@ -96,6 +96,9 @@ ANY option below can be configured with ANY prefered method.
 - `USER_FEEDBACK`: Enable/disable user feedback (default: `True`)
 - `DISPLAY_INTERNAL_OUTPUTS`: Display internal agent outputs (default: `False`)
 - `AUTO_CONFIRM`: Enable/disable auto confirmation of pluscoder execution (default: `False`)
+- `HIDE_THINKING_BLOCKS`: Hide thinking blocks in LLM output (default: `True`)
+- `HIDE_OUTPUT_BLOCKS`: Hide output blocks in LLM output (default: `False`)
+- `HIDE_SOURCE_BLOCKS`: Hide source blocks in LLM output (default: `False`)
 
 ### File Paths
 - `OVERVIEW_FILENAME`: Filename for project overview (default: `"PROJECT_OVERVIEW.md"`)
