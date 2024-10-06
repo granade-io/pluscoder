@@ -132,9 +132,11 @@ class IO:
         self.ctrl_c_count = 0
         self.last_input = ""
         self.buffer = ""  # Buffer para acumular los pequeños chunks
+        self.filepath_buffer = ""  # Buffer to store last 100 characters for filepath detection
         self.in_block = False  # Indicador de si estamos dentro de un bloque
         self.block_content = ""  # Contenido dentro de un bloque
         self.block_type = ""
+        self.current_filepath = ""  # New attribute to store the current filepath
     
     def _check_block_start(self, text):
         return re.match(r'^<(thinking|output|source)>', text.strip())  # Detectar inicio de bloque
@@ -263,13 +265,15 @@ class IO:
         # starts new block
         self.block_type = block_type
         
-        # Just display thinking header
+        # Display block header
         if block_type == "thinking":
             io.console.print(f"::{block_type}::", style=self.get_block_color())
+
         
     def end_block(self) -> None:
         self.in_block = False
         self.block_type = None
+        self.current_filepath = None
         
         
     def stream_block_chunk(self, chunk: str) -> None:
@@ -281,19 +285,34 @@ class IO:
         elif config.hide_source_blocks and self.block_type == "source":
             return
         
+        if self.block_type == "source" and self.current_filepath:
+            io.console.print(f"File: {self.current_filepath}", style="bold green")
+            self.current_filepath = ""  # Reset the filepath after displaying
+        
         io.console.print(chunk, style=self.get_block_color(), end="")
     
     def stream(self, chunk: str):
+        # Update filepath_buffer
+        self.filepath_buffer += chunk
+        self.filepath_buffer = self.filepath_buffer[-100:]  # Keep only last 100 characters
         
-        self.buffer += chunk  # Añadir el chunk recibido al buffer
+        # Check for filepath pattern in filepath_buffer
+        filepath_match = re.search(r'`([^`\n]+):?`\n{1,2}^<source>', self.filepath_buffer, re.MULTILINE)
+        if filepath_match:
+            print(f"Match: {filepath_match.group(1)}", flush=True)
+            self.current_filepath = filepath_match.group(1)
+            self.filepath_buffer = self.filepath_buffer.replace(filepath_match.group(0), '<source>')
+        
+        # Update main buffer
+        self.buffer += chunk
         
         display_now = "<" not in self.buffer and not self.buffer.endswith("\n")
 
         if display_now and not self.in_block:
-            self._stream_to_user(self.buffer)  # Imprimir el buffer si no hay bloques abiertos
-            self.buffer = ""  # Limpiar el buffer
+            self._stream_to_user(self.buffer)
+            self.buffer = ""
         elif "\n<" in self.buffer and not self.in_block:
-            self._stream_to_user(self.buffer.split("\n<", 1)[0])  # Imprimir el buffer sin bloques abiertos
+            self._stream_to_user(self.buffer.split("\n<", 1)[0])
             self.buffer = "\n<" + self.buffer.split("\n<", 1)[1]
         elif ("<" not in self.buffer and not self.buffer.endswith("\n") and \
             not self.buffer.endswith("\n<") and "\n</" not in self.buffer) and self.in_block:
@@ -304,12 +323,14 @@ class IO:
             self.buffer = "\n</" + self.buffer.split("\n</", 1)[1]
             
         if re.search(r'<\w+>', self.buffer) and self._check_block_start(self.buffer) and not self.in_block:
-            # Detectar y abrir un bloque
             self.start_block(self.buffer.split("<", 1)[1].split(">")[0])
             self.in_block = True
-            self.block_content =  ""
+            self.block_content = ""
             self.stream_block_chunk(self.buffer.split("<", 1)[1].split(">")[1])
             self.buffer = ""
+        
+        # Keep buffer small
+        self.buffer = self.buffer[-20:]  # Keep only last 20 characters
         if re.search(r'<\/\w+>', self.buffer):
             if self._check_block_end(self.buffer):
                 # Detectar y cerrar un bloque
