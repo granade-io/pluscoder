@@ -225,6 +225,9 @@ class IO:
         else:
             raise ValueError("Either message or json_data must be provided")
 
+        # Create the directory if it doesn't exist
+        path = Path(self.DEBUG_FILE)
+        path.parent.mkdir(parents=True, exist_ok=True)
         with open(self.DEBUG_FILE, "a") as f:
             f.write(f"{content}\n")
     
