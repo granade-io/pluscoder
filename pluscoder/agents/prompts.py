@@ -166,8 +166,7 @@ REMINDER_PREFILL_PROMP = """
 !!! THIS MESSAGE WAS NOT WRITTEN BY THE USER, IS A REMINDER TO YOURSELF AS AN AI ASSISTANT
 Respond to the user's requirement above. Consider when aswering: 
 1. Base on overview and guidelines, read key files to fetch context about the user request. Read more important files that are *not* already read
-2. Think step by step a solution using <thinking> block
-3. Give an step by step answer using <output> block and <source> blocks
+2. Think step by step a solution then give an step by step answer using proper block structures.
 """
 
 REMINDER_PREFILL_FILE_OPERATIONS_PROMPT = """

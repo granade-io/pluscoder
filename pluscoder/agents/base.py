@@ -271,6 +271,8 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                                     io.stream(entry["text"])
                 elif kind == "on_chat_model_end":
                     io.end_block()
+                elif kind == "on_llm_end":
+                    pass
                 elif kind == "on_tool_start":
                     # io.console.print(f"> Tool calling: {event['data'].get('input')}", style="blue")
                     pass

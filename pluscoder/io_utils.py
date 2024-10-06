@@ -270,8 +270,6 @@ class IO:
         # Display block header
         if block_type == "thinking":
             io.console.print(f"::{block_type}::", style=self.get_block_color())
-        elif block_type == "source":
-            print("---\n" + self.filepath_buffer + "---\n", flush=True)
             
 
         
@@ -311,7 +309,7 @@ class IO:
         # Update main buffer
         self.buffer += chunk
         
-        display_now = "\n<" not in self.buffer and not self.buffer.endswith("\n")
+        display_now = "<" not in self.buffer and not self.buffer.endswith("\n")
 
         # Display right now
         if display_now and not self.in_block:
