@@ -11,7 +11,6 @@ from pluscoder.exceptions import NotGitRepositoryException
 
 class Repository:
     def __init__(self, io=None, repository_path=None):
-
         self.repository_path = repository_path or os.getcwd()
         if not os.path.isdir(self.repository_path):
             raise ValueError(f"Invalid repository path: {self.repository_path}")
