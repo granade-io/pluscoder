@@ -83,7 +83,7 @@ class Agent:
     def get_files_not_in_context(self, state):
         context_files = set(self.get_context_files(state))
         all_tracked_files = set(self.repo.get_tracked_files())
-        return sorted(list(all_tracked_files - context_files))
+        return sorted(all_tracked_files - context_files)
 
     def get_files_context_prompt(self, state):
         files_not_in_context = self.get_files_not_in_context(state)

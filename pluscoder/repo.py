@@ -246,6 +246,6 @@ class Repository:
 
 if __name__ == "__main__":
     repo = Repository()
-    print("Tree:")  # noqa: T201
-    pprint.pprint(repo.get_tracked_files())  # noqa: T203
+    print("Tree:")
+    pprint.pprint(repo.get_tracked_files())
     repo.run_test()

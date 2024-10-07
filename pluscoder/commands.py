@@ -42,7 +42,7 @@ command_registry = CommandRegistry()
 def _clear(state: OrchestrationState):
     """Clear entire chat history"""
     # Filters values from dict where key ends with "_state"
-    for key, value in state.items():
+    for key, _value in state.items():
         if key.endswith("_state"):
             # Reset AgentState to default values
             state[key] = AgentState.default()
@@ -98,7 +98,7 @@ def undo(state: OrchestrationState):
     repo = Repository(io=io)
     if repo.undo():
         # Filters values from dict where key ends with "_state"
-        for key, value in state.items():
+        for key, _value in state.items():
             if not key.endswith("_state") or len(state[key]["messages"]) < 1:
                 # Skip non-message-containing keys
                 continue

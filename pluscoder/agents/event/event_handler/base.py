@@ -15,7 +15,7 @@ class AgentEvent(Enum):
 
 
 class AgentEventBaseHandler:
-    async def on_new_agent_instructions(self, task_list: List[AgentTask] = None):
+    async def on_new_agent_instructions(self, task_list: List[AgentTask]):
         pass
 
     async def on_task_delegated(self, task):

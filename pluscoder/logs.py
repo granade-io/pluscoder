@@ -1,6 +1,6 @@
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from langchain.schema import AIMessage
 from langchain_core.callbacks import BaseCallbackHandler
@@ -72,7 +72,7 @@ file_callback = FileCallbackHandler()
 
 
 def log_llm(
-    prompt: str = None, output: AIMessage = None, log_file: Path = Path(llm_log_file)
+    prompt: Optional[str] = None, output: AIMessage = None, log_file: Path = Path(llm_log_file)
 ):
     """Log the prompt and/or LLM response to a file."""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

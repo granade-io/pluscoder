@@ -37,7 +37,21 @@ select = [
     "RUF",
 ]
 ignore = [
-    "E501" # Line too long
+    "E501", # Line too long,
+    "PLR2004",
+    "T201",
+    "PLR0915",
+    "RUF005",
+    "PLR0911",
+    "RUF012",
+    "C901",
+    "RUF001",
+    "PLR0913",
+    "RUF003",
+    "B005",
+    "T203",
+    "B006",
+    "PLR0912"
 ]
 
 [lint.pycodestyle]

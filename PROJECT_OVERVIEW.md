@@ -1,5 +1,7 @@
 # Project Overview: AI-Driven Software Development Workflow
 
+An AI-powered system that automates the entire software development lifecycle using LLM agents, from vision to production.
+
 ## Vision
 To create an automated workflow entirely managed by LLM agents, capable of developing and maintaining complex software systems from vision to production.
 

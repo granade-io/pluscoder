@@ -10,7 +10,6 @@ from pluscoder.model import get_inferred_provider
 from pluscoder.repo import Repository
 from pluscoder.setup import setup
 from pluscoder.type import AgentState, TokenUsage
-from pluscoder.workflow import run_workflow
 
 
 def run_silent_checks():
@@ -178,6 +177,8 @@ def main():
             "chat_agent": choose_chat_agent_node(),
             "is_task_list_workflow": False,
         }
+
+        from pluscoder.workflow import run_workflow
 
         asyncio.run(run_workflow(state))
     except KeyboardInterrupt:

@@ -12,7 +12,6 @@ from pluscoder.io_utils import io
 from pluscoder.repo import Repository
 from pluscoder.state_utils import get_model_token_info
 from pluscoder.type import AgentInstructions, AgentState, OrchestrationState, TokenUsage
-from pluscoder.workflow import run_workflow
 
 CONFIG_FILE = ".pluscoder-config.yml"
 CONFIG_OPTIONS = ["provider", "model", "auto_commits", "allow_dirty_commits"]
@@ -250,6 +249,8 @@ TASK_LIST = [
 
 
 def initialize_repository():
+    from pluscoder.workflow import run_workflow
+
     io.event("> Starting repository initialization...")
 
     # Setup config to automatize agents calls

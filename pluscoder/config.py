@@ -13,7 +13,7 @@ from pydantic_settings import (
 class Settings(BaseSettings):
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, "_instance"):
-            cls._instance = super(Settings, cls).__new__(cls)
+            cls._instance = super().__new__(cls)
         return cls._instance
 
     # Application behavior
@@ -164,15 +164,8 @@ class Settings(BaseSettings):
         return init_settings, dotenv_settings, env_settings
 
 
-# Singleton pattern (if needed)
-_settings_instance = None
-
-
 def get_settings():
-    global _settings_instance
-    if _settings_instance is None:
-        _settings_instance = Settings()
-    return _settings_instance
+    return Settings()
 
 
 # Usage
