@@ -160,15 +160,13 @@ def test_get_tracked_files_with_exclude_patterns(mock_config, mock_repo):
 
 @patch('builtins.input', side_effect=['y', 'y'])
 @patch('pluscoder.repo.os.path.isfile')
-@patch('pluscoder.repo.open', new_callable=MagicMock)
-def test_setup_all_files_exist(mock_open, mock_isfile, mock_input, mock_repo):
+def test_setup_all_files_exist(mock_isfile, mock_input, mock_repo):
     mock_isfile.side_effect = [True, True, True]  # For overview, guidelines, and .gitignore
 
     repo = Repository(io=io)
     result = repo.setup()
 
     assert result is True
-    mock_open.assert_called_once()  # Called once for .gitignore
 
 @patch('pluscoder.repo.os.path.isfile')
 @patch('pluscoder.repo.open', new_callable=MagicMock)
@@ -183,10 +181,9 @@ def test_setup_missing_files_user_agrees(mock_config, mock_input, mock_open, moc
     result = repo.setup()
 
     assert result is True
-    assert mock_open.call_count == 3
+    assert mock_open.call_count == 2
     mock_open.assert_any_call('mocked_overview.md', "w")
     mock_open.assert_any_call('mocked_guidelines.md', "w")
-    mock_open.assert_any_call('.gitignore', "a")
 
 @patch('pluscoder.repo.os.path.isfile')
 @patch('pluscoder.repo.open', new_callable=Mock)

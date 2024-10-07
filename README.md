@@ -11,9 +11,10 @@ PlusCoder is an AI-assisted software development tool designed to enhance and st
 5. Auto-commit on editions
 6. Cost and token tracking for LLM interactions
 7. Flexible configuration system supporting command-line arguments, environment variables, and default values
-8.  Support for multiple LLM models (LLMLite, OpenAI, AWS Bedrock, Anthropic)
-9.  Enhanced user interaction with rich console output and auto-completion
+8. Support for multiple LLM models (LLMLite, OpenAI, AWS Bedrock, Anthropic)
+9. Enhanced user interaction with rich console output and auto-completion
 10. Real-time task execution progress display
+11. File downloading and context addition during agent interactions
 
 ## Requirements
 - Requires python 3.12
@@ -60,7 +61,7 @@ These features are designed to streamline your interaction with Pluscoder, makin
 
 Note: Pluscoder can modify project files; always review changes to ensure alignment with your goals.
 
-Note: Using the '--auto-confirm' flag when starting Pluscoder will automatically confirm any plan and task execution without prompting.
+Note: Using the '--auto_confirm' flag when starting Pluscoder will automatically confirm any plan and task execution without prompting.
 
 ## Available Commands
 
@@ -76,61 +77,110 @@ PlusCoder supports the following commands during interaction:
 - `/show_repo`: Display information about the current repository.
 - `/show_repomap`: Show the repository map with file structure and summaries.
 - `/show_config`: Display the current configuration settings.
-
-## Command-line Arguments
-
-In addition to the runtime commands, PlusCoder supports the following command-line arguments:
-
-- `--show-repo`: Display information about the current repository and exit.
-- `--show-repomap`: Show the repository map with file structure and summaries and exit.
-- `--show-config`: Display the current configuration settings and exit.
-
-These arguments can be used when launching PlusCoder to quickly access specific information without entering the interactive mode.
+- `/custom <prompt_name> [args]`: Execute a pre-configured custom prompt command.
 
 ## Configuration
 
-PlusCoder can be configured using environment variables (you can use your `.env`), command-line arguments, or the `/config` command during runtime. Here are the available configuration options:
+PlusCoder can be configured using several methods (using this priotity):
+1. The `/config` command during runtime
+2. Command-line arguments
+3. Dot env variables ( `.env` file)
+4. A `.pluscoder-config.yml` file for persistent configuration
+5. Environment variables
+
+ANY option below can be configured with ANY prefered method.
 
 ### Application Behavior
-- `STREAMING`: Enable/disable LLM streaming (default: True)
-- `USER_FEEDBACK`: Enable/disable user feedback (default: True)
-- `DISPLAY_INTERNAL_OUTPUTS`: Display internal agent outputs (default: False)
-- `AUTO_CONFIRM`: Enable/disable auto confirmation of pluscoder execution (default: False)
+- `READ_ONLY`: Enable/disable read-only mode to avoid file editions (default: `False`)
+- `STREAMING`: Enable/disable LLM streaming (default: `True`)
+- `USER_FEEDBACK`: Enable/disable user feedback (default: `True`)
+- `DISPLAY_INTERNAL_OUTPUTS`: Display internal agent outputs (default: `False`)
+- `AUTO_CONFIRM`: Enable/disable auto confirmation of pluscoder execution (default: `False`)
+- `HIDE_THINKING_BLOCKS`: Hide thinking blocks in LLM output (default: `True`)
+- `HIDE_OUTPUT_BLOCKS`: Hide output blocks in LLM output (default: `False`)
+- `HIDE_SOURCE_BLOCKS`: Hide source blocks in LLM output (default: `False`)
 
 ### File Paths
-- `OVERVIEW_FILENAME`: Filename for project overview (default: "PROJECT_OVERVIEW.md")
-- `LOG_FILENAME`: Filename for logs (default: "pluscoder.log")
-- `OVERVIEW_FILE_PATH`: Path to the project overview file (default: "PROJECT_OVERVIEW.md")
-- `GUIDELINES_FILE_PATH`: Path to the coding guidelines file (default: "CODING_GUIDELINES.md")
+- `OVERVIEW_FILENAME`: Filename for project overview (default: `"PROJECT_OVERVIEW.md"`)
+- `LOG_FILENAME`: Filename for logs (default: `"pluscoder.log"`)
+- `OVERVIEW_FILE_PATH`: Path to the project overview file (default: `"PROJECT_OVERVIEW.md"`)
+- `GUIDELINES_FILE_PATH`: Path to the coding guidelines file (default: `"CODING_GUIDELINES.md"`)
 
 ### Model and API Settings
-- `MODEL`: LLM model to use (default: "anthropic.claude-3-5-sonnet-20240620-v1:0")
-- `PROVIDER`: Provider to use. If none, provider will be selected based on available credentaial variables. Options: aws_bedrock, openai, litellm, anthropic (default: None)
+- `MODEL`: LLM model to use (default: `"anthropic.claude-3-5-sonnet-20240620-v1:0"`)
+- `ORCHESTRATOR_MODEL`: LLM model to use for orchestrator (default: same as `MODEL`)
+- `WEAK_MODEL`: Weaker LLM model to use for less complex tasks (default: same as `MODEL`)
+- `PROVIDER`: Provider to use. If none, provider will be selected based on available credentaial variables. Options: aws_bedrock, openai, litellm, anthropic (default: `None`)
+- `ORCHESTRATOR_MODEL_PROVIDER`: Provider to use for orchestrator model (default: same as `PROVIDER`)
+- `WEAK_MODEL_PROVIDER`: Provider to use for weak model (default: same as `PROVIDER`)
 - `OPENAI_API_KEY`: OpenAI API key
 - `OPENAI_API_BASE`: OpenAI API base URL
 - `ANTHROPIC_API_KEY`: Anthropic API key
 - `AWS_ACCESS_KEY_ID`: AWS Access Key ID
 - `AWS_SECRET_ACCESS_KEY`: AWS Secret Access Key
-- `AWS_PROFILE`: AWS profile name (default: "default")
+- `AWS_PROFILE`: AWS profile name (default: `"default"`)
 
 ### Git Settings
-- `AUTO_COMMITS`: Enable/disable automatic Git commits (default: True)
-- `ALLOW_DIRTY_COMMITS`: Allow commits in a dirty repository (default: True)
+- `AUTO_COMMITS`: Enable/disable automatic Git commits (default: `True`)
+- `ALLOW_DIRTY_COMMITS`: Allow commits in a dirty repository (default: `True`)
 
 ### Test and Lint Settings
-- `RUN_TESTS_AFTER_EDIT`: Run tests after file edits (default: False)
-- `RUN_LINT_AFTER_EDIT`: Run linter after file edits (default: False)
-- `TEST_COMMAND`: Command to run tests (default: None)
-- `LINT_COMMAND`: Command to run linter (default: None)
-- `AUTO_RUN_LINTER_FIX`: Automatically run linter fix before linting (default: False)
-- `LINT_FIX_COMMAND`: Command to run linter fix (default: None)
+- `RUN_TESTS_AFTER_EDIT`: Run tests after file edits (default: `False`)
+- `RUN_LINT_AFTER_EDIT`: Run linter after file edits (default: `False`)
+- `TEST_COMMAND`: Command to run tests (default: `None`)
+- `LINT_COMMAND`: Command to run linter (default: `None`)
+- `AUTO_RUN_LINTER_FIX`: Automatically run linter fix before linting (default: `False`)
+- `LINT_FIX_COMMAND`: Command to run linter fix (default: `None`)
 
 ### Repomap Settings
-- `USE_REPOMAP`: Enable/disable repomap feature (default: False)
-- `REPOMAP_LEVEL`: Set the level of detail for repomap (default: 2)
-- `REPOMAP_INCLUDE_FILES`: Comma-separated list of files to include in repomap (default: None)
-- `REPOMAP_EXCLUDE_FILES`: Comma-separated list of files to exclude from repomap (default: None)
-- `REPO_EXCLUDE_FILES`: Comma-separated list of regex patterns to exclude files from repo operations (default: None)
+- `USE_REPOMAP`: Enable/disable repomap feature (default: `False`)
+- `REPOMAP_LEVEL`: Set the level of detail for repomap (default: `2`)
+- `REPOMAP_INCLUDE_FILES`: Comma-separated list of files to include in repomap (default: `None`)
+- `REPOMAP_EXCLUDE_FILES`: Comma-separated list of files to exclude from repomap (default: `None`)
+- `REPO_EXCLUDE_FILES`: Comma-separated list of regex patterns to exclude files from repo operations (default: `None`)
+
+### Custom Prompt Commands
+
+Custom prompt commands allow you to define pre-configured prompts/instruction that can be easily executed during runtime and passed to agents.
+
+- `REPO_EXCLUDE_FILES`: Json list with list of custom prompts configs (default: `[]`)
+
+To configure custom prompt commands:
+
+1. Open or create the `.pluscoder-config.yml` file in your project root.
+2. Add a `custom_prompt_commands` section with a list of custom prompts, each containing:
+   - `prompt_name`: A unique name for the command
+   - `description`: A brief description of what the command does
+   - `prompt`: The actual prompt text to be sent to the AI
+
+Example:
+
+```yaml
+custom_prompt_commands:
+  - prompt_name: "docstring"
+    prompt: "Please add docstring to these files"
+    description: "Generate docstring for specified files"
+  - prompt_name: "feature"
+    prompt: |
+      New feature:
+      1. Load relevant files related to this request
+      2. Ask me key questions to understand better the requirements
+      3. Implement the feature
+      4. Update README.md with proper documentation
+      feature request: 
+    description: "Generate a new feature and documentation"
+```
+
+
+## Command-line Arguments
+
+You can specify any configuration using command-line arguments:
+
+- `--show_repo`: Display information about the current repository and exit.
+- `--show_repomap`: Show the repository map with file structure and summaries and exit.
+- `--show_config`: Display the current configuration settings and exit.
+
+These arguments can be used when launching PlusCoder to quickly access specific information without entering the interactive mode.
 
 You can set these options using environment variables, command-line arguments (e.g., `--streaming false`), or the `/config` command during runtime (e.g., `/config streaming false`).
 

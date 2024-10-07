@@ -1,0 +1,86 @@
+#------------------------------------------------------------------------------
+# PlusCoder Configuration
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+# Application Behavior
+#------------------------------------------------------------------------------
+# streaming: true                 # Enable/disable LLM streaming
+# user_feedback: true             # Enable/disable user feedback
+# display_internal_outputs: false # Display internal agent outputs
+# auto_confirm: false             # Auto-confirm pluscoder execution
+# init: true                      # Enable/disable initial setup
+# read_only: false                # Enable/disable read-only mode
+# user_input: ""                  # Predefined user input
+
+#------------------------------------------------------------------------------
+# File Paths
+#------------------------------------------------------------------------------
+# overview_filename: PROJECT_OVERVIEW.md     # Project overview filename
+# log_filename: pluscoder.log                # Log filename
+# overview_file_path: PROJECT_OVERVIEW.md    # Path to project overview file
+# guidelines_file_path: CODING_GUIDELINES.md # Path to coding guidelines file
+
+#------------------------------------------------------------------------------
+# Model and API Settings
+#------------------------------------------------------------------------------
+# model: anthropic.claude-3-5-sonnet-20240620-v1:0 # LLM model to use
+# orchestrator_model: null            # Model to use for the orchestrator agent (default: same as model)
+# weak_model: null                    # Weaker LLM model for less complex tasks (default: same as model)
+# provider: null                      # Provider (aws_bedrock, openai, litellm, anthropic, azure)
+# orchestrator_model_provider: null   # Provider for orchestrator model (default: same as provider)
+# weak_model_provider: null           # Provider for weak model (default: same as provider)
+# openai_api_key:                     # OpenAI API key
+# openai_api_base:                    # OpenAI API base URL
+# anthropic_api_key:                  # Anthropic API key
+
+#------------------------------------------------------------------------------
+# AWS Settings
+#------------------------------------------------------------------------------
+# aws_access_key_id:       # AWS Access Key ID
+# aws_secret_access_key:   # AWS Secret Access Key
+# aws_profile: default     # AWS profile name
+
+#------------------------------------------------------------------------------
+# Git Settings
+#------------------------------------------------------------------------------
+# auto_commits: true       # Enable/disable automatic Git commits
+# allow_dirty_commits: true # Allow commits in a dirty repository
+
+#------------------------------------------------------------------------------
+# Test and Lint Settings
+#------------------------------------------------------------------------------
+# run_tests_after_edit: false  # Run tests after file edits
+# run_lint_after_edit: false   # Run linter after file edits
+# test_command:                # Command to run tests
+# lint_command:                # Command to run linter
+# auto_run_linter_fix: false   # Auto-run linter fix before linting
+# lint_fix_command:            # Command to run linter fix
+
+#------------------------------------------------------------------------------
+# Repomap Settings
+#------------------------------------------------------------------------------
+# use_repomap: false           # Enable/disable repomap feature
+# repomap_level: 2             # Repomap detail level (0: minimal, 1: moderate, 2: detailed)
+# repomap_exclude_files: []    # List of files to exclude from repomap
+# repo_exclude_files: []       # Regex patterns to exclude files from repo operations
+
+#------------------------------------------------------------------------------
+# Display Options
+#------------------------------------------------------------------------------
+# show_repo: false             # Show repository information
+# show_repomap: false          # Show repository map
+# show_config: false           # Show configuration information
+# hide_thinking_blocks: false  # Hide thinking blocks in LLM output
+# hide_output_blocks: false    # Hide output blocks in LLM output
+# hide_source_blocks: false    # Hide source blocks in LLM output
+
+#------------------------------------------------------------------------------
+# Custom Prompt Commands
+#------------------------------------------------------------------------------
+# Customs instructions to agents when using /custom <prompt_name> <additional instruction>
+# Example: /custom hello then ask what are their needs
+# custom_prompt_commands:
+#   - prompt_name: hello
+#     description: Greet the user says hello
+#     prompt: Say hello to user

@@ -4,9 +4,10 @@ from typing import List
 from pluscoder.io_utils import io
 
 BLOCK_FORMAT = """
+`filepath`
 <source>
 >>> FIND
-<old_content>
+<exact_match_old_content>
 ===
 <new_content>
 <<< REPLACE
@@ -20,7 +21,7 @@ MSG_FIND_NOT_FOUND = f"""Couldn't replace previous content at file `{{file_path}
 Remember to use the format:
 {BLOCK_FORMAT}
 
-Remember to read `{{file_path}}` file content before editing.
+Remember to read `{{file_path}}` file content before editing and perform exact content match for replacements.
 """
 
 def apply_block_update(file_path: str, block_content: str):
@@ -95,8 +96,8 @@ def apply_block_update(file_path: str, block_content: str):
 def get_formatted_file_content(file_path: str) -> str:
     """Return a formatted string with the content of a single file."""
     file_content = Path(file_path).read_text()
-    formatted_content = f"\n<source>\n{file_content}\n</source> ---\n"
-    return f"\n{file_path}:\n{formatted_content}\n"
+    formatted_content = f"{file_content}"
+    return f"\n--- start of `{file_path}`---\n{formatted_content}\n"
 
 def get_formatted_files_content(files: List[str]) -> str:
     """Return a formatted string with the content of each file ready to be used in llm prompts"""

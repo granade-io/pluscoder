@@ -5,7 +5,7 @@ from pathlib import Path
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.messages import BaseMessage
 
-llm_log_file = ".plus_coder_llm.history"
+llm_log_file = ".pluscoder/llm_history.txt"
 
 class FileCallbackHandler(BaseCallbackHandler):
     def on_chat_model_start(
@@ -50,14 +50,6 @@ class FileCallbackHandler(BaseCallbackHandler):
             f.write(log_entry)
         
 file_callback = FileCallbackHandler()
-
-def fs_log(message: str, log_file: Path = Path(".plus_coder.log")):
-    """Log a simple text message to a file with timestamp."""
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    log_entry = f"[{timestamp}] {message}\n"
-    
-    with log_file.open("a") as f:
-        f.write(log_entry)
         
 def log_llm(prompt: str = None, output: AIMessage = None, log_file: Path = Path(llm_log_file)):
     """Log the prompt and/or LLM response to a file."""

@@ -2,9 +2,23 @@ import shutil
 from typing import Annotated, Dict, List, Literal
 from langchain_core.tools import tool
 import re
+import requests
 from pluscoder.fs import get_formatted_file_content
 from pluscoder.io_utils import io
 from pluscoder.type import AgentTask
+
+@tool
+def download_file(
+    url: Annotated[str, "The URL of the file to download."]
+) -> str:
+    """Download the content of a file from the given URL."""
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        content = response.text
+        return f"Here is the content of the downloaded file:\n\n{content}"
+    except requests.RequestException as e:
+        return f"Error downloading file: {str(e)}"
 
 @tool
 def move_files(
@@ -85,7 +99,7 @@ def read_files(
     
     io.event(f"> Added files: {", ".join(loaded_files)}")
     
-    return result.strip()
+    return "Here are the files content:\n\n" + result.strip()
 
 @tool
 def update_file(
@@ -124,7 +138,8 @@ def extract_files(
 @tool
 def delegate_tasks(
     general_objective: Annotated[str, "The general objective for all tasks."],
-    task_list: Annotated[List[AgentTask], "List of tasks, each task being a dictionary with 'objective', 'details', 'agent', 'is_finished', 'restrictions', and 'outcome' keys."]
+    task_list: Annotated[List[AgentTask], "List of tasks, each task being a dictionary with 'objective', 'details', 'agent', 'is_finished', 'restrictions', and 'outcome' keys."],
+    resources: Annotated[List[str], "List of resources specified by the user external to the repository. (url/links/local files)"]
 ) -> Dict[str, List[AgentTask]]:
     """
     Delegates tasks to other agents to execute/complete them. Each task in the task_list must be a dict with 6 values: (objective, details, agent, is_finished, restrictions, outcome).
@@ -132,6 +147,7 @@ def delegate_tasks(
     The 'is_finished' value is a boolean indicating whether the task has been completed.
     The 'restrictions' value is a string describing any limitations or constraints for the task.
     The 'outcome' value is a string describing the expected result of the task.
+    The 'resources' value contains the list of resources the same exact format the user passed it. Including 'img::' if present.
     """
     return f"Task '{general_objective}' about to be delegated. \n\n{task_list}"
 

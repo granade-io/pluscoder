@@ -1,10 +1,11 @@
 from pluscoder import tools
 from typing import Annotated, List, Literal
 from pluscoder.agents.base import Agent, AgentState
-from pluscoder.agents.prompts import combine_prompts, BASE_PROMPT, FILE_OPERATIONS_PROMPT
-from langchain_core.messages import HumanMessage
+from pluscoder.agents.prompts import OUTPUT_STRUCTURE_PROMPT, combine_prompts, BASE_PROMPT, FILE_OPERATIONS_PROMPT, READONLY_MODE_PROMPT
+from pluscoder.message_utils import HumanMessage
 
 from pluscoder.type import AgentInstructions
+from pluscoder.config import config
 
 
 class OrchestratorAgent(Agent):
@@ -145,7 +146,7 @@ You *must follow* following rules when suggesting a task list:
     """
 
     def __init__(self, llm, tools=[tools.read_files], extraction_tools=[tools.delegate_tasks, tools.is_task_completed]):
-        system_message = combine_prompts(BASE_PROMPT, self.orchestrator_prompt, FILE_OPERATIONS_PROMPT)
+        system_message = combine_prompts(BASE_PROMPT, self.orchestrator_prompt, OUTPUT_STRUCTURE_PROMPT, FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT)
         super().__init__(llm, system_message, "Orchestrator Agent", tools=tools, extraction_tools=extraction_tools, default_context_files=["PROJECT_OVERVIEW.md"])
     
     def get_system_message(self, state: AgentState) -> str:
@@ -290,13 +291,25 @@ You *must follow* following rules when suggesting a task list:
         return {**state, "tool_data": tool_data}
     
     def task_to_instruction(self, task: dict, state: AgentState) -> str:
-        general_objective = state["tool_data"][tools.delegate_tasks.name]["general_objective"]
+        task_list_data = state["tool_data"][tools.delegate_tasks.name]
+        general_objective = task_list_data["general_objective"]
         
         completed_tasks = self.get_completed_tasks(state)
         completed_tasks_info = "\n".join([
             f"- Completed: {t['objective']}\n  {t['details']}" 
             for t in completed_tasks
         ])
+        
+        # Get any image for multi-modal llm
+        images = list(filter(lambda res: res.startswith("img::"), task_list_data["resources"]))
+        other_resources = list(filter(lambda res: not res.startswith("img::"), task_list_data["resources"]))
+        images_instruction = ''
+        resources_instruction = ''
+        
+        if images:
+            images_instruction += f"\n*Reference images:* {"".join(images)}"
+        if other_resources:
+            resources_instruction += f"\n*Other resources:* {"".join(other_resources)}"
         
         instruction = f"""You are requested to solve a specific task related to the objective: {general_objective}.
         
@@ -313,9 +326,12 @@ Details: {task["details"]}
 Restrictions: {task.get("restrictions", "No specific restrictions.")}
 Expected Outcome: {task.get("outcome", "No specific outcome defined.")}
 
-Load relevant files mentioned in your task or the completed ones to help you achieve the objective.
+Load all files mentioned, then analyze if need to load any else to complete the task.
 
-Write you answer step by step, using a <thinking> block for analysis your throughts before giving a response to me and edit files inside a <output> block.
+{images_instruction}
+{resources_instruction}
+
+Write you answer step by step, using a <thinking> block for analysis your throughts before giving a response to me using <output> and edit files using <source> blocks.
 
 """
         return instruction

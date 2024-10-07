@@ -1,8 +1,8 @@
 # Prioritized Project Roadmap
 
 ## Bugs:
-- Sometimes agents propose changes that appends new content without replacing previous one, generating duplicated content
-- Sometimes agents propose changes two times, one for explaining and another time for making the changes. This started to happend recenly. We will have to improve the prompt or give new shot examples.
+- Show warning and ask for confirmation then tests/linter are enabled when making request to agent which can due to unwanted errors
+- Allow custom prompt command to run in different agents from the current one
 
 ## High Priority Features
 

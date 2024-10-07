@@ -77,12 +77,11 @@ This project aims to develop a system that uses a composition of LLM agents, lev
 - Additional Libraries: asyncio, dotenv, rich (for console output), prompt_toolkit (for advanced input features), argparse (for command-line argument parsing)
 
 ## Configuration and Startup
-The project includes a flexible configuration system (`pluscoder/config.py`) that allows setting various parameters:
+The project includes a flexible configuration system that allows setting various parameters:
 - Through command-line arguments when running the application
 - Via environment variables
 - Using default values defined in the code
-
-This system enhances the project's flexibility and ease of use, allowing quick configuration changes without modifying the code.
+- Using a .pluscoder-config.yml file for persistent configuration
 
 ## Development Workflow
 1. User selects an agent or starts with the Orchestrator.

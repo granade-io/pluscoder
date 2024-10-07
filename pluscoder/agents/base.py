@@ -3,10 +3,11 @@ import re
 from typing import List, Literal
 from langgraph.graph import StateGraph
 from langgraph.prebuilt import ToolNode
+from pluscoder.agents.prompts import REMINDER_PREFILL_FILE_OPERATIONS_PROMPT, REMINDER_PREFILL_PROMP
 from pluscoder.exceptions import AgentException
 from pluscoder.io_utils import io
 from pluscoder.logs import file_callback
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableMap, Runnable
 from pluscoder.fs import apply_block_update, get_formatted_files_content
@@ -16,6 +17,7 @@ from pluscoder.config import config
 from pluscoder.agents.event.config import event_emitter
 from pluscoder.type import AgentState
 from langchain_community.callbacks.manager import get_openai_callback
+from pluscoder.message_utils import HumanMessage
 
 def parse_block(text):
     pattern = r'`([^`\n]+):?`\n{1,2}^<source>\n(>>> FIND.*?===.*?<<< REPLACE|.*?)\n^<\/source>$'
@@ -89,6 +91,9 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
     def get_system_message(self, state: AgentState):
         return self.system_message
     
+    def get_reminder_prefill(self, state: AgentState) -> str:
+        return REMINDER_PREFILL_PROMP + REMINDER_PREFILL_FILE_OPERATIONS_PROMPT
+    
     def build_assistant_prompt(self, state: AgentState, deflection_messages: list):
         # last_message = state["messages"][-1]
         # check if last message is from a tool
@@ -111,6 +116,7 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                 ("user", self.get_files_context_prompt(state)),
                 AIMessage(content="ok"),
                 ("placeholder", "{messages}"),
+                HumanMessage(content=self.get_reminder_prefill(state)),
             ]# + user_message_list
         )
         return assistant_prompt
@@ -263,6 +269,10 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                                 if "text" in entry:
                                     # io.console.print(entry["text"], style="bright_green", end="")
                                     io.stream(entry["text"])
+                elif kind == "on_chat_model_end":
+                    io.end_block()
+                elif kind == "on_llm_end":
+                    pass
                 elif kind == "on_tool_start":
                     # io.console.print(f"> Tool calling: {event['data'].get('input')}", style="blue")
                     pass
@@ -287,6 +297,10 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         return state_updates
     
     def process_agent_response(self, state, response: AIMessage):
+        if config.read_only:
+            # Ignore file editions when readonly
+            return {}
+        
         content_text = get_message_content_str(response)
         
         found_blocks = parse_block(content_text)

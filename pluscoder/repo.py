@@ -7,8 +7,6 @@ from git import Actor, Repo
 from git import GitCommandError
 from pluscoder.config import config
 
-from pluscoder.repomap import LANGUAGE_MAP, generate_tree
-
 class Repository:
     def __init__(self, io=None):
         self.repo = Repo(os.getcwd(), search_parent_directories=True)
@@ -122,19 +120,6 @@ class Repository:
             else:
                 # otherwise, stop using pluscoder
                 return False
-        
-        # Ask to add .plus_coder* to gitignore. Reads the file or create it if it doesn't exist
-        if not os.path.isfile(".gitignore"):
-            if input("Create the missing .gitignore file? (y/n):").lower().strip() == 'y':
-                with open(".gitignore", "a") as f:
-                    f.write("\n# Pluscoder\n")
-                    f.write(".plus_coder*\n")
-        else:
-            with open(".gitignore", "r+") as f:
-                if ".plus_coder*" not in f.read() and input("Add pluscoder files to gitignore (recommended)? (y/n):").lower().strip() == 'y':
-                    f.write("\n# Pluscoder\n")
-                    f.write(".plus_coder*\n")
-        
         return True
 
     def run_lint(self) -> Optional[str]:
@@ -153,7 +138,7 @@ class Repository:
         
         # Run linter fix if configured
         if config.auto_run_linter_fix and config.lint_fix_command:
-            subprocess.run(config.lint_fix_command, shell=True, check=False)
+            subprocess.run(config.lint_fix_command, shell=True, check=False, capture_output=True)
         
         try:
             subprocess.run(config.lint_command, shell=True, check=True, capture_output=True, text=True)
@@ -199,6 +184,7 @@ class Repository:
         if not config.use_repomap:
             return None
 
+        from pluscoder.repomap import LANGUAGE_MAP, generate_tree
         include_patterns = config.repomap_include_files or [r'.*\.(' + '|'.join(LANGUAGE_MAP.keys()) + ')$']
         exclude_patterns = config.repomap_exclude_files
         level = config.repomap_level
@@ -212,7 +198,7 @@ if __name__ == "__main__":
     print("Tree:")
     pprint.pprint(repo.get_tracked_files())
     
-    print("\n\nRepomap:")
-    print(repo.generate_repomap())
+    # print("\n\nRepomap:")
+    # print(repo.generate_repomap())
     
     repo.run_test()

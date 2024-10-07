@@ -1,14 +1,17 @@
 from typing import Dict, Union, Callable
 from functools import wraps
+from pydantic import ValidationError
 from rich.syntax import Syntax
 from pluscoder.config import config
 from pluscoder.repo import Repository
 from pluscoder.io_utils import io
 from pluscoder.type import AgentState, OrchestrationState
+from pluscoder.message_utils import HumanMessage
 from rich.rule import Rule                                                                                                      
 from rich.table import Table
 from rich.tree import Tree
 from rich.panel import Panel
+from rich.prompt import Prompt
 import subprocess
 
 class CommandRegistry:
@@ -60,14 +63,18 @@ def diff(state: OrchestrationState):
     return state
 
 @command_registry.register("config")
-def config_command(state: OrchestrationState, key: str, value: str):
-    """Override any pluscoder configuration. e.g: `/config auto-commits false`"""
+def config_command(state: OrchestrationState, key: str, value: str, *args):
+    """Override any pluscoder configuration. e.g: `/config auto_commits false`"""
     if key not in config.__dict__:
         io.console.print(f"Error: '{key}' is not a valid configuration option.", style="bold red")
         return state
     old_value = getattr(config, key)
-    new_value = config.update_config(key, value)
-    io.console.print(f"Config updated: {key} = {new_value} (was: {old_value})")
+    try:
+        config.__init__(**{key: value})
+        io.console.print(f"Config updated: {key} = {getattr(config, key)} (was: {old_value})")
+    except ValidationError:
+        io.console.print("Invalid value.", style="bold red")
+    
     return state
 
 @command_registry.register("undo")
@@ -92,24 +99,39 @@ def undo(state: OrchestrationState):
 @command_registry.register("agent")
 def agent(state: OrchestrationState):
     """Start a conversation with a new agent from scratch"""
-    agents = ["orchestrator", "domain_stakeholder", "planning", "developer", "domain_expert"]
-    io.console.print("Available agents:")
-    for i, agent in enumerate(agents, 1):
-        io.console.print(f"{i}. {agent}")
+    agent_options = [
+        ("Orchestrator", "Break down the problem into a list of tasks and delegates it to other agents"),
+        ("Domain Stakeholder", "Discuss project details, maintain project overview, roadmap, and brainstorm"),
+        ("Planning", "Create detailed, actionable plans for software development tasks"),
+        ("Developer", "Implement code to solve complex software development requirements"),
+        ("Domain Expert", "Validate tasks and ensure alignment with project vision")
+    ]
     
-    choice = io.input("Enter the number of the agent you want to switch to: ")
-    try:
-        index = int(choice) - 1
-        if 0 <= index < len(agents):
-            state["chat_agent"] = agents[index]
-            io.event(f"Switched to `{agents[index]}` agent. Chat history was cleared.")
-        else:
-            io.console.print("Invalid choice. Please enter a number between 1 and 5.", style="bold red")
-    except ValueError:
-        io.console.print("Invalid input. Please enter a number.", style="bold red")
-        
+    io.console.print("[bold green]Choose an agent to chat with:[/bold green]")
+    for i, (agent, description) in enumerate(agent_options, 1):
+        io.console.print(f"{i}. [bold green]{agent}[/bold green]: {description}")
+    
+    choice = Prompt.ask(
+        "Select an agent",
+        choices=[str(i) for i in range(1, len(agent_options) + 1)],
+        default="1"
+    )
+    
+    agent_map = {
+        "1": "orchestrator",
+        "2": "domain_stakeholder",
+        "3": "planning",
+        "4": "developer",
+        "5": "domain_expert"
+    }
+    
+    chosen_agent = agent_map[choice]
+    io.event(f"> Starting chat with {chosen_agent} agent. Chat history was cleared.")
+    
+    state["chat_agent"] = chosen_agent
+    
     # Clear chats to start new conversations
-    cleared_state = _clear(state)  
+    cleared_state = _clear(state)
     return cleared_state
 
 @command_registry.register("help")                                                                                                
@@ -195,6 +217,34 @@ def show_config(state: OrchestrationState = None):
         table.add_row(key, str(value))
 
     io.console.print(table)
+    return state
+
+@command_registry.register("custom")
+def custom_command(state: OrchestrationState, prompt_name: str = "", *args):
+    """Execute a custom prompt command"""
+    if not prompt_name:
+        io.console.print("Error: Custom prompt name is required.", style="bold red")
+        io.console.print("Usage: /custom <prompt_name> <additional instructions>")
+        return state
+
+    custom_prompt = next((prompt for prompt in config.custom_prompt_commands if prompt['prompt_name'] == prompt_name), None)
+    if not custom_prompt:
+        io.console.print(f"Error: Custom prompt '{prompt_name}' not found.", style="bold red")
+        return state
+
+    user_input = " ".join(args)
+    combined_prompt = f"{custom_prompt['prompt']} {user_input}"
+
+    # Add the combined prompt as a HumanMessage to the current agent's message history
+    current_agent = state.get("chat_agent", "orchestrator")
+    agent_state = state.get(f"{current_agent}_state", AgentState.default())
+    agent_state["messages"].append(HumanMessage(content=combined_prompt))
+    state[f"{current_agent}_state"] = agent_state
+    
+    # Do not return to the user to execute agent with the added human message
+    state["return_to_user"] = False
+
+    io.console.print(f"Custom prompt '{prompt_name}' executed and added to {current_agent}'s message history.")
     return state
 
 
