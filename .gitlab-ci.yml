@@ -81,7 +81,7 @@ test:
   script:
     - pytest
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH or CI_COMMIT_BRANCH == "develop"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH == "develop"
       changes:
         - pluscoder/**/*
         - tests/**/*
