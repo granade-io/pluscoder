@@ -8,6 +8,7 @@ from pluscoder.config import config
 class GitEventHandler(AgentEventBaseHandler):
     def __init__(self):
         super().__init__()
+        # TODO: why do we initialize the repo here again?
         self.repo = Repository(io=io)
 
     async def on_new_agent_instructions(

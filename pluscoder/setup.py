@@ -10,7 +10,6 @@ from pluscoder.io_utils import io
 from pluscoder.repo import Repository
 from pluscoder.state_utils import get_model_token_info
 
-from pluscoder.workflow import run_workflow
 from rich.prompt import Prompt
 
 
@@ -251,6 +250,8 @@ TASK_LIST = [
 
 
 def initialize_repository():
+    from pluscoder.workflow import run_workflow
+
     io.event("> Starting repository initialization...")
 
     # Setup config to automatize agents calls
@@ -310,6 +311,7 @@ def setup() -> bool:
     if not required_setup():
         return False
 
+    # TODO: Get repository path from config
     repo = Repository(io=io)
 
     if not Path(CONFIG_FILE).exists() and config.init:

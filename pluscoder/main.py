@@ -3,7 +3,6 @@ import asyncio
 from pluscoder.model import get_inferred_provider
 from pluscoder.setup import setup
 from pluscoder.type import AgentState, TokenUsage
-from pluscoder.workflow import run_workflow
 from pluscoder.io_utils import io
 from pluscoder.config import config
 from pluscoder.commands import show_repo, show_repomap, show_config
@@ -134,7 +133,7 @@ def choose_chat_agent_node():
     return chosen_agent
 
 
-def main():
+def main() -> None:
     """
     Main entry point for the Pluscoder application.
     """
@@ -160,7 +159,11 @@ def main():
         if config.show_config:
             show_config()
             return
-
+    except Exception as err:
+        io.event(f"An error occurred. {err}")
+        return
+    try:
+        from pluscoder.workflow import run_workflow
         state = {
             "return_to_user": False,
             "messages": [],
@@ -181,7 +184,3 @@ def main():
     except KeyboardInterrupt:
         io.event("\nProgram interrupted. Exiting gracefully...")
         return
-
-
-if __name__ == "__main__":
-    main()
