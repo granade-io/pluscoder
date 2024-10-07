@@ -3,6 +3,7 @@ from unittest.mock import patch, mock_open
 from pluscoder.repomap import generate_tree
 from pluscoder.io_utils import io
 
+
 @pytest.fixture
 def mock_python_file_content():
     return b"""
@@ -20,6 +21,7 @@ class ExampleClass:
         \"\"\"This is an example method 2.\"\"\"
         pass
 """
+
 
 @pytest.fixture
 def mock_javascript_file_content():
@@ -41,6 +43,7 @@ class ExampleClass {
 }
 """
 
+
 @pytest.fixture
 def mock_jsx_file_content():
     return b"""
@@ -58,6 +61,7 @@ function ExampleComponent({ prop }) {
 
 export default ExampleComponent;
 """
+
 
 @pytest.fixture
 def mock_ts_file_content():
@@ -81,6 +85,7 @@ class Calculator {
     }
 }
 """
+
 
 @pytest.fixture
 def mock_tsx_file_content():
@@ -108,14 +113,15 @@ class Calculator extends React.Component<{ initialValue: number }, {}> {
 }
 """
 
-@patch('pluscoder.repomap.os.walk')
-@patch('pluscoder.repomap.open', new_callable=mock_open)
-@patch('pluscoder.repomap.should_include_file')
-def test_generate_tree(mock_should_include, mock_file_open, mock_walk, mock_python_file_content):
+
+@patch("pluscoder.repomap.os.walk")
+@patch("pluscoder.repomap.open", new_callable=mock_open)
+@patch("pluscoder.repomap.should_include_file")
+def test_generate_tree(
+    mock_should_include, mock_file_open, mock_walk, mock_python_file_content
+):
     # Mock os.walk to return one Python file
-    mock_walk.return_value = [
-        ('/repo_root', [], ['example.py'])
-    ]
+    mock_walk.return_value = [("/repo_root", [], ["example.py"])]
 
     # Mock should_include_file to return True for our file
     mock_should_include.return_value = True
@@ -125,12 +131,12 @@ def test_generate_tree(mock_should_include, mock_file_open, mock_walk, mock_pyth
 
     # Call generate_tree
     result = generate_tree(
-        repo_path='/repo_root',
-        include_patterns=['*.py'],
+        repo_path="/repo_root",
+        include_patterns=["*.py"],
         exclude_patterns=[],
         level=2,
-        tracked_files=['example.py'],
-        io=io
+        tracked_files=["example.py"],
+        io=io,
     )
 
     # Define expected output
@@ -151,18 +157,21 @@ class ExampleClass:
     assert result.strip() == expected_output.strip()
 
     # Verify that the mocks were called correctly
-    mock_walk.assert_called_once_with('/repo_root')
-    mock_should_include.assert_called_once_with('/repo_root/example.py', ['example.py'], ['*.py'], [], '/repo_root')
-    mock_file_open.assert_called_once_with('/repo_root/example.py', 'rb')
+    mock_walk.assert_called_once_with("/repo_root")
+    mock_should_include.assert_called_once_with(
+        "/repo_root/example.py", ["example.py"], ["*.py"], [], "/repo_root"
+    )
+    mock_file_open.assert_called_once_with("/repo_root/example.py", "rb")
 
-@patch('pluscoder.repomap.os.walk')
-@patch('pluscoder.repomap.open', new_callable=mock_open)
-@patch('pluscoder.repomap.should_include_file')
-def test_generate_tree_javascript(mock_should_include, mock_file_open, mock_walk, mock_javascript_file_content):
+
+@patch("pluscoder.repomap.os.walk")
+@patch("pluscoder.repomap.open", new_callable=mock_open)
+@patch("pluscoder.repomap.should_include_file")
+def test_generate_tree_javascript(
+    mock_should_include, mock_file_open, mock_walk, mock_javascript_file_content
+):
     # Mock os.walk to return one JavaScript file
-    mock_walk.return_value = [
-        ('/repo_root', [], ['example.js'])
-    ]
+    mock_walk.return_value = [("/repo_root", [], ["example.js"])]
 
     # Mock should_include_file to return True for our file
     mock_should_include.return_value = True
@@ -172,12 +181,12 @@ def test_generate_tree_javascript(mock_should_include, mock_file_open, mock_walk
 
     # Call generate_tree
     result = generate_tree(
-        repo_path='/repo_root',
-        include_patterns=['*.js'],
+        repo_path="/repo_root",
+        include_patterns=["*.js"],
         exclude_patterns=[],
         level=2,
-        tracked_files=['example.js'],
-        io=io
+        tracked_files=["example.js"],
+        io=io,
     )
 
     # Define expected output
@@ -197,18 +206,21 @@ class ExampleClass {
     assert result.strip() == expected_output.strip()
 
     # Verify that the mocks were called correctly
-    mock_walk.assert_called_once_with('/repo_root')
-    mock_should_include.assert_called_once_with('/repo_root/example.js', ['example.js'], ['*.js'], [], '/repo_root')
-    mock_file_open.assert_called_once_with('/repo_root/example.js', 'rb')
+    mock_walk.assert_called_once_with("/repo_root")
+    mock_should_include.assert_called_once_with(
+        "/repo_root/example.js", ["example.js"], ["*.js"], [], "/repo_root"
+    )
+    mock_file_open.assert_called_once_with("/repo_root/example.js", "rb")
 
-@patch('pluscoder.repomap.os.walk')
-@patch('pluscoder.repomap.open', new_callable=mock_open)
-@patch('pluscoder.repomap.should_include_file')
-def test_generate_tree_jsx(mock_should_include, mock_file_open, mock_walk, mock_jsx_file_content):
+
+@patch("pluscoder.repomap.os.walk")
+@patch("pluscoder.repomap.open", new_callable=mock_open)
+@patch("pluscoder.repomap.should_include_file")
+def test_generate_tree_jsx(
+    mock_should_include, mock_file_open, mock_walk, mock_jsx_file_content
+):
     # Mock os.walk to return one JSX file
-    mock_walk.return_value = [
-        ('/repo_root', [], ['example.jsx'])
-    ]
+    mock_walk.return_value = [("/repo_root", [], ["example.jsx"])]
 
     # Mock should_include_file to return True for our file
     mock_should_include.return_value = True
@@ -218,12 +230,12 @@ def test_generate_tree_jsx(mock_should_include, mock_file_open, mock_walk, mock_
 
     # Call generate_tree
     result = generate_tree(
-        repo_path='/repo_root',
-        include_patterns=['*.jsx'],
+        repo_path="/repo_root",
+        include_patterns=["*.jsx"],
         exclude_patterns=[],
         level=2,
-        tracked_files=['example.jsx'],
-        io=io
+        tracked_files=["example.jsx"],
+        io=io,
     )
 
     # Define expected output
@@ -239,19 +251,21 @@ function ExampleComponent({ prop }) {
     assert result.strip() == expected_output.strip()
 
     # Verify that the mocks were called correctly
-    mock_walk.assert_called_once_with('/repo_root')
-    mock_should_include.assert_called_once_with('/repo_root/example.jsx', ['example.jsx'], ['*.jsx'], [], '/repo_root')
-    mock_file_open.assert_called_once_with('/repo_root/example.jsx', 'rb')
-    
+    mock_walk.assert_called_once_with("/repo_root")
+    mock_should_include.assert_called_once_with(
+        "/repo_root/example.jsx", ["example.jsx"], ["*.jsx"], [], "/repo_root"
+    )
+    mock_file_open.assert_called_once_with("/repo_root/example.jsx", "rb")
 
-@patch('pluscoder.repomap.os.walk')
-@patch('pluscoder.repomap.open', new_callable=mock_open)
-@patch('pluscoder.repomap.should_include_file')
-def test_generate_tree_ts(mock_should_include, mock_file_open, mock_walk, mock_ts_file_content):
+
+@patch("pluscoder.repomap.os.walk")
+@patch("pluscoder.repomap.open", new_callable=mock_open)
+@patch("pluscoder.repomap.should_include_file")
+def test_generate_tree_ts(
+    mock_should_include, mock_file_open, mock_walk, mock_ts_file_content
+):
     # Mock os.walk to return one TypeScript file
-    mock_walk.return_value = [
-        ('/repo_root', [], ['example.ts'])
-    ]
+    mock_walk.return_value = [("/repo_root", [], ["example.ts"])]
 
     # Mock should_include_file to return True for our file
     mock_should_include.return_value = True
@@ -261,12 +275,12 @@ def test_generate_tree_ts(mock_should_include, mock_file_open, mock_walk, mock_t
 
     # Call generate_tree
     result = generate_tree(
-        repo_path='/repo_root',
-        include_patterns=['*.ts'],
+        repo_path="/repo_root",
+        include_patterns=["*.ts"],
         exclude_patterns=[],
         level=2,
-        tracked_files=['example.ts'],
-        io=io
+        tracked_files=["example.ts"],
+        io=io,
     )
 
     # Define expected output
@@ -285,18 +299,21 @@ class Calculator {
     assert result.strip() == expected_output.strip()
 
     # Verify that the mocks were called correctly
-    mock_walk.assert_called_once_with('/repo_root')
-    mock_should_include.assert_called_once_with('/repo_root/example.ts', ['example.ts'], ['*.ts'], [], '/repo_root')
-    mock_file_open.assert_called_once_with('/repo_root/example.ts', 'rb')
+    mock_walk.assert_called_once_with("/repo_root")
+    mock_should_include.assert_called_once_with(
+        "/repo_root/example.ts", ["example.ts"], ["*.ts"], [], "/repo_root"
+    )
+    mock_file_open.assert_called_once_with("/repo_root/example.ts", "rb")
 
-@patch('pluscoder.repomap.os.walk')
-@patch('pluscoder.repomap.open', new_callable=mock_open)
-@patch('pluscoder.repomap.should_include_file')
-def test_generate_tree_tsx(mock_should_include, mock_file_open, mock_walk, mock_tsx_file_content):
+
+@patch("pluscoder.repomap.os.walk")
+@patch("pluscoder.repomap.open", new_callable=mock_open)
+@patch("pluscoder.repomap.should_include_file")
+def test_generate_tree_tsx(
+    mock_should_include, mock_file_open, mock_walk, mock_tsx_file_content
+):
     # Mock os.walk to return one TSX file
-    mock_walk.return_value = [
-        ('/repo_root', [], ['example.tsx'])
-    ]
+    mock_walk.return_value = [("/repo_root", [], ["example.tsx"])]
 
     # Mock should_include_file to return True for our file
     mock_should_include.return_value = True
@@ -306,12 +323,12 @@ def test_generate_tree_tsx(mock_should_include, mock_file_open, mock_walk, mock_
 
     # Call generate_tree
     result = generate_tree(
-        repo_path='/repo_root',
-        include_patterns=['*.tsx'],
+        repo_path="/repo_root",
+        include_patterns=["*.tsx"],
         exclude_patterns=[],
         level=2,
-        tracked_files=['example.tsx'],
-        io=io
+        tracked_files=["example.tsx"],
+        io=io,
     )
 
     # Define expected output
@@ -330,6 +347,8 @@ class Calculator extends React.Component<{ initialValue: number }, {}> {
     assert result.strip() == expected_output.strip()
 
     # Verify that the mocks were called correctly
-    mock_walk.assert_called_once_with('/repo_root')
-    mock_should_include.assert_called_once_with('/repo_root/example.tsx', ['example.tsx'], ['*.tsx'], [], '/repo_root')
-    mock_file_open.assert_called_once_with('/repo_root/example.tsx', 'rb')
+    mock_walk.assert_called_once_with("/repo_root")
+    mock_should_include.assert_called_once_with(
+        "/repo_root/example.tsx", ["example.tsx"], ["*.tsx"], [], "/repo_root"
+    )
+    mock_file_open.assert_called_once_with("/repo_root/example.tsx", "rb")

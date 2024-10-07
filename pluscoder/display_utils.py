@@ -11,6 +11,7 @@ def display_diff(diff_text, filepath, console):
     console.print("\n")
     console.print(syntax)
 
+
 def display_file_diff(content: str, filepath: str, console=None) -> None:
     """
     Find FIND/REPLACE blocks in the given content and display a git-like diff
@@ -24,17 +25,18 @@ def display_file_diff(content: str, filepath: str, console=None) -> None:
     console = console if console else Console()
 
     # Define the regex pattern to match FIND/REPLACE blocks
-    pattern = r'>>> FIND\n(.*?)\n===\n(.*?)\n<<< REPLACE'
-    
+    pattern = r">>> FIND\n(.*?)\n===\n(.*?)\n<<< REPLACE"
+
     # Find all matches of FIND/REPLACE blocks
     matches = re.findall(pattern, content, re.DOTALL)
-    
+
     if not matches:
-        
         # Generate unified diff
         replace_lines = content.splitlines()
-        diff = difflib.unified_diff("", replace_lines, fromfile=filepath, tofile=filepath, lineterm="")
-        
+        diff = difflib.unified_diff(
+            "", replace_lines, fromfile=filepath, tofile=filepath, lineterm=""
+        )
+
         # Convert diff to a single string
         diff_text = "\n".join(diff)
         display_diff(diff_text, filepath, console)
@@ -44,17 +46,17 @@ def display_file_diff(content: str, filepath: str, console=None) -> None:
     for index, (find_block, replace_block) in enumerate(matches):
         find_lines = find_block.splitlines()
         replace_lines = replace_block.splitlines()
-        
+
         # Generate unified diff
-        diff = difflib.unified_diff(find_lines, replace_lines, fromfile=filepath, tofile=filepath, lineterm="")
-        
+        diff = difflib.unified_diff(
+            find_lines, replace_lines, fromfile=filepath, tofile=filepath, lineterm=""
+        )
+
         # Convert diff to a single string
         diff_text = "\n".join(diff)
 
         # Display using rich syntax highlighting
         display_diff(diff_text, filepath, console)
-
-
 
 
 if __name__ == "__main__":

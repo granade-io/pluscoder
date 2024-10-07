@@ -4,12 +4,15 @@ from pluscoder.repo import Repository
 from pluscoder.io_utils import io
 from pluscoder.config import config
 
+
 class GitEventHandler(AgentEventBaseHandler):
     def __init__(self):
         super().__init__()
         self.repo = Repository(io=io)
 
-    async def on_new_agent_instructions(self, agent_instructions: AgentInstructions = None):
+    async def on_new_agent_instructions(
+        self, agent_instructions: AgentInstructions = None
+    ):
         pass
 
     async def on_task_delegated(self, agent_instructions: AgentInstructions):
@@ -21,7 +24,9 @@ class GitEventHandler(AgentEventBaseHandler):
     async def on_task_completed(self, agent_instructions: AgentInstructions = None):
         pass
 
-    async def on_task_list_completed(self, agent_instructions: AgentInstructions = None):
+    async def on_task_list_completed(
+        self, agent_instructions: AgentInstructions = None
+    ):
         pass
 
     async def on_files_updated(self, updated_files):
