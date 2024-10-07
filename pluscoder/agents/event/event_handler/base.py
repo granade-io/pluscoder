@@ -4,6 +4,7 @@ from typing import List
 
 from pluscoder.type import AgentTask
 
+
 class AgentEvent(Enum):
     NEW_AGENT_INSTRUCTIONS = "on_new_agent_instructions"
     TASK_DELEGATED = "on_task_delegated"
@@ -11,8 +12,8 @@ class AgentEvent(Enum):
     TASK_COMPLETED = "on_task_completed"
     TASK_LIST_COMPLETED = "on_task_list_completed"
     FILES_UPDATED = "on_files_updated"
-    
-    
+
+
 class AgentEventBaseHandler:
     async def on_new_agent_instructions(self, task_list: List[AgentTask] = None):
         pass
@@ -31,8 +32,7 @@ class AgentEventBaseHandler:
 
     async def on_files_updated(self, updated_files):
         pass
-    
-    
+
 
 class EventEmitter:
     def __init__(self):

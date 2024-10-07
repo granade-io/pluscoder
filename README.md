@@ -220,7 +220,7 @@ You can set these options using environment variables, command-line arguments (e
    ```bash
    # as python module
    python -m pluscoder.main [options]
-   
+
    # as bash command
    plus-coder [options]
    ```
@@ -230,10 +230,3 @@ You can set these options using environment variables, command-line arguments (e
    ```bash
    pytest
    ```
-
-## Setting up Pre-commit
-
-The `setup_precommit.sh` script will:
-1. Install pre-commit
-2. Set up the git hooks
-3. Add the necessary environment variables to the `.env` file
