@@ -1,6 +1,7 @@
 VENV_DIR := .venv
 REQUIREMENTS_FILE := requirements.txt
 PRECOMMIT_CONFIG := .pre-commit-config.yaml
+RUFF_CONFIG := ruff.toml
 
 .PHONY: venv install_requirements precommit install_precommit
 
@@ -32,11 +33,17 @@ precommit-setup:
 
 precommit:
 	@echo "Running pre-commit on all files..."
-	@pre-commit run --all-files
+	@pre-commit run --all-files -v
 
 fmt:
-	@echo "Running ruff..."
+	@echo "Running ruff format..."
 	@ruff format .
+
+# TODO: remove --exit-zero, so that it fails if there are any issues
+check:
+	@echo "Running ruff check..."
+	@ruff check --exit-zero --output-format full --config $(RUFF_CONFIG) .
+	@ruff check --exit-zero --output-format json -o .ruff_report.json --config $(RUFF_CONFIG) .
 
 test:
 	@echo "Running tests..."

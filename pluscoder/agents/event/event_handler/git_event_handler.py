@@ -1,8 +1,8 @@
 from pluscoder.agents.event.base import AgentEventBaseHandler
-from pluscoder.type import AgentInstructions
-from pluscoder.repo import Repository
-from pluscoder.io_utils import io
 from pluscoder.config import config
+from pluscoder.io_utils import io
+from pluscoder.repo import Repository
+from pluscoder.type import AgentInstructions
 
 
 class GitEventHandler(AgentEventBaseHandler):

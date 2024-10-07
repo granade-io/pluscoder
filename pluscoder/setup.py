@@ -1,18 +1,18 @@
 import asyncio
-from pathlib import Path
-import yaml
 import os
 import re
+from pathlib import Path
+
+import yaml
+from rich.prompt import Prompt
+
 from pluscoder import tools
-from pluscoder.type import AgentInstructions, AgentState, OrchestrationState, TokenUsage
-from pluscoder.config import config, Settings
+from pluscoder.config import Settings, config
 from pluscoder.io_utils import io
 from pluscoder.repo import Repository
 from pluscoder.state_utils import get_model_token_info
-
+from pluscoder.type import AgentInstructions, AgentState, OrchestrationState, TokenUsage
 from pluscoder.workflow import run_workflow
-from rich.prompt import Prompt
-
 
 CONFIG_FILE = ".pluscoder-config.yml"
 CONFIG_OPTIONS = ["provider", "model", "auto_commits", "allow_dirty_commits"]
@@ -47,7 +47,7 @@ def get_config_defaults():
 
 def read_yaml(file_path):
     try:
-        with open(file_path, "r") as file:
+        with open(file_path) as file:
             return yaml.safe_load(file)
     except FileNotFoundError:
         return {}
@@ -55,7 +55,7 @@ def read_yaml(file_path):
 
 def read_file_as_text(file_path):
     try:
-        with open(file_path, "r") as file:
+        with open(file_path) as file:
             return file.read()
     except FileNotFoundError:
         return ""
@@ -125,7 +125,7 @@ def additional_config():
     files_to_ignore = ["PROJECT_OVERVIEW.md", "CODING_GUIDELINES.md"]
 
     if os.path.exists(gitignore_path):
-        with open(gitignore_path, "r") as f:
+        with open(gitignore_path) as f:
             content = f.read().splitlines()
 
         files_to_add = [file for file in files_to_ignore if file not in content]
@@ -143,17 +143,16 @@ def additional_config():
             io.event(
                 "> PROJECT_OVERVIEW.md and CODING_GUIDELINES.md are already in .gitignore"
             )
+    elif io.confirm(
+        "> .gitignore file not found. Do you want to create it with PROJECT_OVERVIEW.md and CODING_GUIDELINES.md?"
+    ):
+        with open(gitignore_path, "w") as f:
+            f.write("\n".join(files_to_ignore) + "\n")
+        io.event(
+            "> Created .gitignore with PROJECT_OVERVIEW.md and CODING_GUIDELINES.md"
+        )
     else:
-        if io.confirm(
-            "> .gitignore file not found. Do you want to create it with PROJECT_OVERVIEW.md and CODING_GUIDELINES.md?"
-        ):
-            with open(gitignore_path, "w") as f:
-                f.write("\n".join(files_to_ignore) + "\n")
-            io.event(
-                "> Created .gitignore with PROJECT_OVERVIEW.md and CODING_GUIDELINES.md"
-            )
-        else:
-            io.event("> Skipped creating .gitignore")
+        io.event("> Skipped creating .gitignore")
 
 
 TASK_LIST = [

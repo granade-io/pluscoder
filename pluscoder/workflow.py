@@ -1,27 +1,27 @@
 import functools
 import warnings
 
-from pluscoder.agents.orchestrator import OrchestratorAgent
-from pluscoder.io_utils import io
-from langgraph.graph import StateGraph, END, START
-from pluscoder.message_utils import HumanMessage
+from langchain_core.globals import set_debug
+from langgraph.graph import END, START, StateGraph
+from rich.markdown import Markdown
+from rich.rule import Rule
+
 from pluscoder.agents.base import Agent, AgentState
-from pluscoder.state_utils import accumulate_token_usage
-from pluscoder.type import OrchestrationState, TokenUsage
 from pluscoder.agents.core import (
     DeveloperAgent,
+    DomainExpertAgent,
     DomainStakeholderAgent,
     PlanningAgent,
-    DomainExpertAgent,
 )
-from rich.rule import Rule
-from rich.markdown import Markdown
-from langchain_core.globals import set_debug
-from pluscoder.message_utils import get_message_content_str
-from pluscoder.model import get_llm, get_orchestrator_llm
 from pluscoder.agents.event.config import event_emitter
+from pluscoder.agents.orchestrator import OrchestratorAgent
 from pluscoder.commands import handle_command, is_command
 from pluscoder.config import config
+from pluscoder.io_utils import io
+from pluscoder.message_utils import HumanMessage, get_message_content_str
+from pluscoder.model import get_llm, get_orchestrator_llm
+from pluscoder.state_utils import accumulate_token_usage
+from pluscoder.type import OrchestrationState, TokenUsage
 
 set_debug(False)
 
@@ -373,7 +373,8 @@ async def orchestrator_agent_node(
                 ),
             )
 
-            # Return to user to give obtain more feedback & set status to active to allow agent to execute its default behavior
+            # Return to user to give obtain more feedback & set status to active to allow agent to
+            # execute its default behavior
             return {
                 **update_global_state(agent.id, {**state_update, "status": "active"}),
                 "return_to_user": True,

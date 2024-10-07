@@ -1,8 +1,10 @@
+import re
 import shutil
 from typing import Annotated, Dict, List, Literal
-from langchain_core.tools import tool
-import re
+
 import requests
+from langchain_core.tools import tool
+
 from pluscoder.fs import get_formatted_file_content
 from pluscoder.io_utils import io
 from pluscoder.type import AgentTask
@@ -17,7 +19,7 @@ def download_file(url: Annotated[str, "The URL of the file to download."]) -> st
         content = response.text
         return f"Here is the content of the downloaded file:\n\n{content}"
     except requests.RequestException as e:
-        return f"Error downloading file: {str(e)}"
+        return f"Error downloading file: {e!s}"
 
 
 @tool
@@ -36,7 +38,7 @@ def move_files(
             shutil.move(from_path, to_path)
             results.append(f"Successfully moved {from_path} to {to_path}")
         except Exception as e:
-            results.append(f"Failed to move {from_path} to {to_path}: {str(e)}")
+            results.append(f"Failed to move {from_path} to {to_path}: {e!s}")
 
     success_count = sum(1 for result in results if result.startswith("Successfully"))
     failure_count = len(results) - success_count
@@ -106,7 +108,7 @@ def read_files(
             loaded_files.append(file_path)
         except Exception as e:
             errors.append(
-                f"Error reading file {file_path}. Maybe the path is wrong or the file never existed: {str(e)}"
+                f"Error reading file {file_path}. Maybe the path is wrong or the file never existed: {e!s}"
             )
 
     if errors:
@@ -128,7 +130,7 @@ def update_file(
             file.write(content)
         return f"File updated successfully at {file_path}"
     except Exception as e:
-        return f"Error updating file: {str(e)}"
+        return f"Error updating file: {e!s}"
 
 
 @tool

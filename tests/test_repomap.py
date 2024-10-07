@@ -1,7 +1,9 @@
+from unittest.mock import mock_open, patch
+
 import pytest
-from unittest.mock import patch, mock_open
-from pluscoder.repomap import generate_tree
+
 from pluscoder.io_utils import io
+from pluscoder.repomap import generate_tree
 
 
 @pytest.fixture

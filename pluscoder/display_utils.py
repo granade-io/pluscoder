@@ -1,5 +1,6 @@
-import re
 import difflib
+import re
+
 from rich.console import Console
 from rich.syntax import Syntax
 

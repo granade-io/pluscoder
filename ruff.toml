@@ -1,0 +1,44 @@
+exclude = [
+    "tests/*",
+]
+
+[lint]
+select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+    # pydocstyle
+    # TODO: Enable docstrings
+    # "D101",
+    # "D102",
+    # "D103",
+    # Mccabe
+    "C90",
+    # Pylint
+    "PL",
+    # Eradicate
+    # "ERA",
+    # flake8-builtins
+    "A",
+    # flake8-comprehensions
+    "C4",
+    # flake8-print
+    "T20",
+    # Ruff
+    "RUF",
+]
+ignore = [
+    "E501" # Line too long
+]
+
+[lint.pycodestyle]
+max-line-length = 120
