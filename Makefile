@@ -14,18 +14,22 @@ venv:
 
 install: venv
 	@echo "Installing requirements from $(REQUIREMENTS_FILE)..."
-	@$(VENV_DIR)/bin/pip install -r $(REQUIREMENTS_FILE)
+	@pip install -r $(REQUIREMENTS_FILE)
 
 install-dev: venv
 	@echo "Installing dev requirements from $(REQUIREMENTS_FILE)..."
-	@$(VENV_DIR)/bin/pip install -r requirements.txt requirements-dev.txt
+	@pip install -r requirements.txt requirements-dev.txt
+
+editable:
+	@echo "Installing package in editable mode..."
+	@pip install -e .
 
 precommit-setup:
 	@echo "Installing pre-commit..."
-	@$(VENV_DIR)/bin/pip install pre-commit
+	@pip install pre-commit
 	@if [ -f $(PRECOMMIT_CONFIG) ]; then \
 		echo "Installing pre-commit hooks..."; \
-		$(VENV_DIR)/bin/pre-commit install; \
+		pre-commit install; \
 	else \
 		echo "$(PRECOMMIT_CONFIG) not found. Please create one."; \
 	fi
