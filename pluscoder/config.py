@@ -1,3 +1,5 @@
+from typing import Any, Dict, List, Optional, Tuple, Type
+
 from pydantic import Field
 from pydantic_settings import (
     BaseSettings,
@@ -6,7 +8,6 @@ from pydantic_settings import (
     SettingsConfigDict,
     YamlConfigSettingsSource,
 )
-from typing import List, Optional, Tuple, Type, Dict, Any
 
 
 class Settings(BaseSettings):

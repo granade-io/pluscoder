@@ -1,10 +1,11 @@
 from unittest.mock import patch
+
 from pluscoder.state_utils import (
+    accumulate_token_usage,
     print_token_usage,
     sum_token_usage,
-    accumulate_token_usage,
 )
-from pluscoder.type import TokenUsage, OrchestrationState, AgentState
+from pluscoder.type import AgentState, OrchestrationState, TokenUsage
 
 
 def test_print_token_usage(capsys):

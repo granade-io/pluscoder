@@ -1,7 +1,9 @@
-import unittest
-import tempfile
 import os
+import tempfile
+import unittest
+
 from PIL import Image
+
 from pluscoder.message_utils import convert_image_paths_to_base64
 
 
@@ -120,7 +122,7 @@ class TestImageHandling(unittest.TestCase):
         self.assertEqual(result[4]["type"], "image_url")
 
     def test_mixed_existing_and_nonexistent_image_paths(self):
-        input_text = f"Start img::{self.test_image_path} Middle /nonexistent1.png /nonexistent2.png img::{self.test_image_path} End"
+        input_text = f"Start img::{self.test_image_path} Middle /nonexistent1.png /nonexistent2.png img::{self.test_image_path} End"  # noqa
         result = convert_image_paths_to_base64(input_text)
 
         self.assertEqual(len(result), 7)

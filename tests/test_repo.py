@@ -1,9 +1,11 @@
-import pytest
-from unittest.mock import ANY, Mock, patch, MagicMock
-from pluscoder.repo import Repository
-from git import GitCommandError
-from pluscoder.io_utils import io
 import subprocess
+from unittest.mock import ANY, MagicMock, Mock, patch
+
+import pytest
+from git import GitCommandError
+
+from pluscoder.io_utils import io
+from pluscoder.repo import Repository
 
 
 @pytest.fixture

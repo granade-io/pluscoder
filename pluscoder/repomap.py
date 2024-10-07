@@ -1,6 +1,7 @@
 import os
 import re
-from typing import List, Tuple, Dict
+from typing import Dict, List, Tuple
+
 from tree_sitter_language_pack import get_language, get_parser
 
 # Map file extensions to languages

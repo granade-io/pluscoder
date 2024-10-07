@@ -3,8 +3,9 @@ import pprint
 import re
 import subprocess
 from typing import List, Optional
-from git import Actor, Repo
-from git import GitCommandError
+
+from git import Actor, GitCommandError, Repo
+
 from pluscoder.config import config
 
 
@@ -245,10 +246,6 @@ class Repository:
 
 if __name__ == "__main__":
     repo = Repository()
-    print("Tree:")
-    pprint.pprint(repo.get_tracked_files())
-
-    # print("\n\nRepomap:")
-    # print(repo.generate_repomap())
-
+    print("Tree:")  # noqa: T201
+    pprint.pprint(repo.get_tracked_files())  # noqa: T203
     repo.run_test()

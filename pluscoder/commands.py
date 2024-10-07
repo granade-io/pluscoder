@@ -1,18 +1,20 @@
-from typing import Dict, Union, Callable
+import subprocess
 from functools import wraps
+from typing import Callable, Dict, Union
+
 from pydantic import ValidationError
-from rich.syntax import Syntax
-from pluscoder.config import config
-from pluscoder.repo import Repository
-from pluscoder.io_utils import io
-from pluscoder.type import AgentState, OrchestrationState
-from pluscoder.message_utils import HumanMessage
-from rich.rule import Rule
-from rich.table import Table
-from rich.tree import Tree
 from rich.panel import Panel
 from rich.prompt import Prompt
-import subprocess
+from rich.rule import Rule
+from rich.syntax import Syntax
+from rich.table import Table
+from rich.tree import Tree
+
+from pluscoder.config import config
+from pluscoder.io_utils import io
+from pluscoder.message_utils import HumanMessage
+from pluscoder.repo import Repository
+from pluscoder.type import AgentState, OrchestrationState
 
 
 class CommandRegistry:
@@ -191,7 +193,7 @@ def run_command(state: OrchestrationState, *args) -> OrchestrationState:
         io.console.print(error_message, style="bold red")
         state["command_output"] = error_message
     except Exception as e:
-        error_message = f"An unexpected error occurred: {str(e)}"
+        error_message = f"An unexpected error occurred: {e!s}"
         io.console.print(error_message, style="bold red")
         state["command_output"] = error_message
 

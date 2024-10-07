@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 import asyncio
+
+from rich.prompt import Prompt
+
+from pluscoder.commands import show_config, show_repo, show_repomap
+from pluscoder.config import config
+from pluscoder.io_utils import io
 from pluscoder.model import get_inferred_provider
+from pluscoder.repo import Repository
 from pluscoder.setup import setup
 from pluscoder.type import AgentState, TokenUsage
 from pluscoder.workflow import run_workflow
-from pluscoder.io_utils import io
-from pluscoder.config import config
-from pluscoder.commands import show_repo, show_repomap, show_config
-from pluscoder.repo import Repository
-from rich.prompt import Prompt
 
 
 def run_silent_checks():

@@ -3,19 +3,13 @@ repos:
     hooks:
       - id: pytest
         name: pytest
-        entry: pytest
+        entry: make test
         language: system
         pass_filenames: false
         always_run: true
-      - id: ruff
-        name: ruff
-        entry: ruff check .
-        language: system
-        pass_filenames: false
-        always_run: true
-      - id: ruff-fix
-        name: ruff (fix)
-        entry: ruff check --fix .
+      - id: ruff_check
+        name: ruff_check
+        entry: make check
         language: system
         pass_filenames: false
         always_run: true
