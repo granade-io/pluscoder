@@ -104,9 +104,9 @@ docker-build:
         - pluscoder/**/*
         - requirements.txt
         - Dockerfile
-  artifacts:
-    paths:
-      - ./wheels
+  # artifacts:
+  #   paths:
+  #     - ./wheels
 
 release:
   image: node:latest
