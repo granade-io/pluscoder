@@ -1,69 +1,76 @@
 import asyncio
-from pathlib import Path
-import yaml
 import os
 import re
+from pathlib import Path
+
+import yaml
+from rich.prompt import Prompt
+
 from pluscoder import tools
-from pluscoder.type import AgentInstructions, AgentState, OrchestrationState, TokenUsage
-from pluscoder.config import config, Settings
+from pluscoder.config import Settings, config
 from pluscoder.io_utils import io
 from pluscoder.repo import Repository
 from pluscoder.state_utils import get_model_token_info
+from pluscoder.type import AgentInstructions, AgentState, OrchestrationState, TokenUsage
 
-from pluscoder.workflow import run_workflow
-from rich.prompt import Prompt
-CONFIG_FILE = '.pluscoder-config.yml'
-CONFIG_OPTIONS = [
-    'provider', 'model', 'auto_commits', 'allow_dirty_commits'
-]
+CONFIG_FILE = ".pluscoder-config.yml"
+CONFIG_OPTIONS = ["provider", "model", "auto_commits", "allow_dirty_commits"]
+
 
 def required_setup():
-    git_dir = Path('.git')
+    git_dir = Path(".git")
     if not git_dir.is_dir():
         io.event("> .git directory not found. Make sure you're in a Git repository.")
         return False
 
-    exclude_file = git_dir / 'info' / 'exclude'
+    exclude_file = git_dir / "info" / "exclude"
     exclude_file.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(exclude_file, 'a+') as f:
+    with open(exclude_file, "a+") as f:
         f.seek(0)
         content = f.read()
-        if '.pluscoder/' not in content:
-            f.write('\n.pluscoder/')
+        if ".pluscoder/" not in content:
+            f.write("\n.pluscoder/")
             # io.event("> Added 'pluscoder/' to .git/info/exclude")
-    
+
     return True
+
 
 def get_config_descriptions():
     return {field: Settings.model_fields[field].description for field in CONFIG_OPTIONS}
 
+
 def get_config_defaults():
     return {field: getattr(config, field) for field in CONFIG_OPTIONS}
 
+
 def read_yaml(file_path):
     try:
-        with open(file_path, 'r') as file:
+        with open(file_path) as file:
             return yaml.safe_load(file)
     except FileNotFoundError:
         return {}
 
+
 def read_file_as_text(file_path):
     try:
-        with open(file_path, 'r') as file:
+        with open(file_path) as file:
             return file.read()
     except FileNotFoundError:
         return ""
 
+
 def load_example_config():
-    content = read_file_as_text('.pluscoder-config-example.yml')
+    content = read_file_as_text(".pluscoder-config-example.yml")
     io.console.print("[DEBUG] Example config content:", style="bold yellow")
     io.console.print(content, style="yellow")
     return content
 
+
 def write_yaml(file_path, data):
-    with open(file_path, 'w') as file:
+    with open(file_path, "w") as file:
         file.write(data)
+
 
 def prompt_for_config():
     example_config_text = load_example_config()
@@ -75,9 +82,11 @@ def prompt_for_config():
         default = defaults[option]
 
         prompt = f"{option} ({description})"
-        
+
         if isinstance(default, bool):
-            value = Prompt.ask(prompt, default=str(default).lower(), choices=["true", "false"])
+            value = Prompt.ask(
+                prompt, default=str(default).lower(), choices=["true", "false"]
+            )
             value = value.lower() == "true"
         elif isinstance(default, int):
             value = Prompt.ask(prompt, default=str(default), validator=int)
@@ -94,11 +103,13 @@ def prompt_for_config():
             rf"^#?\s*{option}:.*$",
             f"{option}: {value}",
             example_config_text,
-            flags=re.MULTILINE
+            flags=re.MULTILINE,
         )
 
         if old_config_text == example_config_text:
-            io.console.print(f"[DEBUG] No change in config for {option}", style="bold red")
+            io.console.print(
+                f"[DEBUG] No change in config for {option}", style="bold red"
+            )
         else:
             io.console.print(f"[DEBUG] Updated config for {option}", style="bold green")
 
@@ -107,32 +118,40 @@ def prompt_for_config():
 
     return example_config_text
 
+
 def additional_config():
-    gitignore_path = '.gitignore'
-    files_to_ignore = ['PROJECT_OVERVIEW.md', 'CODING_GUIDELINES.md']
+    gitignore_path = ".gitignore"
+    files_to_ignore = ["PROJECT_OVERVIEW.md", "CODING_GUIDELINES.md"]
 
     if os.path.exists(gitignore_path):
-        with open(gitignore_path, 'r') as f:
+        with open(gitignore_path) as f:
             content = f.read().splitlines()
 
         files_to_add = [file for file in files_to_ignore if file not in content]
 
         if files_to_add:
-            if io.confirm(f"Do you want to add {', '.join(files_to_add)} to .gitignore?"):
-                with open(gitignore_path, 'a') as f:
-                    f.write('\n' + '\n'.join(files_to_add) + '\n')
+            if io.confirm(
+                f"Do you want to add {', '.join(files_to_add)} to .gitignore?"
+            ):
+                with open(gitignore_path, "a") as f:
+                    f.write("\n" + "\n".join(files_to_add) + "\n")
                 io.event(f"> Added {', '.join(files_to_add)} to .gitignore")
             else:
                 io.event("> No changes made to .gitignore")
         else:
-            io.event("> PROJECT_OVERVIEW.md and CODING_GUIDELINES.md are already in .gitignore")
+            io.event(
+                "> PROJECT_OVERVIEW.md and CODING_GUIDELINES.md are already in .gitignore"
+            )
+    elif io.confirm(
+        "> .gitignore file not found. Do you want to create it with PROJECT_OVERVIEW.md and CODING_GUIDELINES.md?"
+    ):
+        with open(gitignore_path, "w") as f:
+            f.write("\n".join(files_to_ignore) + "\n")
+        io.event(
+            "> Created .gitignore with PROJECT_OVERVIEW.md and CODING_GUIDELINES.md"
+        )
     else:
-        if io.confirm("> .gitignore file not found. Do you want to create it with PROJECT_OVERVIEW.md and CODING_GUIDELINES.md?"):
-            with open(gitignore_path, 'w') as f:
-                f.write('\n'.join(files_to_ignore) + '\n')
-            io.event("> Created .gitignore with PROJECT_OVERVIEW.md and CODING_GUIDELINES.md")
-        else:
-            io.event("> Skipped creating .gitignore")
+        io.event("> Skipped creating .gitignore")
 
 
 TASK_LIST = [
@@ -150,7 +169,7 @@ TASK_LIST = [
         "outcome": "A high-level project summary documented in `PROJECT_OVERVIEW.md`, providing details into the repository’s architecture, purpose, and structure aimed for other developers to understand the project.",
         "agent": "domain_stakeholder",
         "completed": False,
-        "is_finished": False
+        "is_finished": False,
     },
     {
         "objective": "Provide concise descriptions of the core project files to assist maintainers and future developers in understanding the purpose and structure of the repository.",
@@ -167,7 +186,7 @@ TASK_LIST = [
         "outcome": "A new section in `PROJECT_OVERVIEW.md` with descriptions of the key project files, giving future developers a clear understanding of the repository’s structure and file interactions.",
         "agent": "domain_stakeholder",
         "completed": False,
-        "is_finished": False
+        "is_finished": False,
     },
     {
         "objective": "Detect code that is reused or imported multiple times across different files to identify reusable patterns such as constants, functions, or classes. Document these patterns in `CODING_GUIDELINES.md` to provide visibility for future developers.",
@@ -184,7 +203,7 @@ TASK_LIST = [
         "outcome": "A section in `CODING_GUIDELINES.md` that highlights reusable constants, functions, and classes, including their file paths, descriptions, and examples of usage, providing guidance for maintaining reusability in the repository.",
         "agent": "domain_stakeholder",
         "completed": False,
-        "is_finished": False
+        "is_finished": False,
     },
     {
         "objective": "Identify and document specific coding standards, conventions, and patterns within the repository that do not relate to code reuse but provide clear structure and practices for future developers.",
@@ -203,7 +222,7 @@ TASK_LIST = [
         "outcome": "An updated `CODING_GUIDELINES.md` providing detailed documentation on naming conventions, error handling, logging, file organization, and documentation practices, with examples to guide future developers.",
         "agent": "domain_stakeholder",
         "completed": False,
-        "is_finished": False
+        "is_finished": False,
     },
     # {
     #     "objective": "Create or update a `.env` file with configurations for running tests, linting, and lint fixes based on the repository setup.",
@@ -228,9 +247,12 @@ TASK_LIST = [
     # }
 ]
 
+
 def initialize_repository():
+    from pluscoder.workflow import run_workflow
+
     io.event("> Starting repository initialization...")
-    
+
     # Setup config to automatize agents calls
     auto_confirm = config.auto_confirm
     use_repomap = config.use_repomap
@@ -238,61 +260,74 @@ def initialize_repository():
     config.auto_confirm = True
     config.use_repomap = True
     config.auto_commits = False
-    
+
     orchestrator_state = AgentState.default()
     orchestrator_state["tool_data"][tools.delegate_tasks.name] = AgentInstructions(
         general_objective="Number test sequence",
         task_list=TASK_LIST,
-        resources=[]
-        ).dict()
-    
-    initial_state = OrchestrationState(**{
-        "return_to_user": False,
-        "orchestrator_state": orchestrator_state,
-        "domain_stakeholder_state": AgentState.default(),
-        "planning_state": AgentState.default(),
-        "developer_state": AgentState.default(),
-        "domain_expert_state": AgentState.default(),
-        "accumulated_token_usage": TokenUsage.default(),
-        "chat_agent": "orchestrator",
-        "is_task_list_workflow": True,
-    })
+        resources=[],
+    ).dict()
+
+    initial_state = OrchestrationState(
+        **{
+            "return_to_user": False,
+            "orchestrator_state": orchestrator_state,
+            "domain_stakeholder_state": AgentState.default(),
+            "planning_state": AgentState.default(),
+            "developer_state": AgentState.default(),
+            "domain_expert_state": AgentState.default(),
+            "accumulated_token_usage": TokenUsage.default(),
+            "chat_agent": "orchestrator",
+            "is_task_list_workflow": True,
+        }
+    )
 
     asyncio.run(run_workflow(initial_state))
-    
+
     # Restore config values
     config.auto_confirm = auto_confirm
     config.use_repomap = use_repomap
     config.auto_commits = auto_commits
-    
+
     # Check if both files were created
-    if not (Path(config.overview_file_path).exists() and Path(config.guidelines_file_path).exists()):
-        io.console.print("Error: Could not create `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md`. Please try again.", style="bold red")
+    if not (
+        Path(config.overview_file_path).exists()
+        and Path(config.guidelines_file_path).exists()
+    ):
+        io.console.print(
+            "Error: Could not create `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md`. Please try again.",
+            style="bold red",
+        )
         return
-    
+
     io.event("> Repository initialization completed.")
-    io.console.print("Files `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md` were generated and will be used as context for Pluscoder.\n")
+    io.console.print(
+        "Files `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md` were generated and will be used as context for Pluscoder.\n"
+    )
+
 
 def setup() -> bool:
     if not required_setup():
         return False
 
     repo = Repository(io=io)
-    
+
     if not Path(CONFIG_FILE).exists() and config.init:
-        
-        io.console.print("Welcome to Pluscoder! Let's customize your project configuration.", style="bold green")
-        
+        io.console.print(
+            "Welcome to Pluscoder! Let's customize your project configuration.",
+            style="bold green",
+        )
+
         # Load example config and prompt for configuration
         config_data = prompt_for_config()
-        
+
         io.console.print("[DEBUG] Config data to be written:", style="bold magenta")
         io.console.print(config_data, style="magenta")
-        
+
         # Write the updated config
         write_yaml(CONFIG_FILE, config_data)
         repo.create_default_files()
-        
+
         io.event(f"> Configuration saved to {CONFIG_FILE}.")
 
         # Verify the written config
@@ -303,24 +338,29 @@ def setup() -> bool:
         # Additional configuration
         additional_config()
 
-        io.console.print("Initialization will analyze your project for better agent assistance generating `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md` files.")
+        io.console.print(
+            "Initialization will analyze your project for better agent assistance generating `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md` files."
+        )
         if io.confirm("Do you want to initialize it now (takes ~1min)? (recommended)"):
             initialize_repository()
         else:
-            io.event("> Skipping initialization. You can run it later using the /init command.")
+            io.event(
+                "> Skipping initialization. You can run it later using the /init command."
+            )
     elif not Path(CONFIG_FILE).exists() and not config.init:
         io.event("> Skipping initialization due to --no-init flag.")
         # Path.touch(CONFIG_FILE)
-        
 
     # Check repository setup
     if not repo.setup():
         io.event("> Exiting pluscoder")
         return False
-    
+
     # Warns token cost
     if not get_model_token_info(config.model):
-        io.console.print(f"Token usage info not available for model `{config.model}`. Cost calculation can be unaccurate.", style="bold dark_goldenrod")
-        
-    
+        io.console.print(
+            f"Token usage info not available for model `{config.model}`. Cost calculation can be unaccurate.",
+            style="bold dark_goldenrod",
+        )
+
     return True

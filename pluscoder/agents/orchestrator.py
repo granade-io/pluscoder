@@ -1,22 +1,28 @@
-from pluscoder import tools
 from typing import Annotated, List, Literal
-from pluscoder.agents.base import Agent, AgentState
-from pluscoder.agents.prompts import OUTPUT_STRUCTURE_PROMPT, combine_prompts, BASE_PROMPT, FILE_OPERATIONS_PROMPT, READONLY_MODE_PROMPT
-from pluscoder.message_utils import HumanMessage
 
-from pluscoder.type import AgentInstructions
+from pluscoder import tools
+from pluscoder.agents.base import Agent, AgentState
+from pluscoder.agents.prompts import (
+    BASE_PROMPT,
+    FILE_OPERATIONS_PROMPT,
+    READONLY_MODE_PROMPT,
+    combine_prompts,
+)
 from pluscoder.config import config
+from pluscoder.message_utils import HumanMessage
+from pluscoder.type import AgentInstructions
 
 
 class OrchestratorAgent(Agent):
     id = "orchestrator"
-    mode: Annotated[Literal["orchestrate", "direct"],
-                    "'Direct' mode means the OrchestratorAgent talks directly to the selected agent in 'direct mode'.\n" +
-                    "'Orchestrate' mode means the OrchestratorAgent delegates tasks to the selected agent in 'orchestrate mode'."
-                    ]
+    mode: Annotated[
+        Literal["orchestrate", "direct"],
+        "'Direct' mode means the OrchestratorAgent talks directly to the selected agent in 'direct mode'.\n"
+        + "'Orchestrate' mode means the OrchestratorAgent delegates tasks to the selected agent in 'orchestrate mode'.",
+    ]
     current_agent: Annotated[str, "Agent to talk with when in 'direct mode"] = None
     agent_first_instruction: str = None
-    
+
     orchestrator_prompt = """
 *SPECIALIZATION INSTRUCTIONS*:
 Your role is to understand user requirements to generate/plan a proper list of task to solve those requirements with the help of specialized AI Agents.
@@ -41,8 +47,8 @@ To execute/delegate/complete tasks *use the delegation tool*.
    Agent: <agent name> Agent who is responsible for this task.
    Restrictions: <task restrictions> Any limitations or constraints for the task.
    Outcome: <expected outcome> The expected result (file updates) of completing this task.
-   
-   
+
+
 *Examples of task list*:
 
 Example 1: Implement Weather Feature
@@ -136,52 +142,66 @@ You *must follow* following rules when suggesting a task list:
     Completed: [True/False]
     Feedback: [Feedback or response about task completeness, including adherence to restrictions and achievement of the expected outcome]
     """
-    
+
     summarizing_system_message = """
     Your role is to summarize the outputs of others agent to solve a request given by the user's task.
     The summary should be concise and clear.
-    
+
     *Instructions*:
     1. Summarize all task solved in a message aimed for the user who requested the tasks.
     """
 
-    def __init__(self, llm, tools=[tools.read_files], extraction_tools=[tools.delegate_tasks, tools.is_task_completed]):
-        system_message = combine_prompts(BASE_PROMPT, self.orchestrator_prompt, OUTPUT_STRUCTURE_PROMPT, FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT)
-        super().__init__(llm, system_message, "Orchestrator Agent", tools=tools, extraction_tools=extraction_tools, default_context_files=["PROJECT_OVERVIEW.md"])
-    
+    def __init__(
+        self,
+        llm,
+        tools=[tools.read_files],
+        extraction_tools=[tools.delegate_tasks, tools.is_task_completed],
+    ):
+        system_message = combine_prompts(
+            BASE_PROMPT,
+            self.orchestrator_prompt,
+            FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
+        )
+        super().__init__(
+            llm,
+            system_message,
+            "Orchestrator Agent",
+            tools=tools,
+            extraction_tools=extraction_tools,
+            default_context_files=["PROJECT_OVERVIEW.md"],
+        )
+
     def get_system_message(self, state: AgentState) -> str:
         # Default prompt
         if state["status"] == "active":
             return self.system_message
-        
+
         # Default prompt
         if state["status"] == "summarizing":
             return self.summarizing_system_message
-        
+
         # Validation prompt
         return self.validation_system_message
-    
-    
+
     def get_tool_choice(self, state: AgentState) -> str:
         """Chooses a the tool to use when calling the llm"""
         if state["status"] == "delegating":
             return tools.is_task_completed.name
         return "auto"
-    
-    
+
     def is_agent_response(self, state: AgentState) -> bool:
         """
         Verify if the last message in the state is from an agent.
-        
+
         Args:
             state (AgentState): The current state containing messages.
-        
+
         Returns:
             bool: True if the last message is from an agent, False otherwise.
         """
         if not state["messages"]:
             return False
-        
+
         last_message = state["messages"][-1]
         # Assuming agent messages are not instances of HumanMessage
         return not isinstance(last_message, HumanMessage)
@@ -196,16 +216,20 @@ You *must follow* following rules when suggesting a task list:
         Returns:
             Task: The first unfinished task, or None if all tasks are finished or no tasks exist.
         """
-        if "tool_data" not in state \
-            or not state["tool_data"] \
-            or tools.delegate_tasks.name not in state["tool_data"] \
-            or not state["tool_data"][tools.delegate_tasks.name] \
-            or "task_list" not in state["tool_data"][tools.delegate_tasks.name]:
+        if (
+            "tool_data" not in state
+            or not state["tool_data"]
+            or tools.delegate_tasks.name not in state["tool_data"]
+            or not state["tool_data"][tools.delegate_tasks.name]
+            or "task_list" not in state["tool_data"][tools.delegate_tasks.name]
+        ):
             return None
 
         task_list = state["tool_data"][tools.delegate_tasks.name]["task_list"]
-        return next((task for task in task_list if not task.get('is_finished', False)), None)
-    
+        return next(
+            (task for task in task_list if not task.get("is_finished", False)), None
+        )
+
     def get_completed_tasks(self, state: AgentState) -> List[dict]:
         """
         Get the list of completed tasks from the state.
@@ -216,38 +240,47 @@ You *must follow* following rules when suggesting a task list:
         Returns:
             List[dict]: A list of completed tasks with their results.
         """
-        if "tool_data" not in state \
-            or not state["tool_data"] \
-            or tools.delegate_tasks.name not in state["tool_data"] \
-            or not state["tool_data"][tools.delegate_tasks.name] \
-            or "task_list" not in state["tool_data"][tools.delegate_tasks.name]:
+        if (
+            "tool_data" not in state
+            or not state["tool_data"]
+            or tools.delegate_tasks.name not in state["tool_data"]
+            or not state["tool_data"][tools.delegate_tasks.name]
+            or "task_list" not in state["tool_data"][tools.delegate_tasks.name]
+        ):
             return []
 
         task_list = state["tool_data"][tools.delegate_tasks.name]["task_list"]
-        return [task for task in task_list if task.get('is_finished', False)]
-    
+        return [task for task in task_list if task.get("is_finished", False)]
+
     def get_task_list(self, state: AgentState) -> List[dict]:
         """
         Get the task list from the state.
-        
+
         Args:
             state (AgentState): The current state containing tasks.
-        
+
         Returns:
             List[dict]: The task list.
         """
-        if "tool_data" not in state or not state["tool_data"] or tools.delegate_tasks.name not in state["tool_data"]:
+        if (
+            "tool_data" not in state
+            or not state["tool_data"]
+            or tools.delegate_tasks.name not in state["tool_data"]
+        ):
             return []
 
         return state["tool_data"][tools.delegate_tasks.name]["task_list"]
-    
+
     def remove_task_list_data(self, state: AgentState) -> AgentState:
         """Remove the task list data from the state."""
-        return {**state, "tool_data": {**state["tool_data"], tools.delegate_tasks.name: None}}
-    
+        return {
+            **state,
+            "tool_data": {**state["tool_data"], tools.delegate_tasks.name: None},
+        }
+
     def get_agent_instructions(self, state: AgentState) -> AgentInstructions:
         return AgentInstructions(**state["tool_data"][tools.delegate_tasks.name])
-    
+
     def validate_current_task_completed(self, state: AgentState) -> bool:
         """
         Check if the current task is completed based on the state last tool used.
@@ -266,7 +299,9 @@ You *must follow* following rules when suggesting a task list:
 
         return state["tool_data"][tools.is_task_completed.name]["completed"]
 
-    def mark_current_task_as_completed(self, state: AgentState, response: str) -> AgentState:
+    def mark_current_task_as_completed(
+        self, state: AgentState, response: str
+    ) -> AgentState:
         """
         Mark the current task as completed and return a new state.
         Adds the llm response to understand in which message the response was marked as completed.
@@ -283,36 +318,42 @@ You *must follow* following rules when suggesting a task list:
             task_list = tool_data[tools.delegate_tasks.name]["task_list"]
             for task in task_list:
                 # Mark first unfinished task as completed
-                if not task.get('is_finished', False):
-                    task['is_finished'] = True
+                if not task.get("is_finished", False):
+                    task["is_finished"] = True
                     task["response"] = response
                     break
 
         return {**state, "tool_data": tool_data}
-    
+
     def task_to_instruction(self, task: dict, state: AgentState) -> str:
         task_list_data = state["tool_data"][tools.delegate_tasks.name]
         general_objective = task_list_data["general_objective"]
-        
+
         completed_tasks = self.get_completed_tasks(state)
-        completed_tasks_info = "\n".join([
-            f"- Completed: {t['objective']}\n  {t['details']}" 
-            for t in completed_tasks
-        ])
-        
+        completed_tasks_info = "\n".join(
+            [
+                f"- Completed: {t['objective']}\n  {t['details']}"
+                for t in completed_tasks
+            ]
+        )
+
         # Get any image for multi-modal llm
-        images = list(filter(lambda res: res.startswith("img::"), task_list_data["resources"]))
-        other_resources = list(filter(lambda res: not res.startswith("img::"), task_list_data["resources"]))
-        images_instruction = ''
-        resources_instruction = ''
-        
+        images = list(
+            filter(lambda res: res.startswith("img::"), task_list_data["resources"])
+        )
+        other_resources = list(
+            filter(lambda res: not res.startswith("img::"), task_list_data["resources"])
+        )
+        images_instruction = ""
+        resources_instruction = ""
+
         if images:
             images_instruction += f"\n*Reference images:* {"".join(images)}"
         if other_resources:
             resources_instruction += f"\n*Other resources:* {"".join(other_resources)}"
-        
+
         instruction = f"""You are requested to solve a specific task related to the objective: {general_objective}.
-        
+
         These tasks were already completed:
 
 *Context (completed tasks):*
@@ -335,8 +376,7 @@ Write you answer step by step, using a <thinking> block for analysis your throug
 
 """
         return instruction
-    
-    
+
     def is_task_list_empty(self, state: AgentState):
         """
         Check if the task list is empty in the state.
@@ -352,7 +392,7 @@ Write you answer step by step, using a <thinking> block for analysis your throug
 
         task_list = state["tool_data"][tools.delegate_tasks.name]["task_list"]
         return not task_list
-    
+
     def is_task_list_complete(self, state: AgentState):
         """
         Check if the task list is complete in the state.
@@ -365,8 +405,8 @@ Write you answer step by step, using a <thinking> block for analysis your throug
         """
 
         task_list = state["tool_data"][tools.delegate_tasks.name]["task_list"]
-        return all(task.get('is_finished', False) for task in task_list)
-    
+        return all(task.get("is_finished", False) for task in task_list)
+
     def was_task_validation_tool_used(self, state: AgentState) -> bool:
         """
         Check if the validation tool was used in the last message.
@@ -377,9 +417,8 @@ Write you answer step by step, using a <thinking> block for analysis your throug
         Returns:
             bool: True if the validation tool was used, False otherwise.
         """
-        
+
         if "tool_data" not in state or not state["tool_data"]:
             return False
 
         return tools.is_task_completed.name in state["tool_data"]
-    

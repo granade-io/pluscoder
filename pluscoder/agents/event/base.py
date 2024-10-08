@@ -3,7 +3,7 @@
 import asyncio
 
 from pluscoder.agents.event.event_handler.base import AgentEventBaseHandler
-    
+
 
 class EventEmitter:
     def __init__(self):
@@ -27,7 +27,7 @@ class EventEmitter:
                 await method(*args, **kwargs)
             elif method:
                 method(*args, **kwargs)
-                
+
     def emit_sync(self, event, *args, **kwargs):
         method_name = f"on_{event}"
         for handler in self.handlers:

@@ -1,8 +1,9 @@
-from enum import Enum
 import asyncio
+from enum import Enum
 from typing import List
 
 from pluscoder.type import AgentTask
+
 
 class AgentEvent(Enum):
     NEW_AGENT_INSTRUCTIONS = "on_new_agent_instructions"
@@ -11,10 +12,10 @@ class AgentEvent(Enum):
     TASK_COMPLETED = "on_task_completed"
     TASK_LIST_COMPLETED = "on_task_list_completed"
     FILES_UPDATED = "on_files_updated"
-    
-    
+
+
 class AgentEventBaseHandler:
-    async def on_new_agent_instructions(self, task_list: List[AgentTask] = None):
+    async def on_new_agent_instructions(self, task_list: List[AgentTask]):
         pass
 
     async def on_task_delegated(self, task):
@@ -31,8 +32,7 @@ class AgentEventBaseHandler:
 
     async def on_files_updated(self, updated_files):
         pass
-    
-    
+
 
 class EventEmitter:
     def __init__(self):

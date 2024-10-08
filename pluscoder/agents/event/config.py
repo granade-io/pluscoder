@@ -1,7 +1,9 @@
 # Event handlers
-from pluscoder.agents.event.event_handler.console_event_handler import ConsoleAgentEventHandler
-from pluscoder.agents.event.event_handler.git_event_handler import GitEventHandler
 from pluscoder.agents.event.base import EventEmitter
+from pluscoder.agents.event.event_handler.console_event_handler import (
+    ConsoleAgentEventHandler,
+)
+from pluscoder.agents.event.event_handler.git_event_handler import GitEventHandler
 from pluscoder.io_utils import io
 
 # Create a single instance of the EventEmitter
