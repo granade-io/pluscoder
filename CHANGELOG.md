@@ -1,3 +1,29 @@
+# [2.0.0](https://gitlab.com/codematos/pluscoder/compare/v1.13.0...v2.0.0) (2024-10-08)
+
+
+### Bug Fixes
+
+* /config command fixed after refactor to pydantic settings ([2eab6d3](https://gitlab.com/codematos/pluscoder/commit/2eab6d33dfa12457be4643aa15edaae377952430))
+* config singleton references and inferred model display message ([fb269db](https://gitlab.com/codematos/pluscoder/commit/fb269dbab9012315736442dc66a6a6218337ae24))
+* exception when passing empty promopt command to /custom ([ace6310](https://gitlab.com/codematos/pluscoder/commit/ace631007de4e5cdecfcf69344fba18345387fcb))
+
+
+### Features
+
+* add --read_only config to disable file editions keepping assistance ([0116412](https://gitlab.com/codematos/pluscoder/commit/0116412b755292a493463192766d51927d63387a))
+* added documentation link at startup ([0cb6618](https://gitlab.com/codematos/pluscoder/commit/0cb6618a86fee83e203f84b10b4f30b76e61d33f))
+* added new --orchestrator-model and --weak-model model and provider configs ([39b849d](https://gitlab.com/codematos/pluscoder/commit/39b849d1241a3ebb548d0501dfe6d45fbebe3f01))
+* added new .pluscoder-config.yml settings file to work along cmd args and env vars ([b67a583](https://gitlab.com/codematos/pluscoder/commit/b67a583772af76efb0a8fbdb988f84bc9e8edd65))
+* added new custom prompt command (/custom) to pre-define custom repetitive instructions to pass to agents ([b1b60bb](https://gitlab.com/codematos/pluscoder/commit/b1b60bbe4fea6af16a2219509ddfaf1a45892271))
+* added system reminder after each user message to improve llm output consistency ([2551455](https://gitlab.com/codematos/pluscoder/commit/2551455e41029fd7b1192e1ac51ac6cb8b71fe8a))
+* agents can now download files and add context use entire context. Recommended for .md and raw text files only ([3e8282e](https://gitlab.com/codematos/pluscoder/commit/3e8282e6c1116868494733284a7f2e1a17f134d4))
+* display code blocks as unified diffs, updated prompts for output consistency ([d222d7e](https://gitlab.com/codematos/pluscoder/commit/d222d7e34d5dc266309ed752d514e7ef4d67e896))
+* enable block detection and config to hide each block in the output ([a54d62b](https://gitlab.com/codematos/pluscoder/commit/a54d62bcc367d97b9b376ff62c8d06e818dc2f97))
+* new --hide-thinking-blocks, --hide-output-blocks and --hide-source-blocks to hide llm output ([1698c78](https://gitlab.com/codematos/pluscoder/commit/1698c781306dc9a926d6ce9174f087c292d4b5dc))
+* new configuration setup when running Pluscoder by the first time to customize behaviour ([8302e18](https://gitlab.com/codematos/pluscoder/commit/8302e1827146197448e2ef28f64492599f819233))
+* new warning message at start up when test/lint is configured but failing to pass to warn about potential errors on file editions ([8bdec88](https://gitlab.com/codematos/pluscoder/commit/8bdec8876c1ae744b2fe0c98f0389ce9b878bf85))
+* now orchestrator can delegate multi-modal inputs and resources using paths and links references ([c90699f](https://gitlab.com/codematos/pluscoder/commit/c90699fd367999fa36e5cd434372b250dac44072))
+
 # [1.12.0](https://gitlab.com/codematos/pluscoder/compare/v1.11.0...v1.12.0) (2024-10-01)
 
 

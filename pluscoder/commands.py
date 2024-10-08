@@ -1,18 +1,20 @@
-from typing import Dict, Union, Callable
+import subprocess
 from functools import wraps
+from typing import Callable, Dict, Union
+
 from pydantic import ValidationError
-from rich.syntax import Syntax
-from pluscoder.config import config
-from pluscoder.repo import Repository
-from pluscoder.io_utils import io
-from pluscoder.type import AgentState, OrchestrationState
-from pluscoder.message_utils import HumanMessage
-from rich.rule import Rule
-from rich.table import Table
-from rich.tree import Tree
 from rich.panel import Panel
 from rich.prompt import Prompt
-import subprocess
+from rich.rule import Rule
+from rich.syntax import Syntax
+from rich.table import Table
+from rich.tree import Tree
+
+from pluscoder.config import config
+from pluscoder.io_utils import io
+from pluscoder.message_utils import HumanMessage
+from pluscoder.repo import Repository
+from pluscoder.type import AgentState, OrchestrationState
 
 
 class CommandRegistry:
@@ -40,7 +42,7 @@ command_registry = CommandRegistry()
 def _clear(state: OrchestrationState):
     """Clear entire chat history"""
     # Filters values from dict where key ends with "_state"
-    for key, value in state.items():
+    for key, _value in state.items():
         if key.endswith("_state"):
             # Reset AgentState to default values
             state[key] = AgentState.default()
@@ -96,7 +98,7 @@ def undo(state: OrchestrationState):
     repo = Repository(io=io)
     if repo.undo():
         # Filters values from dict where key ends with "_state"
-        for key, value in state.items():
+        for key, _value in state.items():
             if not key.endswith("_state") or len(state[key]["messages"]) < 1:
                 # Skip non-message-containing keys
                 continue
@@ -191,7 +193,7 @@ def run_command(state: OrchestrationState, *args) -> OrchestrationState:
         io.console.print(error_message, style="bold red")
         state["command_output"] = error_message
     except Exception as e:
-        error_message = f"An unexpected error occurred: {str(e)}"
+        error_message = f"An unexpected error occurred: {e!s}"
         io.console.print(error_message, style="bold red")
         state["command_output"] = error_message
 

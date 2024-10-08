@@ -1,26 +1,27 @@
 import asyncio
 import re
 from typing import List, Literal
+
+from langchain_community.callbacks.manager import get_openai_callback
+from langchain_core.messages import AIMessage
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import Runnable, RunnableMap
 from langgraph.graph import StateGraph
 from langgraph.prebuilt import ToolNode
+
+from pluscoder.agents.event.config import event_emitter
 from pluscoder.agents.prompts import (
     REMINDER_PREFILL_FILE_OPERATIONS_PROMPT,
     REMINDER_PREFILL_PROMP,
 )
+from pluscoder.config import config
 from pluscoder.exceptions import AgentException
+from pluscoder.fs import apply_block_update, get_formatted_files_content
 from pluscoder.io_utils import io
 from pluscoder.logs import file_callback
-from langchain_core.messages import AIMessage
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnableMap, Runnable
-from pluscoder.fs import apply_block_update, get_formatted_files_content
-from pluscoder.message_utils import get_message_content_str
+from pluscoder.message_utils import HumanMessage, get_message_content_str
 from pluscoder.repo import Repository
-from pluscoder.config import config
-from pluscoder.agents.event.config import event_emitter
 from pluscoder.type import AgentState
-from langchain_community.callbacks.manager import get_openai_callback
-from pluscoder.message_utils import HumanMessage
 
 
 def parse_block(text):
@@ -82,7 +83,7 @@ class Agent:
     def get_files_not_in_context(self, state):
         context_files = set(self.get_context_files(state))
         all_tracked_files = set(self.repo.get_tracked_files())
-        return sorted(list(all_tracked_files - context_files))
+        return sorted(all_tracked_files - context_files)
 
     def get_files_context_prompt(self, state):
         files_not_in_context = self.get_files_not_in_context(state)
@@ -173,17 +174,17 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                     )
                     break
                 except AgentException as e:
-                    io.console.print(f"Error: {str(e)}")
+                    io.console.print(f"Error: {e!s}")
                     if self.current_deflection <= self.max_deflections:
                         self.current_deflection += 1
                         interaction_msgs.append(
-                            HumanMessage(content=f"An error ocurrred: {str(e)}")
+                            HumanMessage(content=f"An error ocurrred: {e!s}")
                         )
                 except Exception as e:
                     # Handles unknown exceptions, maybe caused by llm api or wrong state
-                    io.console.log(f"An error occurred: {str(e)}", style="bold red")
+                    io.console.log(f"An error occurred: {e!s}", style="bold red")
                     io.log_to_debug_file("########### CALL AGENT ERROR ###########")
-                    io.log_to_debug_file(f"Error: {str(e)}")
+                    io.log_to_debug_file(f"Error: {e!s}")
                     io.log_to_debug_file("State:")
                     io.log_to_debug_file(message=str(state))
                     io.log_to_debug_file("Deflection messages:")

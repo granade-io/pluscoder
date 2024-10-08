@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 import asyncio
+
+from rich.prompt import Prompt
+
+from pluscoder.commands import show_config, show_repo, show_repomap
+from pluscoder.config import config
+from pluscoder.io_utils import io
 from pluscoder.model import get_inferred_provider
+from pluscoder.repo import Repository
 from pluscoder.setup import setup
 from pluscoder.type import AgentState, TokenUsage
-from pluscoder.io_utils import io
-from pluscoder.config import config
-from pluscoder.commands import show_repo, show_repomap, show_config
-from pluscoder.repo import Repository
-from rich.prompt import Prompt
 
 
 def run_silent_checks():
@@ -17,15 +19,11 @@ def run_silent_checks():
 
     test_result = repo.run_test()
     if test_result:
-        warnings.append(
-            "Tests are failing. This may lead to issues when editing files."
-        )
+        warnings.append("Tests are failing. This may lead to issues when editing files.")
 
     lint_result = repo.run_lint()
     if lint_result:
-        warnings.append(
-            "Linter checks are failing. This may lead to issues when editing files."
-        )
+        warnings.append("Linter checks are failing. This may lead to issues when editing files.")
 
     return warnings
 
@@ -46,15 +44,11 @@ def display_initial_messages():
     # Calculate the number of excluded files
     excluded_files_count = len(all_files) - len(tracked_files)
 
-    io.event(
-        f"> Files detected by git: {len(tracked_files)} (excluded: {excluded_files_count})"
-    )
+    io.event(f"> Files detected by git: {len(tracked_files)} (excluded: {excluded_files_count})")
 
     # Get model and provider information
     main_provider = get_inferred_provider()
-    orchestrator_model = (
-        config.orchestrator_model if config.orchestrator_model else config.model
-    )
+    orchestrator_model = config.orchestrator_model if config.orchestrator_model else config.model
     orchestrator_provider = config.orchestrator_model_provider or main_provider
     weak_model = config.weak_model if config.weak_model else config.model
     weak_provider = config.weak_model_provider or main_provider

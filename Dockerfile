@@ -19,9 +19,8 @@ COPY requirements.txt .
 # Install the Python dependencies using local wheels and falling back to PyPI
 # RUN pip install --no-cache-dir --find-links=/app/wheels -r requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
-
 # Final stage
-FROM python:3.12
+FROM python:3.12-slim
 
 # Install git and X11 clipboard tools (required for the application)
 RUN apt-get update && apt-get install -y \
@@ -38,10 +37,12 @@ WORKDIR /app
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 
 # Copy the application code
-COPY . .
+COPY pluscoder /app/pluscoder/
+COPY requirements.txt .
+COPY setup.py .
 
 # Insatll pluscoder
 RUN pip install --no-cache .
 
 # Set the entrypoint to run pluscoder
-ENTRYPOINT ["plus-coder"]
+ENTRYPOINT ["pluscoder"]

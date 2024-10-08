@@ -17,20 +17,29 @@ PlusCoder is an AI-assisted software development tool designed to enhance and st
 11. File downloading and context addition during agent interactions
 
 ## Requirements
-- Requires python 3.12
+- Requires python 3.12 or Docker
 - Credentials for AWS Bedrock, Anthropic, OpenAI or other providers throught LLMLite
 
 ## Usage:
 
-Use pluscoder inside a git repository:
+**Docker**:
+
+```bash
+# Passing ANTHROPIC_API_KEY in --env or having ANTHROPIC_API_KEY in the environment vars
+docker run --env-file <(env) -v $(pwd):/app -it --rm registry.gitlab.com/codematos/pluscoder:latest --auto_commits f
+```
+
+**Python**:
 
    ```bash
    # Install pluscoder
    pip install --no-cache git+https://gitlab.com/codematos/pluscoder.git
 
    # Run, pluscoder will detect credentials automatically
-   plus-coder --auto-commits f --model claude-3-5-sonnet-20240620
+   pluscoder --auto_-_commits f --model claude-3-5-sonnet-20240620
    ```
+
+> **Note:** Pluscoder requires a git repository
 
 > **Note:** First time you run pluscoder in a repo you'll be prompted to initialize the repository through an LLM code base analysis.
 
@@ -77,7 +86,7 @@ PlusCoder supports the following commands during interaction:
 - `/show_repo`: Display information about the current repository.
 - `/show_repomap`: Show the repository map with file structure and summaries.
 - `/show_config`: Display the current configuration settings.
-- `/custom <prompt_name> [args]`: Execute a pre-configured custom prompt command.
+- `/custom <prompt_name> <additional instructions>`: Execute a pre-configured custom prompt command.
 
 ## Configuration
 
@@ -89,6 +98,8 @@ PlusCoder can be configured using several methods (using this priotity):
 5. Environment variables
 
 ANY option below can be configured with ANY prefered method.
+
+Display current configuration settings using command `/show_config` or cmd line arg `--show_config`.
 
 ### Application Behavior
 - `READ_ONLY`: Enable/disable read-only mode to avoid file editions (default: `False`)
@@ -106,18 +117,28 @@ ANY option below can be configured with ANY prefered method.
 - `OVERVIEW_FILE_PATH`: Path to the project overview file (default: `"PROJECT_OVERVIEW.md"`)
 - `GUIDELINES_FILE_PATH`: Path to the coding guidelines file (default: `"CODING_GUIDELINES.md"`)
 
-### Model and API Settings
+### Models and Providers
+
+*Models*:
 - `MODEL`: LLM model to use (default: `"anthropic.claude-3-5-sonnet-20240620-v1:0"`)
 - `ORCHESTRATOR_MODEL`: LLM model to use for orchestrator (default: same as `MODEL`)
-- `WEAK_MODEL`: Weaker LLM model to use for less complex tasks (default: same as `MODEL`)
-- `PROVIDER`: Provider to use. If none, provider will be selected based on available credentaial variables. Options: aws_bedrock, openai, litellm, anthropic (default: `None`)
+- `WEAK_MODEL`: Weaker LLM model to use for less complex tasks (default: same as `MODEL`). (CURRENLY NOT BEING USED)
+
+*Provider*:
+- `PROVIDER`: Provider to use. If `None`, provider will be selected based on available credentaial variables. Options: aws_bedrock, openai, litellm, anthropic (default: `None`)
 - `ORCHESTRATOR_MODEL_PROVIDER`: Provider to use for orchestrator model (default: same as `PROVIDER`)
-- `WEAK_MODEL_PROVIDER`: Provider to use for weak model (default: same as `PROVIDER`)
-- `OPENAI_API_KEY`: OpenAI API key
-- `OPENAI_API_BASE`: OpenAI API base URL
-- `ANTHROPIC_API_KEY`: Anthropic API key
-- `AWS_ACCESS_KEY_ID`: AWS Access Key ID
-- `AWS_SECRET_ACCESS_KEY`: AWS Secret Access Key
+- `WEAK_MODEL_PROVIDER`: Provider to use for weak model (default: same as `PROVIDER`). (CURRENLY NOT BEING USED)
+
+*OpenAI*:
+- `OPENAI_API_KEY`: OpenAI API key. (default: `None`)
+- `OPENAI_API_BASE`: OpenAI API base URL. (default: `None`)
+
+*Anthropic*:
+- `ANTHROPIC_API_KEY`: Anthropic API key. (default: `None`)
+
+*AWS*
+- `AWS_ACCESS_KEY_ID`: AWS Access Key ID. (default: `None`)
+- `AWS_SECRET_ACCESS_KEY`: AWS Secret Access Key. (default: `None`)
 - `AWS_PROFILE`: AWS profile name (default: `"default"`)
 
 ### Git Settings
@@ -135,15 +156,13 @@ ANY option below can be configured with ANY prefered method.
 ### Repomap Settings
 - `USE_REPOMAP`: Enable/disable repomap feature (default: `False`)
 - `REPOMAP_LEVEL`: Set the level of detail for repomap (default: `2`)
-- `REPOMAP_INCLUDE_FILES`: Comma-separated list of files to include in repomap (default: `None`)
-- `REPOMAP_EXCLUDE_FILES`: Comma-separated list of files to exclude from repomap (default: `None`)
-- `REPO_EXCLUDE_FILES`: Comma-separated list of regex patterns to exclude files from repo operations (default: `None`)
+- `REPOMAP_INCLUDE_FILES`: Comma-separated list of files to include in repomap (default: `[]`)
+- `REPOMAP_EXCLUDE_FILES`: Comma-separated list of files to exclude from repomap (default: `[]`)
+- `REPO_EXCLUDE_FILES`: Json list with list of custom prompts configs (default: `[]`)
 
 ### Custom Prompt Commands
 
 Custom prompt commands allow you to define pre-configured prompts/instruction that can be easily executed during runtime and passed to agents.
-
-- `REPO_EXCLUDE_FILES`: Json list with list of custom prompts configs (default: `[]`)
 
 To configure custom prompt commands:
 
@@ -222,7 +241,7 @@ You can set these options using environment variables, command-line arguments (e
    python -m pluscoder.main [options]
 
    # as bash command
-   plus-coder [options]
+   pluscoder [options]
    ```
 
 7. Test:
@@ -230,3 +249,5 @@ You can set these options using environment variables, command-line arguments (e
    ```bash
    pytest
    ```
+
+test

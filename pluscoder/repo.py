@@ -3,8 +3,9 @@ import pprint
 import re
 import subprocess
 from typing import List, Optional
-from git import Actor, Repo
-from git import GitCommandError
+
+from git import Actor, GitCommandError, Repo
+
 from pluscoder.config import config
 from pluscoder.exceptions import NotGitRepositoryException
 
@@ -255,8 +256,4 @@ if __name__ == "__main__":
     repo = Repository()
     print("Tree:")
     pprint.pprint(repo.get_tracked_files())
-
-    # print("\n\nRepomap:")
-    # print(repo.generate_repomap())
-
     repo.run_test()

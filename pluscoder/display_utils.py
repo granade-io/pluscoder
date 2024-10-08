@@ -1,5 +1,6 @@
-import re
 import difflib
+import re
+
 from rich.console import Console
 from rich.syntax import Syntax
 
@@ -43,7 +44,7 @@ def display_file_diff(content: str, filepath: str, console=None) -> None:
         return
 
     # For each match, generate a diff and display
-    for index, (find_block, replace_block) in enumerate(matches):
+    for _index, (find_block, replace_block) in enumerate(matches):
         find_lines = find_block.splitlines()
         replace_lines = replace_block.splitlines()
 

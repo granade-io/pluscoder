@@ -1,8 +1,9 @@
 import asyncio
 from typing import List
-from pluscoder.agents.event.base import AgentEventBaseHandler
+
 from rich.progress import SpinnerColumn, TextColumn
 
+from pluscoder.agents.event.base import AgentEventBaseHandler
 from pluscoder.io_utils import IO, CustomProgress
 from pluscoder.type import AgentInstructions, AgentTask
 
@@ -117,6 +118,7 @@ class ConsoleAgentEventHandler(AgentEventBaseHandler):
 
 if __name__ == "__main__":
     import asyncio
+
     from pluscoder.io_utils import io
 
     async def main():

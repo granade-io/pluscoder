@@ -1,9 +1,11 @@
-import pytest
 from unittest.mock import Mock, patch
+
+import pytest
 from langchain_core.messages import AIMessage
-from pluscoder.message_utils import HumanMessage
+
 from pluscoder.agents.base import Agent, AgentState, parse_block, parse_mentioned_files
 from pluscoder.exceptions import AgentException
+from pluscoder.message_utils import HumanMessage
 from pluscoder.repo import Repository
 
 

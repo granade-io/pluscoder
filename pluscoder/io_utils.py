@@ -1,27 +1,27 @@
-import os
-import logging
-from pathlib import Path
-import re
-from typing import Union, Optional
 import json
-from prompt_toolkit import PromptSession
-from rich.console import Console, Group, ConsoleRenderable, RichCast
-from rich.live import Live
-from rich.text import Text
-from rich.rule import Rule
-from rich.progress import Progress
-from rich.prompt import Confirm
-from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.completion import Completer, Completion
-from prompt_toolkit.history import FileHistory
+import logging
+import os
+import re
 import sys
 import tempfile
-from PIL import ImageGrab
-from typing import List, Dict, Any
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
+from PIL import ImageGrab
+from prompt_toolkit import PromptSession
+from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.history import FileHistory
+from prompt_toolkit.key_binding import KeyBindings
+from rich.console import Console, ConsoleRenderable, Group, RichCast
+from rich.live import Live
+from rich.progress import Progress
+from rich.prompt import Confirm
+from rich.rule import Rule
+from rich.text import Text
+
+from pluscoder.config import config
 from pluscoder.display_utils import display_file_diff
 from pluscoder.repo import Repository
-from pluscoder.config import config
 
 logging.getLogger().setLevel(logging.ERROR)  # hide warning log
 
@@ -333,11 +333,14 @@ class IO:
 
     def stream_block_chunk(self, chunk: str) -> None:
         self.block_content += chunk
-        if config.hide_thinking_blocks and self.block_type == "thinking":
-            return
-        elif config.hide_output_blocks and self.block_type == "output":
-            return
-        elif config.hide_source_blocks and self.block_type == "source":
+        if (
+            config.hide_thinking_blocks
+            and self.block_type == "thinking"
+            or config.hide_output_blocks
+            and self.block_type == "output"
+            or config.hide_source_blocks
+            and self.block_type == "source"
+        ):
             return
 
         io.console.print(chunk, style=self.get_block_color(), end="")
