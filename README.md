@@ -26,7 +26,7 @@ PlusCoder is an AI-assisted software development tool designed to enhance and st
 
 ```bash
 # Passing ANTHROPIC_API_KEY in --env or having ANTHROPIC_API_KEY in the environment vars
-docker run --env ANTHROPIC_API_KEY=<YOUR_KEY> --env-file <(env) -v $(pwd):/app -it registry.gitlab.com/codematos/pluscoder:latest --auto_commits f --model claude-3-5-sonnet-20240620 --provider anthropic
+docker run --env-file <(env) -v $(pwd):/app -it --rm registry.gitlab.com/codematos/pluscoder:latest --auto_commits f
 ```
 
 **Python**:
