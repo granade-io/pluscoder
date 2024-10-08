@@ -1,3 +1,18 @@
+# [2.0.0](https://gitlab.com/codematos/pluscoder/compare/v1.13.0...v2.0.0) (2024-10-08)
+
+
+### Features
+
+* a big feature \n\n BREAKING CHANGE: it breaks something ([b6aac0a](https://gitlab.com/codematos/pluscoder/commit/b6aac0aa0344db0238de8d5d44a833c1434bde37))
+* BREAKING CHANGE ([e49aa6d](https://gitlab.com/codematos/pluscoder/commit/e49aa6d82777e6e01f84c2e49c433f0922aab369))
+* BREAKING CHANGE ([7631b7b](https://gitlab.com/codematos/pluscoder/commit/7631b7b7309478252ceee7311e11192fbbb0cc33))
+* some feat ([89c0226](https://gitlab.com/codematos/pluscoder/commit/89c0226569d7724f9d7bfbce65d45eb5a77b90ca))
+
+
+### BREAKING CHANGES
+
+* some breaking change
+
 # [1.13.0](https://gitlab.com/codematos/pluscoder/compare/v1.12.0...v1.13.0) (2024-10-07)
 
 
