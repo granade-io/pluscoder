@@ -16,7 +16,7 @@ setup(
     packages=find_packages(include=["pluscoder", "pluscoder*"]),
     entry_points={
         "console_scripts": [
-            "plus-coder=pluscoder.main:main",
+            "pluscoder=pluscoder.main:main",
         ],
     },
     include_package_data=True,
