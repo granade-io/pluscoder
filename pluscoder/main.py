@@ -19,15 +19,11 @@ def run_silent_checks():
 
     test_result = repo.run_test()
     if test_result:
-        warnings.append(
-            "Tests are failing. This may lead to issues when editing files."
-        )
+        warnings.append("Tests are failing. This may lead to issues when editing files.")
 
     lint_result = repo.run_lint()
     if lint_result:
-        warnings.append(
-            "Linter checks are failing. This may lead to issues when editing files."
-        )
+        warnings.append("Linter checks are failing. This may lead to issues when editing files.")
 
     return warnings
 
@@ -48,15 +44,11 @@ def display_initial_messages():
     # Calculate the number of excluded files
     excluded_files_count = len(all_files) - len(tracked_files)
 
-    io.event(
-        f"> Files detected by git: {len(tracked_files)} (excluded: {excluded_files_count})"
-    )
+    io.event(f"> Files detected by git: {len(tracked_files)} (excluded: {excluded_files_count})")
 
     # Get model and provider information
     main_provider = get_inferred_provider()
-    orchestrator_model = (
-        config.orchestrator_model if config.orchestrator_model else config.model
-    )
+    orchestrator_model = config.orchestrator_model if config.orchestrator_model else config.model
     orchestrator_provider = config.orchestrator_model_provider or main_provider
     weak_model = config.weak_model if config.weak_model else config.model
     weak_provider = config.weak_model_provider or main_provider
@@ -135,7 +127,7 @@ def choose_chat_agent_node():
     return chosen_agent
 
 
-def main():
+def main() -> None:
     """
     Main entry point for the Pluscoder application.
     """
@@ -161,6 +153,11 @@ def main():
         if config.show_config:
             show_config()
             return
+    except Exception as err:
+        io.event(f"An error occurred. {err}")
+        return
+    try:
+        from pluscoder.workflow import run_workflow
 
         state = {
             "return_to_user": False,
@@ -178,13 +175,7 @@ def main():
             "is_task_list_workflow": False,
         }
 
-        from pluscoder.workflow import run_workflow
-
         asyncio.run(run_workflow(state))
     except KeyboardInterrupt:
         io.event("\nProgram interrupted. Exiting gracefully...")
         return
-
-
-if __name__ == "__main__":
-    main()
