@@ -25,6 +25,10 @@ def display_file_diff(content: str, filepath: str, console=None) -> None:
     # Initialize console for rich output
     console = console if console else Console()
 
+    if not filepath:
+        console.print("[WARN] Failed to display diff. Filepath not detected", style="bold dark_goldenrod")
+        return False
+
     # Define the regex pattern to match FIND/REPLACE blocks
     pattern = r">>> FIND\n(.*?)\n===\n(.*?)\n<<< REPLACE"
 
@@ -41,7 +45,7 @@ def display_file_diff(content: str, filepath: str, console=None) -> None:
         # Convert diff to a single string
         diff_text = "\n".join(diff)
         display_diff(diff_text, filepath, console)
-        return
+        return True
 
     # For each match, generate a diff and display
     for _index, (find_block, replace_block) in enumerate(matches):
@@ -58,6 +62,7 @@ def display_file_diff(content: str, filepath: str, console=None) -> None:
 
         # Display using rich syntax highlighting
         display_diff(diff_text, filepath, console)
+    return True
 
 
 if __name__ == "__main__":

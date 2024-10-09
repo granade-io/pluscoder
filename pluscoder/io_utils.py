@@ -180,6 +180,8 @@ class IO:
         self.block_content = ""  # Contenido dentro de un bloque
         self.block_type = ""
         self.current_filepath = ""  # New attribute to store the current filepath
+        self.buffer_size = 80  # Buffer size to hold before display to look for blocks
+        self.valid_blocks = {'thinking', 'source'}
 
     def _check_block_start(self, text):
         return re.match(
@@ -323,11 +325,20 @@ class IO:
 
     def end_block(self) -> None:
         if self.block_type == "source":
-            display_file_diff(self.block_content, self.current_filepath)
+            displayed = display_file_diff(self.block_content, self.current_filepath)
 
+            # Fall back to display raw code if fails to display diff
+            if not displayed and not config.hide_source_blocks:
+                io.console.print("block content fb")
+                io.console.print(self.block_content, style=self.get_block_color())
+                io.console.print("\n")
+
+        if self.buffer:
+            # Clean leftovers from buffer if external end of blocks are called
+            self._stream_to_user(self.buffer)
+            self.buffer = ""
         self.in_block = False
         self.block_type = None
-        self.current_filepath = None
         self.current_filepath = None
         self.block_content = ""
 
@@ -352,63 +363,56 @@ class IO:
             -100:
         ]  # Keep only last 100 characters
 
-        # Check for filepath pattern in filepath_buffer
-        filepath_match = re.search(
-            r"`([^`\n]+):?`\n{1,2}^<source>", self.filepath_buffer, re.MULTILINE
-        )
-        if filepath_match:
-            self.current_filepath = filepath_match.group(1)
-            self.filepath_buffer = self.filepath_buffer.replace(
-                filepath_match.group(0), "<source>"
-            )
-
         # Update main buffer
         self.buffer += chunk
 
-        display_now = "<" not in self.buffer and not self.buffer.endswith("\n")
+        # Look for block start/end with capturing group for block type
+        start_match = re.search(r'\n<(thinking|output|source)>', self.buffer)
+        end_match = re.search(r'\n</(thinking|output|source)>', self.buffer)
 
-        # Display right now
-        if display_now and not self.in_block:
-            self._stream_to_user(self.buffer)
-            self.buffer = ""
-        elif "\n<" in self.buffer and not self.in_block:
-            self._stream_to_user(self.buffer.split("\n<", 1)[0])
-            self.buffer = "\n<" + self.buffer.split("\n<", 1)[1]
-        elif (
-            "<" not in self.buffer
-            and not self.buffer.endswith("\n")
-            and not self.buffer.endswith("\n<")
-            and "\n</" not in self.buffer
-        ) and self.in_block:
-            self.stream_block_chunk(self.buffer)
-            self.buffer = ""
-        elif "\n</" in self.buffer and self.in_block:
-            self.stream_block_chunk(self.buffer.split("\n</", 1)[0])
-            self.buffer = "\n</" + self.buffer.split("\n</", 1)[1]
+        if self.in_block:
+            if end_match and end_match.group(1) == self.block_type:
+                # Found matching end of block
+                end_pos = end_match.end()
 
-        if (
-            re.search(r"<\w+>", self.buffer)
-            and self._check_block_start(self.buffer)
-            and not self.in_block
-        ):
-            block_type = self.buffer.split("<", 1)[1].split(">", 1)[0]
-            if block_type in ["thinking", "source"]:
-                self.start_block(block_type)
-                self.stream_block_chunk(self.buffer.split("<", 1)[1].split(">", 1)[1])
-                self.buffer = ""
+                # Print anything after the block
+                self._stream_to_user(self.buffer[end_pos:])
+                self.block_content += self.buffer[:end_match.start()]
 
-        # Keep buffer small
-        self.buffer = self.buffer[-20:]  # Keep only last 20 characters
-        if re.search(r"<\/\w+>", self.buffer):
-            if self._check_block_end(self.buffer):
-                # Detectar y cerrar un bloque
-                # Imprimir el resto del buffer
-                self._stream_to_user(self.buffer.split(">", 1)[1])
+                # Reset buffer must be before end of block because end of block also prints buffer when be called from
+                # other sources
                 self.buffer = ""
                 self.end_block()
             else:
-                self.stream_block_chunk(self.buffer.split(">", 1)[0] + ">")
-                self.buffer = self.buffer.split(">", 1)[1]
+                # Still in block, add everything except last 20 chars to block_content
+                self.stream_block_chunk(self.buffer[:-self.buffer_size])
+                self.buffer = self.buffer[-self.buffer_size:]
+
+        elif start_match:
+            # Found start of block
+            block_type = start_match.group(1)
+            if block_type in self.valid_blocks:
+                # Check for filepath pattern in filepath_buffer
+                filepath_match = re.search(
+                    r"`([^`\n]+):?`\n{1,2}^<source>", self.buffer, re.MULTILINE
+                )
+                if filepath_match:
+                    self.current_filepath = filepath_match.group(1)
+                    self.filepath_buffer = self.filepath_buffer.replace(
+                        filepath_match.group(0), "<source>"
+                    )
+
+                start_pos = start_match.start()
+                self._stream_to_user(self.buffer[:start_pos])
+                self.start_block(block_type)
+                self.block_content = self.buffer[start_match.end():]
+                self.buffer = ""
+            else:
+                self._stream_to_user(self.buffer[:-self.buffer_size])
+                self.buffer = self.buffer[-self.buffer_size:]
+        elif len(self.buffer) > self.buffer_size:
+            self._stream_to_user(self.buffer[:-self.buffer_size])
+            self.buffer = self.buffer[-self.buffer_size:]
 
 
 io = IO()
