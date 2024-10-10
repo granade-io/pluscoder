@@ -301,12 +301,14 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                                     # io.console.print(entry["text"], style="bright_green", end="")
                                     io.stream(entry["text"])
                 elif kind == "on_chat_model_end":
+                    io.flush()
                     # io.console.print("on_chat_model_end")
                     io.end_block()
-                    io.console.print("\n")
+                    # io.console.print("\n")
                 elif kind == "on_llm_end":
+                    pass
                     # io.console.print("on_llm_end")
-                    io.console.print("\n")
+                    # io.console.print("\n")
                 elif kind == "on_tool_start":
                     # io.console.print("on_tool_start")
                     io.end_block()
@@ -316,6 +318,7 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                     pass
                     # io.console.print(Text(f"Tool output: {event['data'].get('output')}", style="italic"))
                 elif kind == "on_chain_end" and event["name"] == "LangGraph":
+                    # io.console.print("on_chain_end")
                     if "agent" in event["data"]["output"]:
                         state_updates = {
                             **state_updates,
