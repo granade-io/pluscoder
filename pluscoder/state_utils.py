@@ -1,7 +1,7 @@
 from litellm import model_cost
 
+from pluscoder.agents.event.config import event_emitter
 from pluscoder.config import config
-from pluscoder.io_utils import io
 from pluscoder.type import AgentState, OrchestrationState, TokenUsage
 
 
@@ -11,13 +11,6 @@ def get_model_token_info(model_name: str) -> dict:
     elif model_name.split("/")[-1] in model_cost:
         return model_cost[model_name.split("/")[-1]]
     return None
-
-
-def print_token_usage(token_usage: TokenUsage):
-    io.console.print(
-        f"Tokens: ↑:{token_usage['prompt_tokens']} ↓:{token_usage['completion_tokens']} T:{token_usage['total_tokens']} ${token_usage['total_cost']:.3f}",
-        style="yellow",
-    )
 
 
 def sum_token_usage(accumulated: TokenUsage, new: TokenUsage) -> TokenUsage:
@@ -48,7 +41,6 @@ def sum_token_usage(accumulated: TokenUsage, new: TokenUsage) -> TokenUsage:
         ),
     }
 
-
 def accumulate_token_usage(
     global_state: OrchestrationState, _state: AgentState
 ) -> OrchestrationState:
@@ -70,7 +62,6 @@ def accumulate_token_usage(
     )
     global_state["accumulated_token_usage"] = accumulated_token_usage
 
-    # TODO: track accumulated token usage for every agent
-    print_token_usage(accumulated_token_usage)
+    event_emitter.emit_sync('cost_update', token_usage=accumulated_token_usage)
 
     return global_state

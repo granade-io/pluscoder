@@ -110,6 +110,7 @@ Display current configuration settings using command `/show_config` or cmd line 
 - `HIDE_THINKING_BLOCKS`: Hide thinking blocks in LLM output (default: `True`)
 - `HIDE_OUTPUT_BLOCKS`: Hide output blocks in LLM output (default: `False`)
 - `HIDE_SOURCE_BLOCKS`: Hide source blocks in LLM output (default: `False`)
+- `SHOW_TOKEN_USAGE`: Show token usage/cost (default: `True`)
 
 ### File Paths
 - `OVERVIEW_FILENAME`: Filename for project overview (default: `"PROJECT_OVERVIEW.md"`)
@@ -249,5 +250,3 @@ You can set these options using environment variables, command-line arguments (e
    ```bash
    pytest
    ```
-
-test

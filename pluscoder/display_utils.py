@@ -4,6 +4,8 @@ import re
 from rich.console import Console
 from rich.syntax import Syntax
 
+from pluscoder.type import TokenUsage
+
 
 def display_diff(diff_text, filepath, console):
     # Display using rich syntax highlighting
@@ -26,8 +28,7 @@ def display_file_diff(content: str, filepath: str, console=None) -> None:
     console = console if console else Console()
 
     if not filepath:
-        console.print("[WARN] Failed to display diff. Filepath not detected", style="bold dark_goldenrod")
-        return False
+        filepath = "a"
 
     # Define the regex pattern to match FIND/REPLACE blocks
     pattern = r">>> FIND\n(.*?)\n===\n(.*?)\n<<< REPLACE"
@@ -64,6 +65,12 @@ def display_file_diff(content: str, filepath: str, console=None) -> None:
         display_diff(diff_text, filepath, console)
     return True
 
+def get_cost_usage_display(token_usage: TokenUsage):
+    if not token_usage:
+        text_content = "Tokens: ↑:0 ↓:0 T:0 $0"
+    else:
+        text_content = f"Tokens: ↑:{token_usage['prompt_tokens']} ↓:{token_usage['completion_tokens']} T:{token_usage['total_tokens']} ${token_usage['total_cost']:.3f}"
+    return text_content
 
 if __name__ == "__main__":
     # Example usage

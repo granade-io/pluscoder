@@ -121,6 +121,9 @@ class Settings(BaseSettings):
     show_config: CliImplicitFlag[bool] = Field(
         False, description="Show repository information"
     )
+    show_token_usage: CliImplicitFlag[bool] = Field(
+        True, description="Show token usage/cost"
+    )
 
     # Output display settings
     hide_thinking_blocks: CliImplicitFlag[bool] = Field(
