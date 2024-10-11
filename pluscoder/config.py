@@ -1,6 +1,7 @@
+import sys
 from typing import Any, Dict, List, Optional, Tuple, Type
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import (
     BaseSettings,
     CliImplicitFlag,
@@ -8,6 +9,59 @@ from pydantic_settings import (
     SettingsConfigDict,
     YamlConfigSettingsSource,
 )
+from rich.console import Console
+
+
+def validate_custom_agents(custom_agents: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    console = Console()
+    names = set()
+    for agent in custom_agents:
+        # Check for required fields
+        if "name" not in agent:
+            console.print(
+                "[bold red]Error:[/bold red] Custom agent must have a 'name' field"
+            )
+            sys.exit(1)
+        if "prompt" not in agent:
+            console.print(
+                f"[bold red]Error:[/bold red] Custom agent '{agent['name']}' must have a 'prompt' field"
+            )
+            sys.exit(1)
+        if "description" not in agent:
+            console.print(
+                f"[bold red]Error:[/bold red] Custom agent '{agent['name']}' must have a 'description' field"
+            )
+            sys.exit(1)
+
+        # Check for unique names
+        if agent["name"] in names:
+            console.print(
+                f"[bold red]Error:[/bold red] Duplicate custom agent name: '{agent['name']}'"
+            )
+            sys.exit(1)
+        names.add(agent["name"])
+
+        # Check for non-empty prompt and description
+        if not agent["prompt"].strip():
+            console.print(
+                f"[bold red]Error:[/bold red] Custom agent '{agent['name']}' has an empty prompt"
+            )
+            sys.exit(1)
+        if not agent["description"].strip():
+            console.print(
+                f"[bold red]Error:[/bold red] Custom agent '{agent['name']}' has an empty description"
+            )
+            sys.exit(1)
+
+        # Check for valid boolean flags
+        for flag in ["read_only"]:
+            if flag in agent and not isinstance(agent[flag], bool):
+                console.print(
+                    f"[bold red]Error:[/bold red] Custom agent '{agent['name']}': '{flag}' must be a boolean"
+                )
+                sys.exit(1)
+
+    return custom_agents
 
 
 class Settings(BaseSettings):
@@ -15,6 +69,15 @@ class Settings(BaseSettings):
         if not hasattr(cls, "_instance"):
             cls._instance = super().__new__(cls)
         return cls._instance
+
+    custom_agents: List[Dict[str, Any]] = Field(
+        default=[],
+        description="List of custom agents with properties: name, description, prompt, and read_only",
+    )
+
+    @field_validator("custom_agents")
+    def validate_custom_agents_field(cls, v):
+        return validate_custom_agents(v)
 
     # Application behavior
     init: CliImplicitFlag[bool] = Field(

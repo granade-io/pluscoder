@@ -1,5 +1,6 @@
 import asyncio
 import re
+from time import sleep
 from typing import List, Literal
 
 from langchain_community.callbacks.manager import get_openai_callback
@@ -174,7 +175,10 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                     )
                     break
                 except AgentException as e:
-                    io.console.print(f"Error: {e!s}")
+                    # io.console.print(f"Error: {e!s}")
+                    io.console.print(
+                        "::re-thinking due an issue:: ", style="bold dark_goldenrod"
+                    )
                     if self.current_deflection <= self.max_deflections:
                         self.current_deflection += 1
                         interaction_msgs.append(
@@ -189,6 +193,12 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                     io.log_to_debug_file(message=str(state))
                     io.log_to_debug_file("Deflection messages:")
                     io.log_to_debug_file(message=str(interaction_msgs))
+                    sleep(1)  # Wait a bit, some api calls need time to recover
+                    interaction_msgs.append(
+                        HumanMessage(
+                            content="An error ocurrred. Please try exactly the same again"
+                        )
+                    )
                     if self.current_deflection <= self.max_deflections:
                         self.current_deflection += 1
 

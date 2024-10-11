@@ -9,7 +9,7 @@ class GitEventHandler(AgentEventBaseHandler):
     def __init__(self):
         super().__init__()
         # TODO: why do we initialize the repo here again?
-        self.repo = Repository(io=io)
+        self.repo = None
 
     async def on_new_agent_instructions(
         self, agent_instructions: AgentInstructions = None
@@ -31,6 +31,8 @@ class GitEventHandler(AgentEventBaseHandler):
         pass
 
     async def on_files_updated(self, updated_files):
+        if not self.repo:
+            self.repo = Repository(io=io)
         if updated_files and config.auto_commits:
             files_str = ", ".join(updated_files)
             commit_message = f"Updated files: {files_str}"

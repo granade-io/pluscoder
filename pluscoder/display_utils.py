@@ -65,6 +65,7 @@ def display_file_diff(content: str, filepath: str, console=None) -> None:
         display_diff(diff_text, filepath, console)
     return True
 
+
 def get_cost_usage_display(token_usage: TokenUsage):
     if not token_usage:
         text_content = "Tokens: ↑:0 ↓:0 T:0 $0"
@@ -72,12 +73,22 @@ def get_cost_usage_display(token_usage: TokenUsage):
         text_content = f"Tokens: ↑:{token_usage['prompt_tokens']} ↓:{token_usage['completion_tokens']} T:{token_usage['total_tokens']} ${token_usage['total_cost']:.3f}"
     return text_content
 
+
+def display_agent(agent, agent_type: str):
+    description = (
+        agent.description
+        if hasattr(agent, "description")
+        else "No description available"
+    )
+    return f"[bold green]{agent.name}[/bold green] ({agent_type}): {description}"
+
+
 if __name__ == "__main__":
     # Example usage
     content = """
 >>> FIND
-This is the old text.
-It needs to be replaced.
+This is the new text.
+It has been replaced.
 ===
 This is the new text.
 It has been replaced.

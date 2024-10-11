@@ -102,6 +102,24 @@ CONFIG_TEMPLATE = """
 #   - prompt_name: hello
 #     description: Greet the user says hello
 #     prompt: Say hello to user
+
+#------------------------------------------------------------------------------
+# Custom Agents
+#------------------------------------------------------------------------------
+# Define custom agents with specific roles and capabilities
+# custom_agents:
+#   - name: CodeReviewer
+#     prompt: "You are a code reviewer. Your task is to review code changes and provide feedback on code quality, best practices, and potential issues."
+#     description: "Code reviewer"
+#     read_only: true
+#   - name: DocumentationWriter
+#     prompt: "You are a technical writer specializing in software documentation. Your task is to create and update project documentation, including README files, API documentation, and user guides."
+#     description: "Documentation Writer Description"
+#     read_only: false
+#   - name: SecurityAuditor
+#     prompt: "You are a security expert. Your task is to review code and configurations for potential security vulnerabilities and suggest improvements to enhance the overall security of the project."
+#     description: "Security Auditor Description"
+#     read_only: true
 """
 
 
@@ -323,7 +341,7 @@ def initialize_repository():
     use_repomap = config.use_repomap
     auto_commits = config.auto_commits
     config.auto_confirm = True
-    config.use_repomap = True
+    config.use_repomap = False
     config.auto_commits = False
 
     orchestrator_state = AgentState.default()
@@ -344,6 +362,8 @@ def initialize_repository():
             "accumulated_token_usage": TokenUsage.default(),
             "chat_agent": "orchestrator",
             "is_task_list_workflow": True,
+            "max_agent_deflections": 2,
+            "current_agent_deflections": 0,
         }
     )
 
@@ -386,7 +406,6 @@ def setup() -> bool:
 
         # Load example config and prompt for configuration
         config_data = prompt_for_config()
-
 
         # Write the updated config
         write_yaml(CONFIG_FILE, config_data)

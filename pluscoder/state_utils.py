@@ -41,6 +41,7 @@ def sum_token_usage(accumulated: TokenUsage, new: TokenUsage) -> TokenUsage:
         ),
     }
 
+
 def accumulate_token_usage(
     global_state: OrchestrationState, _state: AgentState
 ) -> OrchestrationState:
@@ -62,6 +63,6 @@ def accumulate_token_usage(
     )
     global_state["accumulated_token_usage"] = accumulated_token_usage
 
-    event_emitter.emit_sync('cost_update', token_usage=accumulated_token_usage)
+    event_emitter.emit_sync("cost_update", token_usage=accumulated_token_usage)
 
     return global_state

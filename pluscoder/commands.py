@@ -11,6 +11,7 @@ from rich.table import Table
 from rich.tree import Tree
 
 from pluscoder.config import config
+from pluscoder.display_utils import display_agent
 from pluscoder.io_utils import io
 from pluscoder.message_utils import HumanMessage
 from pluscoder.repo import Repository
@@ -115,45 +116,26 @@ def undo(state: OrchestrationState):
 @command_registry.register("agent")
 def agent(state: OrchestrationState):
     """Start a conversation with a new agent from scratch"""
-    agent_options = [
-        (
-            "Orchestrator",
-            "Break down the problem into a list of tasks and delegates it to other agents",
-        ),
-        (
-            "Domain Stakeholder",
-            "Discuss project details, maintain project overview, roadmap, and brainstorm",
-        ),
-        (
-            "Planning",
-            "Create detailed, actionable plans for software development tasks",
-        ),
-        (
-            "Developer",
-            "Implement code to solve complex software development requirements",
-        ),
-        ("Domain Expert", "Validate tasks and ensure alignment with project vision"),
-    ]
+    from pluscoder.agents.custom import CustomAgent
+    from pluscoder.workflow import agent_dict
 
     io.console.print("[bold green]Choose an agent to chat with:[/bold green]")
-    for i, (agent, description) in enumerate(agent_options, 1):
-        io.console.print(f"{i}. [bold green]{agent}[/bold green]: {description}")
+
+    for i, (_agent_id, agent) in enumerate(agent_dict.items(), 1):
+        agent_type = (
+            "[cyan]Custom[/cyan]"
+            if isinstance(agent, CustomAgent)
+            else "[yellow]Predefined[/yellow]"
+        )
+        io.console.print(f"{i}. {display_agent(agent, agent_type)}")
 
     choice = Prompt.ask(
         "Select an agent",
-        choices=[str(i) for i in range(1, len(agent_options) + 1)],
+        choices=[str(i) for i in range(1, len(agent_dict) + 1)],
         default="1",
     )
 
-    agent_map = {
-        "1": "orchestrator",
-        "2": "domain_stakeholder",
-        "3": "planning",
-        "4": "developer",
-        "5": "domain_expert",
-    }
-
-    chosen_agent = agent_map[choice]
+    chosen_agent = list(agent_dict.keys())[int(choice) - 1]
     io.event(f"> Starting chat with {chosen_agent} agent. Chat history was cleared.")
 
     state["chat_agent"] = chosen_agent

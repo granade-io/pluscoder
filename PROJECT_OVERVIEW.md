@@ -13,6 +13,7 @@ This project aims to develop a system that uses a composition of LLM agents, lev
 1. Multi-agent system with orchestration capabilities
    - Includes specialized agents (Domain Stakeholder, Domain Expert, Planning, Developer)
    - Orchestrator Agent manages workflow between agents
+   - Support for custom agents with specialized roles and capabilities
 
 2. Automated repository initialization and documentation
    - Automatically generates `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md`

@@ -280,7 +280,7 @@ class IO:
         if config.auto_confirm:
             io.event("> Auto-confirming...")
             return True
-        return Confirm.ask(f"{message}", console=self.console, default=True)
+        return Confirm.ask(f"[green]{message}[/green]", console=self.console, default=True)
 
     def log_to_debug_file(
         self, message: Optional[str] = None, json_data: Optional[dict] = None

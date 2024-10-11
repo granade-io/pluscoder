@@ -13,6 +13,7 @@ from pluscoder.agents.core import (
     DomainStakeholderAgent,
     PlanningAgent,
 )
+from pluscoder.agents.custom import CustomAgent
 from pluscoder.agents.event.config import event_emitter
 from pluscoder.agents.orchestrator import OrchestratorAgent
 from pluscoder.commands import handle_command, is_command
@@ -37,6 +38,18 @@ domain_stakeholder_agent = DomainStakeholderAgent(llm)
 planning_agent = PlanningAgent(llm)
 developer_agent = DeveloperAgent(llm)
 domain_expert_agent = DomainExpertAgent(llm)
+
+# Initialize custom agents
+custom_agents = []
+for agent_config in config.custom_agents:
+    custom_agent = CustomAgent(
+        llm,
+        name=agent_config["name"],
+        prompt=agent_config["prompt"],
+        description=agent_config["description"],
+        read_only=agent_config.get("read_only", True),
+    )
+    custom_agents.append(custom_agent)
 
 # Orchestrator now handles agent selection, so we don't need to set a default agent
 
@@ -141,6 +154,19 @@ def agent_router(state: OrchestrationState) -> str:
     return orchestrator_agent.id
 
 
+# Update the available_agents list to include custom agents
+available_agents = [
+    orchestrator_agent,
+    domain_stakeholder_agent,
+    planning_agent,
+    developer_agent,
+    domain_expert_agent,
+] + custom_agents
+
+# Create a dictionary mapping agent names to their instances
+agent_dict = {agent.id: agent for agent in available_agents}
+
+
 async def agent_node(state: OrchestrationState, agent: Agent) -> OrchestrationState:
     """
     Agent node process its message list to return a new answer and a updated state
@@ -154,7 +180,7 @@ async def agent_node(state: OrchestrationState, agent: Agent) -> OrchestrationSt
     agent_state = state[agent.id + "_state"]
 
     # Display agent information
-    io.console.print(Rule(agent.id))
+    io.console.print(Rule(agent.name))
 
     # Execute the agent's graph node and get a its modified state
     agent_state_output = await agent.graph_node(agent_state)
@@ -468,6 +494,10 @@ planning_agent_node = functools.partial(agent_node, agent=planning_agent)
 developer_agent_node = functools.partial(agent_node, agent=developer_agent)
 domain_expert_agent_node = functools.partial(agent_node, agent=domain_expert_agent)
 
+# Create custom agent nodes
+custom_agent_nodes = {
+    agent.id: functools.partial(agent_node, agent=agent) for agent in custom_agents
+}
 
 # Create the graph
 workflow = StateGraph(OrchestrationState)
@@ -481,6 +511,10 @@ workflow.add_node("planning", planning_agent_node)
 workflow.add_node("developer", developer_agent_node)
 workflow.add_node("domain_expert", domain_expert_agent_node)
 
+# Add custom agent nodes
+for agent_id, agent_node in custom_agent_nodes.items():
+    workflow.add_node(agent_id, agent_node)
+
 # Add edges
 workflow.add_edge(START, "user_input")
 workflow.add_conditional_edges("user_input", user_router)
@@ -489,6 +523,10 @@ workflow.add_conditional_edges("domain_stakeholder", agent_router)
 workflow.add_conditional_edges("planning", agent_router)
 workflow.add_conditional_edges("developer", agent_router)
 workflow.add_conditional_edges("domain_expert", agent_router)
+
+# Add edges for custom agents
+for agent_id in custom_agent_nodes:
+    workflow.add_conditional_edges(agent_id, agent_router)
 
 # Set the entrypoint
 # workflow.set_entry_point("user_input")

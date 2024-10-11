@@ -26,7 +26,9 @@ class ConsoleAgentEventHandler(AgentEventBaseHandler):
         text = get_cost_usage_display(token_usage)
         if self.io.progress:
             # Use regex to find numbers and surround them with [cyan]{number}[/cyan]
-            text = re.sub(r'(\d+(?:\.\d+)?)', lambda m: f'[cyan]{m.group(1)}[/cyan]', text)
+            text = re.sub(
+                r"(\d+(?:\.\d+)?)", lambda m: f"[cyan]{m.group(1)}[/cyan]", text
+            )
             description = "[yellow]" + text + "[/yellow]"
             self.progress.update(self.usage_task_id, description=description)
         else:
