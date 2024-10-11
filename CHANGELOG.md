@@ -1,3 +1,20 @@
+# [2.1.0](https://gitlab.com/codematos/pluscoder/compare/v2.0.0...v2.1.0) (2024-10-11)
+
+
+### Bug Fixes
+
+* chunk streaming parsing blocks ([2b465e1](https://gitlab.com/codematos/pluscoder/commit/2b465e15e0bba7602af5e74ac188a8e848d98097))
+* config template now works without a template file in repo ([896b27c](https://gitlab.com/codematos/pluscoder/commit/896b27c2861d4b2fdd0708b39f160832a5656aef))
+* git validation order ([dbb9a51](https://gitlab.com/codematos/pluscoder/commit/dbb9a51256a05438c343a36cefc9804ac49ad620))
+* setup entrypoint ([79524a9](https://gitlab.com/codematos/pluscoder/commit/79524a9e5ab0f922946108ef64cff22c6e60200c))
+* streaming block parsing ([fb812b6](https://gitlab.com/codematos/pluscoder/commit/fb812b6f4acac7b6b5ebeb742527b8e9b52cfc31))
+
+
+### Features
+
+* new --show_token_usage flag to display llm cost of the session. Default to true ([da0f442](https://gitlab.com/codematos/pluscoder/commit/da0f442ae9db870803238cf3e12efd0c609f7d44))
+* new custom_agents config at .pluscoder-config.yml to define agents with customized instructions ([f893f9f](https://gitlab.com/codematos/pluscoder/commit/f893f9f1c16fa81cc10b4ad497f758d8c4fa32b6))
+
 # [2.0.0](https://gitlab.com/codematos/pluscoder/compare/v1.13.0...v2.0.0) (2024-10-08)
 
 
