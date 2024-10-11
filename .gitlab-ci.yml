@@ -3,6 +3,9 @@ image: node:latest
 stages:
   - prepare
 #   - build-wheel
+#   - create_release_macos
+#   - create_release_windows
+#   - create_release_linux
   - test
   - docker-build-push
   - release
@@ -48,7 +51,7 @@ prepare:
 #       - ./wheels/*.whl
 #     expire_in: 4 week
 #   cache:
-#     key: 
+#     key:
 #       files:
 #         - requirements.txt  # Asume que tienes un archivo de requerimientos
 #     paths:
@@ -62,11 +65,16 @@ prepare:
 #         - requirements.txt
 #         - Dockerfile
 
+# TODO: create release package for MacOS, Windows and Linux
+# create_release_macos
+# create_release_windows
+# create_release_linux
+
 test:
   image: python:3.12
   stage: test
   cache:
-    key: 
+    key:
       files:
         - requirements.txt
     paths:
