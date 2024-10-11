@@ -127,7 +127,6 @@ def main() -> None:
             io.console.print(f"Warning: {warning}", style="bold dark_goldenrod")
             io.confirm("Proceed anyways?")
 
-
         display_initial_messages()
 
         # Check for new command-line arguments
