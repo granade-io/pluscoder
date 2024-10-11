@@ -1,8 +1,10 @@
 VENV_DIR := .venv
 REQUIREMENTS_FILE := requirements.txt
 PRECOMMIT_CONFIG := .pre-commit-config.yaml
+PACKAGE_NAME = pluscoder
+ENTRY_POINT = __main__.py
 
-.PHONY: venv install_requirements precommit install_precommit
+.PHONY: venv install_requirements precommit install_precommit build clean
 
 venv:
 	@if [ ! -d $(VENV_DIR) ]; then \
@@ -45,3 +47,13 @@ fmt:
 test:
 	@echo "Running tests..."
 	@pytest -v tests
+
+build:
+	@echo "Building package..."
+	@pyinstaller --onefile \
+		--add-data $(PACKAGE_NAME)/assets:assets \
+		--name $(PACKAGE_NAME) \
+		$(PACKAGE_NAME)/$(ENTRY_POINT)
+
+clean:
+	@rm -rf dist build __pycache__

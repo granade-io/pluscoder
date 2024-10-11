@@ -6,6 +6,7 @@ from langchain.schema import AIMessage
 from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.messages import BaseMessage
 
+# TODO: Move this to config
 llm_log_file = ".pluscoder/llm_history.txt"
 
 
@@ -25,8 +26,7 @@ class FileCallbackHandler(BaseCallbackHandler):
                 # if isinstance(m.content, str):
                 if type(m.content) is str:
                     chat_log += (
-                        "\n".join(f"{m.type}: {line}" for line in m.content.split("\n"))
-                        + "\n"
+                        "\n".join(f"{m.type}: {line}" for line in m.content.split("\n")) + "\n"
                     )
                 # check type list for content
                 # elif isinstance(m.content, list):
@@ -34,10 +34,7 @@ class FileCallbackHandler(BaseCallbackHandler):
                     for item in m.content:
                         if isinstance(item, dict) and "text" in item:
                             chat_log += (
-                                "\n".join(
-                                    f"{m.type}: {line}"
-                                    for line in item["text"].split("\n")
-                                )
+                                "\n".join(f"{m.type}: {line}" for line in item["text"].split("\n"))
                                 + "\n"
                             )
                         else:
@@ -56,10 +53,7 @@ class FileCallbackHandler(BaseCallbackHandler):
     ) -> None:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         chat_log = (
-            "\n".join(
-                f"OUTPUT: {line}"
-                for line in response.generations[0][0].text.split("\n")
-            )
+            "\n".join(f"OUTPUT: {line}" for line in response.generations[0][0].text.split("\n"))
             + "\n"
         )
         log_entry = f"[{timestamp}] LLM OUTPUT:\n{chat_log}\n---\n\n"

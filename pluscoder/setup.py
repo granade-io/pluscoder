@@ -12,6 +12,7 @@ from pluscoder.repo import Repository
 from pluscoder.state_utils import get_model_token_info
 from pluscoder.type import AgentInstructions, AgentState, OrchestrationState, TokenUsage
 
+# TODO: Move this?
 CONFIG_FILE = ".pluscoder-config.yml"
 CONFIG_OPTIONS = ["provider", "model", "auto_commits", "allow_dirty_commits"]
 
