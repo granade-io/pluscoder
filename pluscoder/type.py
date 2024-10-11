@@ -6,6 +6,8 @@ from langchain_core.pydantic_v1 import BaseModel
 from langgraph.graph import add_messages
 from typing_extensions import TypedDict
 
+from pluscoder.config import config
+
 
 class TokenUsage(TypedDict):
     total_tokens: int
@@ -28,7 +30,7 @@ class AgentState(TypedDict, total=False):
     token_usage: TokenUsage
 
     # Deprecated: Context for loaded files
-    context_files: Annotated[List[str], add] = []
+    context_files: Annotated[List[str], add]
 
     # List of messages of this agent with the caller
     messages: Annotated[List[AnyMessage], add_messages]
@@ -55,24 +57,31 @@ class AgentState(TypedDict, total=False):
         }
 
 
-class OrchestrationState(AgentState, total=False):
-    accumulated_token_usage: TokenUsage
-    orchestrator_state: AgentState
-    domain_stakeholder_state: AgentState
-    planning_state: AgentState
-    developer_state: AgentState
-    domain_expert_state: AgentState
-    return_to_user: bool
-    chat_agent: str
-
-    # Tell is the workflow is being run from task list to avoid user interactions
-    is_task_list_workflow: bool = False
-
-    # Max times to additionally delegate same task to an agent to complete it properly
-    max_agent_deflections: int = 2
-
-    # Current agent deflections count
-    current_agent_deflections: int = 0
+OrchestrationState = TypedDict(
+    "OrchestrationState",
+    {
+        "accumulated_token_usage": TokenUsage,
+        "orchestrator_state": AgentState,
+        "domain_stakeholder_state": AgentState,
+        "planning_state": AgentState,
+        "developer_state": AgentState,
+        "domain_expert_state": AgentState,
+        "return_to_user": bool,
+        "chat_agent": str,
+        "custom_agent_state": AgentState,
+        # Tell is the workflow is being run from task list to avoid user interactions
+        "is_task_list_workflow": bool,
+        # Max times to additionally delegate same task to an agent to complete it properly
+        "max_agent_deflections": int,
+        # Current agent deflections count
+        "current_agent_deflections": int,
+        # Custom agent states
+        **{
+            f"{agent["name"].lower()}_state": AgentState  # noqa
+            for agent in config.custom_agents
+        },
+    },
+)
 
 
 class AgentTask(BaseModel):

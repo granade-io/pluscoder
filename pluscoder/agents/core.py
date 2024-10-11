@@ -11,6 +11,7 @@ from pluscoder.config import config
 
 class DeveloperAgent(Agent):
     id = "developer"
+    description = "Implement code to solve complex software development requirements"
     developer_prompt = """
 *SPECIALIZATION INSTRUCTIONS*:
 Your role is to implement software development tasks based on detailed plans provided. You should write high-quality, maintainable code that adheres to the project's coding guidelines and integrates seamlessly with the existing codebase.
@@ -59,6 +60,9 @@ Guidelines:
 
 class DomainStakeholderAgent(Agent):
     id = "domain_stakeholder"
+    description = (
+        "Discuss project details, maintain project overview, roadmap, and brainstorm"
+    )
 
     domain_prompt = """
 *SPECIALIZATION INSTRUCTIONS*:
@@ -108,6 +112,7 @@ These are only example questions to help you understand the project vision and g
 
 class DomainExpertAgent(Agent):
     id = "domain_expert"
+    description = "Validate tasks and ensure alignment with project vision"
     domain_prompt = """
 *SPECIALIZATION INSTRUCTIONS*:
 Your role is to validate the tasks of all other agents, check alignment with the project vision, and provide feedback for task revisions.
@@ -162,6 +167,7 @@ THE PROPOSAL NEVER IS FULLY CORRECT, WAS MADE BY AN IA, FIND THOSE DETAILS TO IM
 
 class PlanningAgent(Agent):
     id = "planning"
+    description = "Create detailed, actionable plans for software development tasks"
     planning_prompt = """
 *SPECIALIZATION INSTRUCTIONS*:
 Your role is to create detailed, actionable plans for software development tasks. You should break down high-level requirements into specific, implementable tasks at the class and method level. Your plans will be executed by AI developer agents, so be as clear and specific as possible.

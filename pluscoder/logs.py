@@ -72,7 +72,9 @@ file_callback = FileCallbackHandler()
 
 
 def log_llm(
-    prompt: Optional[str] = None, output: AIMessage = None, log_file: Path = Path(llm_log_file)
+    prompt: Optional[str] = None,
+    output: AIMessage = None,
+    log_file: Path = Path(llm_log_file),
 ):
     """Log the prompt and/or LLM response to a file."""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

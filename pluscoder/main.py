@@ -3,13 +3,16 @@ import asyncio
 
 from rich.prompt import Prompt
 
+from pluscoder.agents.custom import CustomAgent
 from pluscoder.commands import show_config, show_repo, show_repomap
 from pluscoder.config import config
+from pluscoder.display_utils import display_agent
 from pluscoder.io_utils import io
 from pluscoder.model import get_inferred_provider
 from pluscoder.repo import Repository
 from pluscoder.setup import setup
 from pluscoder.type import AgentState, TokenUsage
+from pluscoder.workflow import agent_dict, run_workflow
 
 
 def run_silent_checks():
@@ -28,7 +31,6 @@ def run_silent_checks():
         warnings.append(
             "Linter checks are failing. This may lead to issues when editing files."
         )
-
     return warnings
 
 
@@ -91,51 +93,28 @@ def display_initial_messages():
 def choose_chat_agent_node():
     """Allows the user to choose which agent to chat with."""
 
-    agent_options = [
-        "Orchestrator: Break down the problem into a list of tasks and delegates it to other agents",
-        "Domain Stakeholder: Discuss project details, maintain project overview, roadmap, and brainstorm",
-        "Planning: Create detailed, actionable plans for software development tasks",
-        "Developer: Implement code to solve complex software development requirements",
-        "Domain Expert: Validate tasks and ensure alignment with project vision",
-    ]
     io.console.print("[bold green]Choose an agent to chat with:[/bold green]")
-    io.console.print(
-        "1. [bold green]Orchestrator[/bold green]: Break down the problem into a list of tasks and delegates it to others agents."
-    )
-    io.console.print(
-        "2. [bold green]Domain Stakeholder[/bold green]: For discussing project details, maintaining the project overview, roadmap, and brainstorming."
-    )
-    io.console.print(
-        "3. [bold green]Planning[/bold green]: For creating detailed, actionable plans for software development tasks."
-    )
-    io.console.print(
-        "4. [bold green]Developer[/bold green]: For implementing code to solve complex software development requirements."
-    )
-    io.console.print(
-        "5. [bold green]Domain Expert[/bold green]: For validating tasks and ensuring alignment with project vision."
-    )
+
+    for i, (_agent_id, agent) in enumerate(agent_dict.items(), 1):
+        agent_type = (
+            "[cyan]Custom[/cyan]"
+            if isinstance(agent, CustomAgent)
+            else "[yellow]Predefined[/yellow]"
+        )
+        io.console.print(f"{i}. {display_agent(agent, agent_type)}")
 
     choice = Prompt.ask(
         "Select an agent",
-        choices=[str(i) for i in range(1, len(agent_options) + 1)],
+        choices=[str(i) for i in range(1, len(agent_dict) + 1)],
         default="1",
     )
 
-    # Map user input to agent IDs
-    agent_map = {
-        "1": "orchestrator",
-        "2": "domain_stakeholder",
-        "3": "planning",
-        "4": "developer",
-        "5": "domain_expert",
-    }
-
-    chosen_agent = agent_map[choice]
+    chosen_agent = list(agent_dict.keys())[int(choice) - 1]
     io.event(f"> Starting chat with {chosen_agent} agent.")
     return chosen_agent
 
 
-def main():
+def main() -> None:
     """
     Main entry point for the Pluscoder application.
     """
@@ -146,6 +125,7 @@ def main():
         warnings = run_silent_checks()
         for warning in warnings:
             io.console.print(f"Warning: {warning}", style="bold dark_goldenrod")
+            io.confirm("Proceed anyways?")
 
         display_initial_messages()
 
@@ -161,7 +141,10 @@ def main():
         if config.show_config:
             show_config()
             return
-
+    except Exception as err:
+        io.event(f"An error occurred. {err}")
+        return
+    try:
         state = {
             "return_to_user": False,
             "messages": [],
@@ -178,7 +161,10 @@ def main():
             "is_task_list_workflow": False,
         }
 
-        from pluscoder.workflow import run_workflow
+        # Add custom agent states
+        for agent_id, agent in agent_dict.items():
+            if isinstance(agent, CustomAgent):
+                state[f"{agent_id.lower()}_state"] = AgentState.default()
 
         asyncio.run(run_workflow(state))
     except KeyboardInterrupt:

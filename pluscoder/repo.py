@@ -7,11 +7,19 @@ from typing import List, Optional
 from git import Actor, GitCommandError, Repo
 
 from pluscoder.config import config
+from pluscoder.exceptions import NotGitRepositoryException
 
 
 class Repository:
-    def __init__(self, io=None):
-        self.repo = Repo(os.getcwd(), search_parent_directories=True)
+    def __init__(self, io=None, repository_path=None):
+        self.repository_path = repository_path or os.getcwd()
+        if not os.path.isdir(self.repository_path):
+            raise ValueError(f"Invalid repository path: {self.repository_path}")
+
+        if not os.path.isdir(os.path.join(self.repository_path, ".git")):
+            raise NotGitRepositoryException(self.repository_path)
+
+        self.repo = Repo(self.repository_path, search_parent_directories=True)
         self.io = io
 
     def commit(self, message="Auto-commit"):

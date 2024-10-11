@@ -1,2 +1,3 @@
 include README.md
+include .pluscoder-config-example.yml
 include requirements.txt

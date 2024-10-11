@@ -15,6 +15,9 @@ from pluscoder.type import AgentInstructions
 
 class OrchestratorAgent(Agent):
     id = "orchestrator"
+    description = (
+        "Break down the problem into a list of tasks and delegates it to other agents"
+    )
     mode: Annotated[
         Literal["orchestrate", "direct"],
         "'Direct' mode means the OrchestratorAgent talks directly to the selected agent in 'direct mode'.\n"
@@ -367,13 +370,12 @@ Details: {task["details"]}
 Restrictions: {task.get("restrictions", "No specific restrictions.")}
 Expected Outcome: {task.get("outcome", "No specific outcome defined.")}
 
-Load all files mentioned, then analyze if need to load any else to complete the task.
+*Read all files mentioned in tasks above* for context, then analyze if need to load any else to complete the task.
 
 {images_instruction}
 {resources_instruction}
 
 Write you answer step by step, using a <thinking> block for analysis your throughts before giving a response to me using <output> and edit files using <source> blocks.
-
 """
         return instruction
 

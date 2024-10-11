@@ -3,7 +3,6 @@ import os
 import re
 from pathlib import Path
 
-import yaml
 from rich.prompt import Prompt
 
 from pluscoder import tools
@@ -15,6 +14,113 @@ from pluscoder.type import AgentInstructions, AgentState, OrchestrationState, To
 
 CONFIG_FILE = ".pluscoder-config.yml"
 CONFIG_OPTIONS = ["provider", "model", "auto_commits", "allow_dirty_commits"]
+
+CONFIG_TEMPLATE = """
+#------------------------------------------------------------------------------
+# PlusCoder Configuration
+#------------------------------------------------------------------------------
+
+#------------------------------------------------------------------------------
+# Application Behavior
+#------------------------------------------------------------------------------
+# streaming: true                 # Enable/disable LLM streaming
+# user_feedback: true             # Enable/disable user feedback
+# display_internal_outputs: false # Display internal agent outputs
+# auto_confirm: false             # Auto-confirm pluscoder execution
+# init: true                      # Enable/disable initial setup
+# read_only: false                # Enable/disable read-only mode
+# user_input: ""                  # Predefined user input
+
+#------------------------------------------------------------------------------
+# File Paths
+#------------------------------------------------------------------------------
+# overview_filename: PROJECT_OVERVIEW.md     # Project overview filename
+# log_filename: pluscoder.log                # Log filename
+# overview_file_path: PROJECT_OVERVIEW.md    # Path to project overview file
+# guidelines_file_path: CODING_GUIDELINES.md # Path to coding guidelines file
+
+#------------------------------------------------------------------------------
+# Model and API Settings
+#------------------------------------------------------------------------------
+# model: anthropic.claude-3-5-sonnet-20240620-v1:0 # LLM model to use
+# orchestrator_model: null            # Model to use for the orchestrator agent (default: same as model)
+# weak_model: null                    # Weaker LLM model for less complex tasks (default: same as model)
+# provider: null                      # Provider (aws_bedrock, openai, litellm, anthropic, azure)
+# orchestrator_model_provider: null   # Provider for orchestrator model (default: same as provider)
+# weak_model_provider: null           # Provider for weak model (default: same as provider)
+# openai_api_key:                     # OpenAI API key
+# openai_api_base:                    # OpenAI API base URL
+# anthropic_api_key:                  # Anthropic API key
+
+#------------------------------------------------------------------------------
+# AWS Settings
+#------------------------------------------------------------------------------
+# aws_access_key_id:       # AWS Access Key ID
+# aws_secret_access_key:   # AWS Secret Access Key
+# aws_profile: default     # AWS profile name
+
+#------------------------------------------------------------------------------
+# Git Settings
+#------------------------------------------------------------------------------
+# auto_commits: true       # Enable/disable automatic Git commits
+# allow_dirty_commits: true # Allow commits in a dirty repository
+
+#------------------------------------------------------------------------------
+# Test and Lint Settings
+#------------------------------------------------------------------------------
+# run_tests_after_edit: false  # Run tests after file edits
+# run_lint_after_edit: false   # Run linter after file edits
+# test_command:                # Command to run tests
+# lint_command:                # Command to run linter
+# auto_run_linter_fix: false   # Auto-run linter fix before linting
+# lint_fix_command:            # Command to run linter fix
+
+#------------------------------------------------------------------------------
+# Repomap Settings
+#------------------------------------------------------------------------------
+# use_repomap: false           # Enable/disable repomap feature
+# repomap_level: 2             # Repomap detail level (0: minimal, 1: moderate, 2: detailed)
+# repomap_exclude_files: []    # List of files to exclude from repomap
+# repo_exclude_files: []       # Regex patterns to exclude files from repo operations
+
+#------------------------------------------------------------------------------
+# Display Options
+#------------------------------------------------------------------------------
+# show_repo: false             # Show repository information
+# show_repomap: false          # Show repository map
+# show_config: false           # Show configuration information
+# hide_thinking_blocks: false  # Hide thinking blocks in LLM output
+# hide_output_blocks: false    # Hide output blocks in LLM output
+# hide_source_blocks: false    # Hide source blocks in LLM output
+
+#------------------------------------------------------------------------------
+# Custom Prompt Commands
+#------------------------------------------------------------------------------
+# Customs instructions to agents when using /custom <prompt_name> <additional instruction>
+# Example: /custom hello then ask what are their needs
+# custom_prompt_commands:
+#   - prompt_name: hello
+#     description: Greet the user says hello
+#     prompt: Say hello to user
+
+#------------------------------------------------------------------------------
+# Custom Agents
+#------------------------------------------------------------------------------
+# Define custom agents with specific roles and capabilities
+# custom_agents:
+#   - name: CodeReviewer
+#     prompt: "You are a code reviewer. Your task is to review code changes and provide feedback on code quality, best practices, and potential issues."
+#     description: "Code reviewer"
+#     read_only: true
+#   - name: DocumentationWriter
+#     prompt: "You are a technical writer specializing in software documentation. Your task is to create and update project documentation, including README files, API documentation, and user guides."
+#     description: "Documentation Writer Description"
+#     read_only: false
+#   - name: SecurityAuditor
+#     prompt: "You are a security expert. Your task is to review code and configurations for potential security vulnerabilities and suggest improvements to enhance the overall security of the project."
+#     description: "Security Auditor Description"
+#     read_only: true
+"""
 
 
 def required_setup():
@@ -44,14 +150,6 @@ def get_config_defaults():
     return {field: getattr(config, field) for field in CONFIG_OPTIONS}
 
 
-def read_yaml(file_path):
-    try:
-        with open(file_path) as file:
-            return yaml.safe_load(file)
-    except FileNotFoundError:
-        return {}
-
-
 def read_file_as_text(file_path):
     try:
         with open(file_path) as file:
@@ -61,9 +159,7 @@ def read_file_as_text(file_path):
 
 
 def load_example_config():
-    content = read_file_as_text(".pluscoder-config-example.yml")
-    io.console.print("[DEBUG] Example config content:", style="bold yellow")
-    io.console.print(content, style="yellow")
+    content = CONFIG_TEMPLATE
     return content
 
 
@@ -95,26 +191,13 @@ def prompt_for_config():
         else:
             value = Prompt.ask(prompt, default=str(default))
 
-        io.console.print(f"[DEBUG] User input for {option}: {value}", style="bold cyan")
-
         # Update the config text with the new value
-        old_config_text = example_config_text
         example_config_text = re.sub(
             rf"^#?\s*{option}:.*$",
             f"{option}: {value}",
             example_config_text,
             flags=re.MULTILINE,
         )
-
-        if old_config_text == example_config_text:
-            io.console.print(
-                f"[DEBUG] No change in config for {option}", style="bold red"
-            )
-        else:
-            io.console.print(f"[DEBUG] Updated config for {option}", style="bold green")
-
-    io.console.print("[DEBUG] Final config content:", style="bold yellow")
-    io.console.print(example_config_text, style="yellow")
 
     return example_config_text
 
@@ -258,7 +341,7 @@ def initialize_repository():
     use_repomap = config.use_repomap
     auto_commits = config.auto_commits
     config.auto_confirm = True
-    config.use_repomap = True
+    config.use_repomap = False
     config.auto_commits = False
 
     orchestrator_state = AgentState.default()
@@ -279,6 +362,8 @@ def initialize_repository():
             "accumulated_token_usage": TokenUsage.default(),
             "chat_agent": "orchestrator",
             "is_task_list_workflow": True,
+            "max_agent_deflections": 2,
+            "current_agent_deflections": 0,
         }
     )
 
@@ -310,6 +395,7 @@ def setup() -> bool:
     if not required_setup():
         return False
 
+    # TODO: Get repository path from config
     repo = Repository(io=io)
 
     if not Path(CONFIG_FILE).exists() and config.init:
@@ -321,19 +407,11 @@ def setup() -> bool:
         # Load example config and prompt for configuration
         config_data = prompt_for_config()
 
-        io.console.print("[DEBUG] Config data to be written:", style="bold magenta")
-        io.console.print(config_data, style="magenta")
-
         # Write the updated config
         write_yaml(CONFIG_FILE, config_data)
         repo.create_default_files()
 
         io.event(f"> Configuration saved to {CONFIG_FILE}.")
-
-        # Verify the written config
-        written_config = read_file_as_text(CONFIG_FILE)
-        io.console.print("[DEBUG] Written config content:", style="bold blue")
-        io.console.print(written_config, style="blue")
 
         # Additional configuration
         additional_config()

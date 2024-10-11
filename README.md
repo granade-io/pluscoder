@@ -15,6 +15,7 @@ PlusCoder is an AI-assisted software development tool designed to enhance and st
 9. Enhanced user interaction with rich console output and auto-completion
 10. Real-time task execution progress display
 11. File downloading and context addition during agent interactions
+12. Custom agent creation for specialized tasks
 
 ## Requirements
 - Requires python 3.12 or Docker
@@ -110,6 +111,7 @@ Display current configuration settings using command `/show_config` or cmd line 
 - `HIDE_THINKING_BLOCKS`: Hide thinking blocks in LLM output (default: `True`)
 - `HIDE_OUTPUT_BLOCKS`: Hide output blocks in LLM output (default: `False`)
 - `HIDE_SOURCE_BLOCKS`: Hide source blocks in LLM output (default: `False`)
+- `SHOW_TOKEN_USAGE`: Show token usage/cost (default: `True`)
 
 ### File Paths
 - `OVERVIEW_FILENAME`: Filename for project overview (default: `"PROJECT_OVERVIEW.md"`)
@@ -190,6 +192,35 @@ custom_prompt_commands:
     description: "Generate a new feature and documentation"
 ```
 
+### Custom Agents
+
+PlusCoder supports the creation of custom agents for specialized tasks. These agents can be defined in the configuration and used alongside the predefined agents.
+
+To configure custom agents:
+
+1. Open or create the `.pluscoder-config.yml` file in your project root.
+2. Add a `custom_agents` section with a list of custom agent configurations, each containing:
+   - `name`: A unique name for the agent
+   - `description`: a description of the agent
+   - `prompt`: The system prompt defining the agent's role and capabilities
+   - `read_only`: Boolean indicating whether the agent is restricted to read-only file operations
+
+Example:
+
+```yaml
+custom_agents:
+  - name: CodeReviewer
+    description: Agent description
+    prompt: "You are a code reviewer. Your task is to review code changes and provide feedback on code quality, best practices, and potential issues."
+    read_only: true
+  - name: DocumentationWriter
+    description: Agent description
+    prompt: "You are a technical writer specializing in software documentation. Your task is to create and update project documentation, including README files, API documentation, and user guides."
+    read_only: false
+```
+
+Custom agents can be selected and used in the same way as predefined agents during the PlusCoder workflow. They will appear in the agent selection menu and can be assigned tasks by the Orchestrator agent.
+
 
 ## Command-line Arguments
 
@@ -249,5 +280,4 @@ You can set these options using environment variables, command-line arguments (e
    ```bash
    pytest
    ```
-
 test

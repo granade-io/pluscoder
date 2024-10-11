@@ -4,6 +4,8 @@ import re
 from rich.console import Console
 from rich.syntax import Syntax
 
+from pluscoder.type import TokenUsage
+
 
 def display_diff(diff_text, filepath, console):
     # Display using rich syntax highlighting
@@ -25,6 +27,9 @@ def display_file_diff(content: str, filepath: str, console=None) -> None:
     # Initialize console for rich output
     console = console if console else Console()
 
+    if not filepath:
+        filepath = "a"
+
     # Define the regex pattern to match FIND/REPLACE blocks
     pattern = r">>> FIND\n(.*?)\n===\n(.*?)\n<<< REPLACE"
 
@@ -41,7 +46,7 @@ def display_file_diff(content: str, filepath: str, console=None) -> None:
         # Convert diff to a single string
         diff_text = "\n".join(diff)
         display_diff(diff_text, filepath, console)
-        return
+        return True
 
     # For each match, generate a diff and display
     for _index, (find_block, replace_block) in enumerate(matches):
@@ -58,14 +63,32 @@ def display_file_diff(content: str, filepath: str, console=None) -> None:
 
         # Display using rich syntax highlighting
         display_diff(diff_text, filepath, console)
+    return True
+
+
+def get_cost_usage_display(token_usage: TokenUsage):
+    if not token_usage:
+        text_content = "Tokens: ↑:0 ↓:0 T:0 $0"
+    else:
+        text_content = f"Tokens: ↑:{token_usage['prompt_tokens']} ↓:{token_usage['completion_tokens']} T:{token_usage['total_tokens']} ${token_usage['total_cost']:.3f}"
+    return text_content
+
+
+def display_agent(agent, agent_type: str):
+    description = (
+        agent.description
+        if hasattr(agent, "description")
+        else "No description available"
+    )
+    return f"[bold green]{agent.name}[/bold green] ({agent_type}): {description}"
 
 
 if __name__ == "__main__":
     # Example usage
     content = """
 >>> FIND
-This is the old text.
-It needs to be replaced.
+This is the new text.
+It has been replaced.
 ===
 This is the new text.
 It has been replaced.
