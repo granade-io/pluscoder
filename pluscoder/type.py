@@ -77,7 +77,7 @@ OrchestrationState = TypedDict(
         "current_agent_deflections": int,
         # Custom agent states
         **{
-            f"{agent["name"].lower()}_state": AgentState  # noqa
+            f"{agent["name"].lower()}_state": AgentState  # noqa: F821  # NOTE: undefined name 'name'
             for agent in config.custom_agents
         },
     },

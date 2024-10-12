@@ -1,20 +1,118 @@
 repos:
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      # - id: trailing-whitespace
+      #   name: "  [fix]: trim trailing whitespace"
+      #   args:
+      #     # preserve Markdown hard line breaks
+      #     - --markdown-linebreak-ext=md
+
+      - id: check-docstring-first
+        name: "[check]: check docstring first"
+        exclude: ".*/constants.py"
+
+      - id: debug-statements
+        name: "[check]: check for pdb/ipdb/print statements"
+        # only include python files
+        # files: \.py$
+
+      - id: check-added-large-files
+        name: "[check]: added large files"
+        args:
+          # default: 500
+          - --maxkb=2000
+          # - --enforce-all
+        exclude: '.*\.(csv|txt)'
+
+      - id: end-of-file-fixer
+        name: "  [fix]: fix missing newline at end of file"
+        exclude: '.*\.(txt|csv|json)'
+        # only include python files
+        # files: \.py$
+
+      - id: mixed-line-ending
+        name: "  [fix]: mixed line endings"
+        args:
+          - --fix=lf
+
+      - id: fix-byte-order-marker
+        name: "  [fix]: remove UTF-8 byte order marker"
+
+      - id: check-merge-conflict
+        name: "[check]: check for merge conflicts"
+
+      - id: no-commit-to-branch
+        name: "[check]: no commit to branch"
+        args:
+          - --branch=master
+          - --branch=main
+          # - --branch=dev
+
+      - id: check-case-conflict
+        name: "[check]: filename case conflicts"
+
+      - id: check-executables-have-shebangs
+        name: "[check]: ensures that (non-binary) executables have a shebang"
+
+      - id: check-shebang-scripts-are-executable
+        name: "[check]: ensures that (non-binary) files with a shebang are executable"
+
+      - id: check-symlinks
+        name: "[check]: checks for symlinks which do not point to anything"
+
+      - id: destroyed-symlinks
+        name: "[check]: detects symlinks which are changed to regular files"
+
+      - id: check-vcs-permalinks
+        name: "[check]: ensures that links to vcs websites are permalinks"
+
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0
+    hooks:
+      - id: text-unicode-replacement-char
+        name: "[check]: check for unicode replacement characters"
+
+      - id: python-check-blanket-noqa
+        name: "[check]: check blanket noqa"
+
+      - id: python-check-blanket-type-ignore
+        name: "[check]: check blanket type ignore"
+
+      - id: python-no-eval
+        name: "[check]: check for eval()"
+
+  - repo: https://github.com/abravalheri/validate-pyproject
+    rev: v0.20.2
+    hooks:
+      - id: validate-pyproject
+        name: "[check]: validate pyproject.toml"
+        files: pyproject\.toml$
+
+  - repo: https://github.com/tox-dev/pyproject-fmt
+    rev: "2.3.0"
+    hooks:
+      - id: pyproject-fmt
+        name: "  [fix]: format pyproject.toml"
+        files: pyproject\.toml$
+
   - repo: local
     hooks:
       - id: pytest
-        name: pytest
+        name: "[check]: run the pytest suite"
         entry: pytest
         language: system
         pass_filenames: false
         always_run: true
       - id: ruff
-        name: ruff
+        name: "[check]: run the ruff linter"
         entry: ruff check .
         language: system
         pass_filenames: false
         always_run: true
       - id: ruff-fix
-        name: ruff (fix)
+        name: "  [fix]: run the ruff formatter"
         entry: ruff check --fix .
         language: system
         pass_filenames: false

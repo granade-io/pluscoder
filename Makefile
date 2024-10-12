@@ -1,10 +1,12 @@
+#!make
+
 VENV_DIR := .venv
 REQUIREMENTS_FILE := requirements.txt
 PRECOMMIT_CONFIG := .pre-commit-config.yaml
 PACKAGE_NAME = pluscoder
 ENTRY_POINT = __main__.py
 
-.PHONY: venv install_requirements precommit install_precommit build clean
+.PHONY: venv install_requirements precommit install_precommit build clean start
 
 venv:
 	@if [ ! -d $(VENV_DIR) ]; then \
@@ -17,10 +19,6 @@ venv:
 install: venv
 	@echo "Installing requirements from $(REQUIREMENTS_FILE)..."
 	@pip install -r $(REQUIREMENTS_FILE)
-
-install-dev: venv
-	@echo "Installing dev requirements from $(REQUIREMENTS_FILE)..."
-	@pip install -r requirements.txt requirements-dev.txt
 
 editable:
 	@echo "Installing package in editable mode..."
@@ -57,3 +55,8 @@ build:
 
 clean:
 	@rm -rf dist build __pycache__
+
+start:
+	@echo "Make sure you are in the virtual environment."
+	@echo "Starting PlusCoder..."
+	@python3.12 -m pluscoder --auto_commits f
