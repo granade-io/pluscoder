@@ -1,0 +1,35 @@
+// {
+	// Place your snippets for makefile here. Each snippet is defined under a snippet name and has a prefix, body and
+	// description. The prefix is what is used to trigger the snippet and the body will be expanded and inserted. Possible variables are:
+	// $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders. Placeholders with the
+	// same ids are connected.
+	// Example:
+	// "Print to console": {
+	// 	"prefix": "log",
+	// 	"body": [
+	// 		"console.log('$1');",
+	// 		"$2"
+	// 	],
+	// 	"description": "Log output to console"
+	// }
+// }
+{
+    "Makefile Command": {
+        "prefix": [
+            ".PHONY",  // This prefix will trigger the snippet when you type ".PHONY" in your Makefile.
+            "PHONY",   // This prefix will trigger the snippet when you type "PHONY" in your Makefile.
+            ".phony",  // This prefix will trigger the snippet when you type ".phony" in your Makefile.
+            "phony",   // This prefix will trigger the snippet when you type "phony" in your Makefile.
+        ],
+        "body": [
+            ".PHONY: ${1:TARGET_NAME}  ## ${2:TARGET_DESCRIPTION}",  // This line declares a phony target with a name and description.
+            // "${1:TARGET_NAME}${3/(.+)?/: $1/}",
+            "${1:TARGET_NAME}${3:: OPTIONAL_DEPENDENCIES}",  // This line defines the target and its (optional) dependencies.
+            "#\t@echo [$(DATETIME)] $@",  // This line prints the current date and time and the target name.
+            "\t${4:TARGET_COMMAND}",  // This line is where you put the command that the target will execute.
+            "#\t@echo [$(DATETIME)] Done."  // This line prints the current date and time and a "Done" message.
+        ],
+        "description": "Template for a Makefile command",  // This is the description of the snippet.
+        "scope": "makefile"  // This snippet will only be available in Makefiles.
+    }
+}

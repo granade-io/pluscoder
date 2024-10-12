@@ -1,14 +1,47 @@
 {
+    "files.encoding": "utf8",
+    "files.eol": "\n",
+    "editor.renderWhitespace": "all",
+    "python.languageServer": "Pylance",
+    "python.analysis.typeCheckingMode": "standard",
+    "python.analysis.diagnosticMode": "workspace",
+    "python.analysis.importFormat": "absolute",
+    "python.analysis.fixAll": [
+        "source.convertImportFormat",
+    ],
     "[python]": {
+        // "editor.formatOnType": true,
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "charliermarsh.ruff",
         "editor.codeActionsOnSave": {
             "source.fixAll": "explicit",
             "source.organizeImports": "explicit"
         },
+        "files.encoding": "utf8",
         "files.eol": "\n",
         "files.trimTrailingWhitespace": true,
-        "editor.rulers": [120],
+        "files.insertFinalNewline": true,
+        "files.trimFinalNewlines": true,
+        "editor.rulers": [
+            120
+        ],
+        "editor.renderWhitespace": "all",
         "editor.tabSize": 4
-    }
+    },
+    "notebook.formatOnSave.enabled": true,
+    "notebook.codeActionsOnSave": {
+        "notebook.source.fixAll": "explicit",
+        "notebook.source.organizeImports": "explicit",
+    },
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    // "python.analysis.inlayHints.pytestParameters": true,
+    "python.testing.autoTestDiscoverOnSaveEnabled": true,
+    "github.copilot.enable": {
+        "*": true,
+        "plaintext": true,
+        "markdown": true,
+        "scminput": true,
+    },
+    "git.autofetch": true,
 }
