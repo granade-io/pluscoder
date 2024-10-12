@@ -11,13 +11,13 @@ from pluscoder.type import AgentTask
 
 
 @tool
-def download_file(url: Annotated[str, "The URL of the file to download."]) -> str:
-    """Download the content of a file from the given URL."""
+def read_file_from_url(url: Annotated[str, "The URL of the file to read."]) -> str:
+    """Reads the content of a file given its URL."""
     try:
         response = requests.get(url)
         response.raise_for_status()
         content = response.text
-        return f"Here is the content of the downloaded file:\n\n{content}"
+        return f"Here is the content of the file:\n\n{content}"
     except requests.RequestException as e:
         return f"Error downloading file: {e!s}"
 
@@ -170,7 +170,7 @@ def delegate_tasks(
 ) -> Dict[str, List[AgentTask]]:
     """
     Delegates tasks to other agents to execute/complete them. Each task in the task_list must be a dict with 6 values: (objective, details, agent, is_finished, restrictions, outcome).
-    The 'agent' value must be one of: "domain_stakeholder", "planning", "developer", or "domain_expert".
+    The 'agent' value must be one of: "developer".
     The 'is_finished' value is a boolean indicating whether the task has been completed.
     The 'restrictions' value is a string describing any limitations or constraints for the task.
     The 'outcome' value is a string describing the expected result of the task.

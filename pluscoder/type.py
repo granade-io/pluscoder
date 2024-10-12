@@ -87,7 +87,7 @@ OrchestrationState = TypedDict(
 class AgentTask(BaseModel):
     objective: str
     details: str
-    agent: Literal["domain_stakeholder", "planning", "developer", "domain_expert"]
+    agent: Literal["developer"]
     is_finished: bool
     restrictions: str = ""
     outcome: str = ""

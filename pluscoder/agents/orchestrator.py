@@ -1,14 +1,13 @@
-from typing import Annotated, List, Literal
+from typing import List
 
 from pluscoder import tools
 from pluscoder.agents.base import Agent, AgentState
 from pluscoder.agents.prompts import (
     BASE_PROMPT,
-    FILE_OPERATIONS_PROMPT,
     READONLY_MODE_PROMPT,
+    REMINDER_PREFILL_PROMP,
     combine_prompts,
 )
-from pluscoder.config import config
 from pluscoder.message_utils import HumanMessage
 from pluscoder.type import AgentInstructions
 
@@ -18,13 +17,6 @@ class OrchestratorAgent(Agent):
     description = (
         "Break down the problem into a list of tasks and delegates it to other agents"
     )
-    mode: Annotated[
-        Literal["orchestrate", "direct"],
-        "'Direct' mode means the OrchestratorAgent talks directly to the selected agent in 'direct mode'.\n"
-        + "'Orchestrate' mode means the OrchestratorAgent delegates tasks to the selected agent in 'orchestrate mode'.",
-    ]
-    current_agent: Annotated[str, "Agent to talk with when in 'direct mode"] = None
-    agent_first_instruction: str = None
 
     orchestrator_prompt = """
 *SPECIALIZATION INSTRUCTIONS*:
@@ -36,8 +28,7 @@ Simple requirements requires less (or no) questions than complex ones. Choose ke
 Do not propose a list of task until you understand the user requirements deeply through asking detailed questions. *Do not* ask more than 3 questions at once.
 
 *Available Agents*:
-- Domain Stakeholder Agent: For discussing project details, maintaining the project overview, roadmap, and brainstorming.
-- Developer Agent: For implementing code to solve complex software development requirements.
+- Developer Agent: For writing code, documentation, tests, etc.
 
 *Always* present the list of tasks in a structured, ordered format to the user *before* using the delegation tool.
 To execute/delegate/complete tasks *use the delegation tool*.
@@ -73,7 +64,7 @@ Example 1: Implement Weather Feature
 [ ] Update Project Documentation:
    Objective: Document the new weather feature in project files
    Details: Update `PROJECT_OVERVIEW.md` to include information about the new weather feature. Add a section in `README.md` explaining how to use the new weather command, including any required API keys or configuration, and provide an example of the output.
-   Agent: Domain Expert
+   Agent: Developer
    Restrictions: Ensure documentation is clear and concise. Include any setup steps required for the weather API.
    Outcome: Updated `PROJECT_OVERVIEW.md` and `README.md` files with new sections detailing the weather feature.
 
@@ -96,7 +87,7 @@ Example 2: Implement Data Processing Feature
 [ ] Update Project Documentation for CSV Processing:
    Objective: Document the new CSV processing feature in project files
    Details: Update `PROJECT_OVERVIEW.md` to include information about the new CSV processing feature. Add a section in `README.md` explaining how to use the new CSV processing command, including expected CSV format, the statistics calculated, and provide an example command with sample output.
-   Agent: Domain Expert
+   Agent: Developer
    Restrictions: Ensure documentation is clear and concise. Include any dependencies required for the CSV processing feature.
    Outcome: Updated `PROJECT_OVERVIEW.md` and `README.md` files with new sections detailing the CSV processing feature.
 
@@ -116,7 +107,7 @@ Example 3: Project Analysis and Overview
 [ ] Generate Structured Project Overview:
    Objective: Create a comprehensive, structured overview of the project based on the analysis
    Details: Using the information from `temp_project_analysis.md`, create a new file `PROJECT_OVERVIEW.md` in the project root. Organize the information into sections such as "Backend Architecture", "Frontend Structure", "Database Schema", "API Integration", and "Key Features". Include relevant file paths, main components, and brief explanations of their purposes. Ensure the document provides a clear, high-level understanding of the project's structure and functionality.
-   Agent: Domain Expert
+   Agent: Developer
    Restrictions: The overview should be concise yet comprehensive. Use clear headings and subheadings for easy navigation.
    Outcome: New file `PROJECT_OVERVIEW.md` with a structured, comprehensive overview of the project. Deletion of the temporary `temp_project_analysis.md` file.
 
@@ -128,6 +119,7 @@ You *must follow* following rules when suggesting a task list:
 2. All editions related to the same file *must be handled by the same task*
 3. Task *must* be able to be executed sequentially and reference outcome of previous tasks.
 4. Tasks outcome must always be file updates/editions
+5. Especify in agent instructions the resources (links/images) the user gave (including 'img::' if present on images)
 """
 
     validation_system_message = """
@@ -154,6 +146,15 @@ You *must follow* following rules when suggesting a task list:
     1. Summarize all task solved in a message aimed for the user who requested the tasks.
     """
 
+    orchestrator_reminder_prompt = """
+    You *must follow* following rules when suggesting a task list:
+    1. Each task must be an step of an step-by-step solution
+    2. All editions related to the same file *must be handled by the same task*
+    3. Task *must* be able to be executed sequentially and reference outcome of previous tasks.
+    4. Tasks outcome *must always* be file updates/editions
+    5. Especify in agent instructions the resources (links/images) the user gave (including 'img::' if present on images)
+    """
+
     def __init__(
         self,
         llm,
@@ -163,7 +164,7 @@ You *must follow* following rules when suggesting a task list:
         system_message = combine_prompts(
             BASE_PROMPT,
             self.orchestrator_prompt,
-            FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
+            READONLY_MODE_PROMPT,
         )
         super().__init__(
             llm,
@@ -185,6 +186,14 @@ You *must follow* following rules when suggesting a task list:
 
         # Validation prompt
         return self.validation_system_message
+
+    def get_reminder_prefill(self, state: AgentState) -> str:
+        # Default prompt
+        if state["status"] == "active":
+            return combine_prompts(
+                REMINDER_PREFILL_PROMP
+            )
+        return ""
 
     def get_tool_choice(self, state: AgentState) -> str:
         """Chooses a the tool to use when calling the llm"""

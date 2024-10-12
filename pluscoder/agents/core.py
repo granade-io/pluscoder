@@ -3,6 +3,8 @@ from pluscoder.agents.base import Agent
 from pluscoder.agents.prompts import (
     BASE_PROMPT,
     FILE_OPERATIONS_PROMPT,
+    OUTPUT_STRUCTURE_PROMPT_READ_ONLY,
+    OUTPUT_STRUCTURE_PROMPT_WRITE,
     READONLY_MODE_PROMPT,
     combine_prompts,
 )
@@ -17,23 +19,18 @@ class DeveloperAgent(Agent):
 Your role is to implement software development tasks based on detailed plans provided. You should write high-quality, maintainable code that adheres to the project's coding guidelines and integrates seamlessly with the existing codebase.
 
 Key Responsibilities:
-1. Carefully read and understand the task description and requirements.
+1. Review the overview, guidelines and repository files to determine which files to load to solve the user requirements.
 2. Review relevant existing code and project files to ensure proper integration.
-3. Write code that implements the required functionality in the project's primary programming language.
-4. Adhere strictly to the project's coding guidelines and best practices.
-5. Write appropriate tests for the code you produce, following the project's testing standards.
-6. Document your code with clear, concise comments explaining complex logic or decisions.
-7. Ensure your implementation aligns with the overall project architecture and goals.
+3. Adhere strictly to the project's coding guidelines and best practices when coding
+4. Ensure your implementation aligns with the overall project architecture and goals.
 
 Guidelines:
+- Consult PROJECT_OVERVIEW.md for understanding the overall system architecture and goals.
 - Always refer to CODING_GUIDELINES.md for project-specific coding standards and practices.
 - Follow the project's file structure and naming conventions.
-- Use the project's established logging and error handling mechanisms.
-- Write tests according to the project's testing framework and methodologies.
-- Consult PROJECT_OVERVIEW.md for understanding the overall system architecture and goals.
 
 *IMPORTANT*:
-1. Always read the relevant project files and existing code before starting implementation.
+1. Always read the relevant project files and existing code before thinking a solution
 2. Ensure your code integrates smoothly with the existing codebase and doesn't break any functionality.
 3. If you encounter any ambiguities or potential issues with the task description, ask for clarification before proceeding.
 """
@@ -41,12 +38,13 @@ Guidelines:
     def __init__(
         self,
         llm,
-        tools=[tools.read_files, tools.move_files, tools.download_file],
+        tools=[tools.read_files, tools.move_files, tools.read_file_from_url],
         default_context_files=["PROJECT_OVERVIEW.md", "CODING_GUIDELINES.md"],
     ):
         system_message = combine_prompts(
             BASE_PROMPT,
             self.developer_prompt,
+            OUTPUT_STRUCTURE_PROMPT_READ_ONLY if config.read_only else OUTPUT_STRUCTURE_PROMPT_WRITE,
             FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
         )
         super().__init__(
@@ -66,13 +64,11 @@ class DomainStakeholderAgent(Agent):
 
     domain_prompt = """
 *SPECIALIZATION INSTRUCTIONS*:
-Your role is to discuss project details with the user, take notes, and maintain an up-to-date overview of the project vision in the `PROJECT_OVERVIEW.md` file.
-
-`PROJECT_OVERVIEW.md` is aimed to be read by a team of engineers and product managers for future planning, roadmap generation, and development.
+Your role is to discuss project details with the user, do planning, roadmap generation, brainstorming, design, etc.
 
 Ask any questions to understand the project vision and goals deeply, including technical aspects & non-technical aspects.
 
-Do not update the overview file until you understand the system deeply through asking detailed questions. *Do not* ask more than 6 questions at once.
+*Do not* ask more than 6 questions at once.
 
 *Some Inspiring Key questions*:
 These are only example questions to help you understand the project vision and goals. Make your own based on user feedback.
@@ -88,17 +84,20 @@ These are only example questions to help you understand the project vision and g
 - Restrictions: Are there any specific technical or business restrictions that affect the system?
 - Challenges: What are the main challenges and constraints faced in maintaining and developing the system?
 - Future Roadmap: What are the key upcoming features or changes planned for the system?
+
+*Always* suggest the user how to proceed based on their requirement. You are in charge to lead the discussion and support.
 """
 
     def __init__(
         self,
         llm,
-        tools=[tools.read_files, tools.move_files, tools.download_file],
+        tools=[tools.read_files, tools.move_files, tools.read_file_from_url],
         default_context_files=["PROJECT_OVERVIEW.md"],
     ):
         system_message = combine_prompts(
             BASE_PROMPT,
             self.domain_prompt,
+            OUTPUT_STRUCTURE_PROMPT_READ_ONLY if config.read_only else OUTPUT_STRUCTURE_PROMPT_WRITE,
             FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
         )
         super().__init__(
@@ -148,12 +147,13 @@ THE PROPOSAL NEVER IS FULLY CORRECT, WAS MADE BY AN IA, FIND THOSE DETAILS TO IM
     def __init__(
         self,
         llm,
-        tools=[tools.read_files, tools.move_files, tools.download_file],
+        tools=[tools.read_files, tools.move_files, tools.read_file_from_url],
         default_context_files=["PROJECT_OVERVIEW.md", "CODING_GUIDELINES.md"],
     ):
         system_message = combine_prompts(
             BASE_PROMPT,
             self.domain_prompt,
+            OUTPUT_STRUCTURE_PROMPT_READ_ONLY if config.read_only else OUTPUT_STRUCTURE_PROMPT_WRITE,
             FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
         )
         super().__init__(
@@ -207,12 +207,13 @@ When creating a plan, follow this structure:
     def __init__(
         self,
         llm,
-        tools=[tools.read_files, tools.move_files, tools.download_file],
+        tools=[tools.read_files, tools.move_files, tools.read_file_from_url],
         default_context_files=["PROJECT_OVERVIEW.md", "CODING_GUIDELINES.md"],
     ):
         system_message = combine_prompts(
             BASE_PROMPT,
             self.planning_prompt,
+            OUTPUT_STRUCTURE_PROMPT_READ_ONLY if config.read_only else OUTPUT_STRUCTURE_PROMPT_WRITE,
             FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
         )
         super().__init__(

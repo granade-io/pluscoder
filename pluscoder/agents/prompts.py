@@ -11,9 +11,9 @@ Always strive to understand the big picture of the project.
 """
 
 # Output structure
-OUTPUT_STRUCTURE_PROMPT = """
+OUTPUT_STRUCTURE_PROMPT_READ_ONLY = """
 *OUTPUT STRUCTURE*:
-Response EVERYTHING inside <thinking>, <output> and <source> blocks.
+Response EVERYTHING inside <thinking> and <output> blocks.
 
 I.e:
 
@@ -24,14 +24,9 @@ Your internal thinking process step by step to solve/accomplish the user request
 <output>
 Your step by step solution to the display to the user.
 </output>
-
-`filepath`
-<source>
-Add some code/markdown or any file content
-</source>
 """
 
-OUTPUT_STRUCTURE_PROMPT_EDITION = """
+OUTPUT_STRUCTURE_PROMPT_WRITE = """
 *OUTPUT STRUCTURE*:
 Response EVERYTHING inside <thinking>, <output> and <source> blocks.
 
@@ -65,51 +60,61 @@ FILE_OPERATIONS_PROMPT = """
     `<relative_file_path>`
     <source>
     >>> FIND
-    <content_to_replace>
+    1st line of context
+    2nd line of context
+    (lines of content to be replaced)
+    3nd line of context
+    4th line of context
     ===
-    <new_content>
+    1st line of context
+    2nd line of context
+    (lines of new content to replace in file)
+    3nd line of context
+    4th line of context
     <<< REPLACE
     </source>
-    
+
     I.e: Create a new file. No need for FIND and REPLACE when creating new files.
-    
+
     <output>
     ... explanation of the solution step ...
     </output>
-    
+
     `src/code.py`
     <source>
     print("Hello!")
     print("World!")
     </source>
-    
+
     I.e: Update a file. Including few aditional lines to avoid duplications.
-    
+
     <output>
     ... explanation of the solution step ...
     </output>
-    
+
     `src/code.py`
     <source>
     >>> FIND
     def sum(x, y):
         return x + y
     print(sum(1, 2))
+    print(sum(3, 4))
     ===
     def sum(x, y):
         return x + y
     def sub(x, y):
         return x - y
     print(sum(1, 2))
+    print(sum(3, 4))
     <<< REPLACE
     </source>
-    
+
     I.e: Markdown file:
-    
+
     <output>
     ... explanation of the solution step ...
     </output>
-    
+
     `file.md`
     <source>
     >>> FIND
@@ -124,25 +129,27 @@ FILE_OPERATIONS_PROMPT = """
     Section description
     <<< REPLACE
     </source>
-    
+
     I.e: Multiple replacements in same file:
-    
+
     <output>
     ... explanation of the solution step ...
     </output>
-    
+
     `utils.js`
     <source>
     >>> FIND
     const useInterval = true;
     const counter = 0;
+    const showDecimals = false;
     ===
     const useInterval = true;
     const counter = 0;
     const intervalMilliseconds = 1000;
+    const showDecimals = false;
     <<< REPLACE
     </source>
-    
+
     `utils.js`
     <source>
     >>> FIND
@@ -155,7 +162,7 @@ FILE_OPERATIONS_PROMPT = """
     </source>
 
 3. Multiple replacements in a single file are allowed.
-4. find content at FIND/REPLACE must *exact* match the content line per line and character per character with file content to edit
+4. Find content at FIND/REPLACE must *exact* match the content line per line and character per character with file content to edit
 5. Keep FIND/REPLACE blocks small ALWAYS including few more lines of context to generate correct replaces and avoid duplicates.
 6. NEVER use ** rest of code ** or similar placeholder when replacing file content
 7. When mentioning files, always use *full paths*, e.g., `docs/architecture.md`. *always* inside backticks
@@ -164,12 +171,30 @@ FILE_OPERATIONS_PROMPT = """
 REMINDER_PREFILL_PROMP = """
 ----- SYSTEM REMINDER -----
 !!! THIS MESSAGE WAS NOT WRITTEN BY THE USER, IS A REMINDER TO YOURSELF AS AN AI ASSISTANT
-Respond to the user's requirement above. Consider when aswering: 
-1. Base on overview and guidelines, read key files to fetch context about the user request. Read more important files that are *not* already read
-2. Think step by step a solution then give an step by step answer using proper block structures.
+Respond to the user's requirement above. Consider when aswering:
+- Base on overview and guidelines, read key files to fetch context about the user request. Read more important files that are *not* already read to understand context
+- Think step by step a solution then give an step by step answer using proper block structures.
 """
 
 REMINDER_PREFILL_FILE_OPERATIONS_PROMPT = """
+- Use <source> block structure to edit files of your proposed solution, always with a content to be replaced (with some additional lines of context) and one to replace it:
+
+    `<relative_file_path>`
+    <source>
+    >>> FIND
+    1st line of context
+    2nd line of context
+    (lines of content to be replaced)
+    3nd line of context
+    4th line of context
+    ===
+    1st line of context
+    2nd line of context
+    (lines of new content to replace in file)
+    3nd line of context
+    4th line of context
+    <<< REPLACE
+    </source>
 """
 
 

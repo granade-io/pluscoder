@@ -107,7 +107,10 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         return self.system_message
 
     def get_reminder_prefill(self, state: AgentState) -> str:
-        return REMINDER_PREFILL_PROMP + REMINDER_PREFILL_FILE_OPERATIONS_PROMPT
+        prompt = REMINDER_PREFILL_PROMP
+        if not config.read_only:
+            prompt += REMINDER_PREFILL_FILE_OPERATIONS_PROMPT
+        return prompt
 
     def build_assistant_prompt(self, state: AgentState, deflection_messages: list):
         # last_message = state["messages"][-1]
