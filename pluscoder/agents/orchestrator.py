@@ -190,9 +190,7 @@ You *must follow* following rules when suggesting a task list:
     def get_reminder_prefill(self, state: AgentState) -> str:
         # Default prompt
         if state["status"] == "active":
-            return combine_prompts(
-                REMINDER_PREFILL_PROMP
-            )
+            return combine_prompts(REMINDER_PREFILL_PROMP)
         return ""
 
     def get_tool_choice(self, state: AgentState) -> str:

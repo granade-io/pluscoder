@@ -42,8 +42,12 @@ class CustomAgent(Agent):
         return combine_prompts(
             BASE_PROMPT,
             self.custom_prompt,
-            OUTPUT_STRUCTURE_PROMPT_READ_ONLY if config.read_only else OUTPUT_STRUCTURE_PROMPT_WRITE,
-            FILE_OPERATIONS_PROMPT if not self.read_only and not config.read_only else READONLY_MODE_PROMPT,
+            OUTPUT_STRUCTURE_PROMPT_READ_ONLY
+            if config.read_only
+            else OUTPUT_STRUCTURE_PROMPT_WRITE,
+            FILE_OPERATIONS_PROMPT
+            if not self.read_only and not config.read_only
+            else READONLY_MODE_PROMPT,
         )
 
     def process_agent_response(self, state, response):
@@ -54,5 +58,7 @@ class CustomAgent(Agent):
     def get_reminder_prefill(self, state: AgentState) -> str:
         return combine_prompts(
             REMINDER_PREFILL_PROMP,
-            REMINDER_PREFILL_FILE_OPERATIONS_PROMPT if not config.read_only and not self.read_only else ""
+            REMINDER_PREFILL_FILE_OPERATIONS_PROMPT
+            if not config.read_only and not self.read_only
+            else "",
         )

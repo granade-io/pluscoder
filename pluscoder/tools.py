@@ -1,6 +1,7 @@
 import re
 import shutil
 from typing import Annotated, Dict, List, Literal
+from urllib.parse import urlparse
 
 import requests
 from langchain_core.tools import tool
@@ -10,16 +11,43 @@ from pluscoder.io_utils import io
 from pluscoder.type import AgentTask
 
 
+def convert_to_raw_url(url: str) -> str:
+    """Convert repository URL to raw file URL."""
+    parsed_url = urlparse(url)
+    path_parts = parsed_url.path.split("/")
+
+    if parsed_url.netloc == "github.com":
+        if len(path_parts) >= 5 and path_parts[3] == "blob":
+            return f"https://raw.githubusercontent.com/{path_parts[1]}/{path_parts[2]}/{'/'.join(path_parts[4:])}"
+    elif parsed_url.netloc == "gitlab.com" and "/-/blob/" in parsed_url.path:
+        return url.replace("/-/blob/", "/-/raw/", 1)
+    # elif parsed_url.netloc == "bitbucket.org":
+    #     if len(path_parts) >= 5 and path_parts[3] == "src":
+    #         return f"https://bitbucket.org/{path_parts[1]}/{path_parts[2]}/raw/{'/'.join(path_parts[4:])}"
+    # elif (
+    #     parsed_url.netloc == "dev.azure.com"
+    #     and len(path_parts) >= 7
+    #     and path_parts[5] == "blob"
+    # ):
+    #     org, project = path_parts[1], path_parts[2]
+    #     repo = path_parts[4]
+    #     branch_and_file = "/".join(path_parts[6:])
+    #     return f"https://dev.azure.com/{org}/{project}/_apis/git/repositories/{repo}/items?path=/{branch_and_file}&api-version=6.0"
+
+    return url  # Return original URL if not a recognized repository link
+
+
 @tool
 def read_file_from_url(url: Annotated[str, "The URL of the file to read."]) -> str:
-    """Reads the content of a file given its URL."""
+    """Reads the content of a file given its URL or repository link."""
     try:
-        response = requests.get(url)
+        raw_url = convert_to_raw_url(url)
+        response = requests.get(raw_url)
         response.raise_for_status()
         content = response.text
         return f"Here is the content of the file:\n\n{content}"
     except requests.RequestException as e:
-        return f"Error downloading file: {e!s}"
+        return f"Error downloading file: {e!s}. It is possible that the given link is not a valid file or url"
 
 
 @tool

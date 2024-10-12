@@ -1,10 +1,14 @@
 import pytest
+import requests
+from unittest.mock import patch, Mock
 
 from pluscoder.tools import (
     file_detection_with_confirmation,
     move_files,
     read_files,
     update_file,
+    read_file_from_url,
+    convert_to_raw_url,
 )
 
 
@@ -133,3 +137,58 @@ def test_move_files_one_failed(tmp_path):
     assert (dest_dir / "file1.txt").exists()
     assert not file1.exists()
     assert not (dest_dir / "nonexistent.txt").exists()
+
+
+def test_convert_to_raw_url():
+    # Test GitHub repository URL
+    github_url = "https://github.com/user/repo/blob/main/file.txt"
+    expected_github_raw = "https://raw.githubusercontent.com/user/repo/main/file.txt"
+    assert convert_to_raw_url(github_url) == expected_github_raw
+
+    # Test GitLab repository URL
+    gitlab_url = "https://gitlab.com/user/repo/-/blob/main/file.txt"
+    expected_gitlab_raw = "https://gitlab.com/user/repo/-/raw/main/file.txt"
+    assert convert_to_raw_url(gitlab_url) == expected_gitlab_raw
+
+    # Test Bitbucket repository URL
+    # bitbucket_url = "https://bitbucket.org/user/repo/src/main/file.txt"
+    # expected_bitbucket_raw = "https://bitbucket.org/user/repo/raw/main/file.txt"
+    # assert convert_to_raw_url(bitbucket_url) == expected_bitbucket_raw
+
+    # # Test Azure DevOps repository URL
+    # azure_url = "https://dev.azure.com/org/project/_git/repo/blob/main/file.txt"
+    # expected_azure_raw = "https://dev.azure.com/org/project/_apis/git/repositories/repo/items?path=/main/file.txt&api-version=6.0"
+    # assert convert_to_raw_url(azure_url) == expected_azure_raw
+
+    # Test non-repository URL
+    other_url = "https://example.com/file.txt"
+    assert convert_to_raw_url(other_url) == other_url
+
+
+@patch('requests.get')
+def test_read_file_from_url(mock_get):
+    # Mock the requests.get method
+    mock_response = Mock()
+    mock_response.text = "File content"
+    mock_response.raise_for_status.return_value = None
+    mock_get.return_value = mock_response
+
+    # Test with a regular URL
+    result = read_file_from_url.run({"url": "https://example.com/file.txt"})
+    assert "File content" in result
+    mock_get.assert_called_with("https://example.com/file.txt")
+
+    # Test with a GitHub repository URL
+    github_url = "https://github.com/user/repo/blob/main/file.txt"
+    result = read_file_from_url.run({"url": github_url})
+    assert "File content" in result
+    mock_get.assert_called_with("https://raw.githubusercontent.com/user/repo/main/file.txt")
+
+
+@patch('requests.get')
+def test_read_file_from_url_error(mock_get):
+    # Mock the requests.get method to raise an exception
+    mock_get.side_effect = requests.RequestException("Error")
+
+    result = read_file_from_url.run({"url": "https://example.com/file.txt"})
+    assert "Error downloading file" in result

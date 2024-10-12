@@ -52,7 +52,8 @@ def sum_token_usage(accumulated: TokenUsage, new: TokenUsage) -> TokenUsage:
         return {
             "total_tokens": accumulated["total_tokens"] + new["total_tokens"],
             "prompt_tokens": accumulated["prompt_tokens"] + new["prompt_tokens"],
-            "completion_tokens": accumulated["completion_tokens"] + new["completion_tokens"],
+            "completion_tokens": accumulated["completion_tokens"]
+            + new["completion_tokens"],
             "total_cost": accumulated["total_cost"] + new["total_cost"],
         }
 
@@ -67,7 +68,8 @@ def sum_token_usage(accumulated: TokenUsage, new: TokenUsage) -> TokenUsage:
         "prompt_tokens": prompt_tokens,
         "completion_tokens": completion_tokens,
         "total_cost": (
-            prompt_tokens * input_cost_per_token + completion_tokens * output_cost_per_token
+            prompt_tokens * input_cost_per_token
+            + completion_tokens * output_cost_per_token
         ),
     }
 

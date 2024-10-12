@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import asyncio
+import sys
 
 from rich.prompt import Prompt
 
@@ -125,7 +126,8 @@ def main() -> None:
         warnings = run_silent_checks()
         for warning in warnings:
             io.console.print(f"Warning: {warning}", style="bold dark_goldenrod")
-            io.confirm("Proceed anyways?")
+            if not io.confirm("Proceed anyways?"):
+                sys.exit(0)
 
         display_initial_messages()
 

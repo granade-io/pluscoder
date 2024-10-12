@@ -44,7 +44,9 @@ Guidelines:
         system_message = combine_prompts(
             BASE_PROMPT,
             self.developer_prompt,
-            OUTPUT_STRUCTURE_PROMPT_READ_ONLY if config.read_only else OUTPUT_STRUCTURE_PROMPT_WRITE,
+            OUTPUT_STRUCTURE_PROMPT_READ_ONLY
+            if config.read_only
+            else OUTPUT_STRUCTURE_PROMPT_WRITE,
             FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
         )
         super().__init__(
@@ -97,7 +99,9 @@ These are only example questions to help you understand the project vision and g
         system_message = combine_prompts(
             BASE_PROMPT,
             self.domain_prompt,
-            OUTPUT_STRUCTURE_PROMPT_READ_ONLY if config.read_only else OUTPUT_STRUCTURE_PROMPT_WRITE,
+            OUTPUT_STRUCTURE_PROMPT_READ_ONLY
+            if config.read_only
+            else OUTPUT_STRUCTURE_PROMPT_WRITE,
             FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
         )
         super().__init__(
@@ -153,7 +157,9 @@ THE PROPOSAL NEVER IS FULLY CORRECT, WAS MADE BY AN IA, FIND THOSE DETAILS TO IM
         system_message = combine_prompts(
             BASE_PROMPT,
             self.domain_prompt,
-            OUTPUT_STRUCTURE_PROMPT_READ_ONLY if config.read_only else OUTPUT_STRUCTURE_PROMPT_WRITE,
+            OUTPUT_STRUCTURE_PROMPT_READ_ONLY
+            if config.read_only
+            else OUTPUT_STRUCTURE_PROMPT_WRITE,
             FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
         )
         super().__init__(
@@ -213,7 +219,9 @@ When creating a plan, follow this structure:
         system_message = combine_prompts(
             BASE_PROMPT,
             self.planning_prompt,
-            OUTPUT_STRUCTURE_PROMPT_READ_ONLY if config.read_only else OUTPUT_STRUCTURE_PROMPT_WRITE,
+            OUTPUT_STRUCTURE_PROMPT_READ_ONLY
+            if config.read_only
+            else OUTPUT_STRUCTURE_PROMPT_WRITE,
             FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
         )
         super().__init__(

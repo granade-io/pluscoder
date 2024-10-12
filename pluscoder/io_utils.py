@@ -84,7 +84,9 @@ class CommandCompleter(Completer):
                         completion.start_position,
                         display=completion.display,
                     )
-                    for completion in self.file_completer.get_completions(document, complete_event)
+                    for completion in self.file_completer.get_completions(
+                        document, complete_event
+                    )
                 )
 
 
@@ -107,7 +109,10 @@ class FileNameCompleter(Completer):
         for filepath in repo_files:
             # splits filepath into directories and filename
             directories, filename = os.path.split(filepath)
-            if any(part.startswith(last_word) for part in directories.split(os.sep) + [filename]):
+            if any(
+                part.startswith(last_word)
+                for part in directories.split(os.sep) + [filename]
+            ):
                 yield Completion(filepath, start_position=-len(last_word))
 
 
@@ -171,7 +176,9 @@ class CustomProgress(Progress):
         return Text("".join(self.chunks), style=self.style)
 
     def get_renderable(self) -> ConsoleRenderable | RichCast | str:
-        renderable = Group(self.get_stream_renderable(), Rule(), *self.get_renderables())
+        renderable = Group(
+            self.get_stream_renderable(), Rule(), *self.get_renderables()
+        )
         return renderable
 
 
@@ -190,7 +197,9 @@ class IO:
         self.ctrl_c_count = 0
         self.last_input = ""
         self.buffer = ""  # Buffer para acumular los pequeños chunks
-        self.filepath_buffer = ""  # Buffer to store last 100 characters for filepath detection
+        self.filepath_buffer = (
+            ""  # Buffer to store last 100 characters for filepath detection
+        )
         self.in_block = False  # Indicador de si estamos dentro de un bloque
         self.block_content = ""  # Contenido dentro de un bloque
         self.block_type = ""
@@ -199,10 +208,14 @@ class IO:
         self.valid_blocks = {"thinking", "source"}
 
     def _check_block_start(self, text):
-        return re.match(r"^<(thinking|output|source)>", text.strip())  # Detectar inicio de bloque
+        return re.match(
+            r"^<(thinking|output|source)>", text.strip()
+        )  # Detectar inicio de bloque
 
     def _check_block_end(self, text):
-        return re.match(f"^</{self.block_type}>", text.strip())  # Detectar fin de bloque
+        return re.match(
+            f"^</{self.block_type}>", text.strip()
+        )  # Detectar fin de bloque
 
     def event(self, string: str):
         return self.console.print(string, style="yellow")
@@ -267,7 +280,9 @@ class IO:
         if config.auto_confirm:
             io.event("> Auto-confirming...")
             return True
-        return Confirm.ask(f"[green]{message}[/green]", console=self.console, default=True)
+        return Confirm.ask(
+            f"[green]{message}[/green]", console=self.console, default=True
+        )
 
     def log_to_debug_file(
         self, message: Optional[str] = None, json_data: Optional[dict] = None
@@ -343,7 +358,9 @@ class IO:
     def end_block(self) -> None:
         if self.block_type == "source":
             self.flush()
-            displayed = display_file_diff(self.block_content, self.current_filepath, self.console)
+            displayed = display_file_diff(
+                self.block_content, self.current_filepath, self.console
+            )
 
             # Fall back to display raw code if fails to display diff
             if not displayed and not config.hide_source_blocks:
@@ -383,7 +400,9 @@ class IO:
         # Update filepath_buffer
         first_chunk = self.filepath_buffer == ""
         self.filepath_buffer += chunk
-        self.filepath_buffer = self.filepath_buffer[-100:]  # Keep only last 100 characters
+        self.filepath_buffer = self.filepath_buffer[
+            -100:
+        ]  # Keep only last 100 characters
 
         # Update main buffer
         self.buffer += chunk
