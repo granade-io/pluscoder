@@ -54,6 +54,7 @@ def get_llm_base(model_id, provider):
             base_url=config.openai_api_base,
             api_key=config.openai_api_key,
             max_tokens=4096,
+            streaming=True,
         )
 
     # Uses Litellm

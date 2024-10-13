@@ -54,6 +54,31 @@ Multiple lines are supported.
     assert parse_block(test_input) == []
 
 
+
+def test_parse_block_merge():
+    test_input = """
+`file1.py`
+<source>
+def hello():
+    print("Hello, World!")
+</source>
+
+<source>
+This is some plain text content.
+Multiple lines are supported.
+</source>
+"""
+
+    expected_output = [
+        {
+            "file_path": "file1.py",
+            "content": 'def hello():\n    print("Hello, World!")\n\nThis is some plain text content.\nMultiple lines are supported.',
+        }
+    ]
+
+    assert parse_block(test_input) == expected_output
+
+
 def test_parse_mentioned_files():
     test_input = (
         "This text mentions `file1.py` and `file2.txt` as well as `another_file.md`."

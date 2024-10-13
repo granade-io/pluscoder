@@ -26,8 +26,11 @@ from pluscoder.type import AgentState
 
 
 def parse_block(text):
+    # Pre-process the text to merge multiple <source> blocks for the same file
+    merged_text = re.sub(r"</source>\s*<source>", "", text)
+
     pattern = r"`([^`\n]+):?`\n{1,2}^<source>\n(>>> FIND.*?===.*?<<< REPLACE|.*?)\n^<\/source>$"
-    matches = re.findall(pattern, text, re.DOTALL | re.MULTILINE)
+    matches = re.findall(pattern, merged_text, re.DOTALL | re.MULTILINE)
     return [{"file_path": m[0], "content": m[1].strip()} for m in matches]
 
 
