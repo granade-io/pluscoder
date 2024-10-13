@@ -53,7 +53,7 @@ x = 10
 
     error_msg = apply_block_update("test.py", block_content)
 
-    assert "Couldn't replace previous content at file `test.py`" in str(error_msg)
+    assert "Couldn't replace some changes at file `test.py`" in str(error_msg)
 
 
 @patch("pluscoder.fs.io")

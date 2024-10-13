@@ -172,12 +172,12 @@ REMINDER_PREFILL_PROMP = """
 ----- SYSTEM REMINDER -----
 !!! THIS MESSAGE WAS NOT WRITTEN BY THE USER, IS A REMINDER TO YOURSELF AS AN AI ASSISTANT
 Respond to the user's requirement above. Consider when aswering:
-- Base on overview and guidelines, read without by yourself asking key files to fetch context about the user request. Read more important files that are *not* already read to understand context
+- Base on your knowledge, read key files to fetch context about the user request. Read more important files that are *not* already read to understand context
 - Think step by step a solution then give an step by step answer using proper block structures.
 """
 
 REMINDER_PREFILL_FILE_OPERATIONS_PROMPT = """
-- Use <source> block structure to edit files of your proposed solution, always with a content to be replaced (with some additional lines of context) and one to replace it:
+- *Only* if need to edit files as part of the solution, use <source> blocks structure to edit files of your proposed solution, always with a content to be replaced (with some additional lines of context) and a content to replace it:
 
     `<relative_file_path>`
     <source>

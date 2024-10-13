@@ -4,7 +4,7 @@ from time import sleep
 from typing import List, Literal
 
 from langchain_community.callbacks.manager import get_openai_callback
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, merge_message_runs
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable, RunnableMap
 from langgraph.graph import StateGraph
@@ -71,6 +71,7 @@ class Agent:
         self.current_deflection = 0
         self.repo = Repository(io=io)
         self.state = None
+        self.disable_reminder = False
 
     def get_context_files(self, state):
         state_files = state.get("context_files") or []
@@ -131,9 +132,19 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
 
         context_files = self.get_context_files(state)
         files_content = get_formatted_files_content(context_files)
+
+        # reminders
+        reminder_messages = []
+        if not self.disable_reminder:
+            reminder_messages.append(
+                HumanMessage(content=self.get_reminder_prefill(state))
+            )
+
         assistant_prompt = RunnableMap(
             {
-                "messages": lambda x: state["messages"] + deflection_messages,
+                "messages": lambda x: merge_message_runs(
+                    state["messages"] + deflection_messages + reminder_messages
+                ),
                 "files_content": lambda x: files_content,
                 "repomap": lambda x: self.get_repomap() if config.use_repomap else "",
             }
@@ -174,6 +185,7 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         """When entering this agent graph, this function is the first node to be called"""
 
         self.get_context_files(state)
+        self.disable_reminder = False
         # io.event(self.get_context_files_panel(context_files))
 
         interaction_msgs = []
@@ -189,6 +201,9 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                     )
                     break
                 except AgentException as e:
+                    # Disable sysetem reminders when solving specific errors
+                    self.disable_reminder = True
+
                     # io.console.print(f"Error: {e!s}")
                     io.console.print(
                         "::re-thinking due an issue:: ", style="bold dark_goldenrod"

@@ -5,24 +5,32 @@ from typing import List
 from pluscoder.io_utils import io
 
 BLOCK_FORMAT = """
-`filepath`
+`<relative_file_path>`
 <source>
 >>> FIND
-<exact_match_old_content>
+1st line of context
+2nd line of context
+(lines of content to be replaced)
+3nd line of context
+4th line of context
 ===
-<new_content>
+1st line of context
+2nd line of context
+(lines of new content to put in file)
+3nd line of context
+4th line of context
 <<< REPLACE
 </source>
 """
-MSG_WRONG_FORMAT = f"""Invalid file update format when updating '%s' file. Please use the format: 
+MSG_WRONG_FORMAT = f"""Invalid file update format when updating '%s' file. Please use the format:
 {BLOCK_FORMAT}
 """
-MSG_FIND_NOT_FOUND = f"""Couldn't replace previous content at file `{{file_path}}`.
+MSG_FIND_NOT_FOUND = f"""Couldn't replace some changes at file `{{file_path}}`.
 
 Remember to use the format:
 {BLOCK_FORMAT}
 
-Remember to read `{{file_path}}` file content before editing and perform exact content match for replacements.
+Read the `{{file_path}}` file again, identify content that was not replaced properly and add them performing exact content match for replacements using the format above.
 """
 
 
