@@ -37,7 +37,6 @@ Guidelines:
 
     def __init__(
         self,
-        llm,
         tools=[tools.read_files, tools.move_files, tools.read_file_from_url],
         default_context_files=["PROJECT_OVERVIEW.md", "CODING_GUIDELINES.md"],
     ):
@@ -50,7 +49,6 @@ Guidelines:
             FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
         )
         super().__init__(
-            llm,
             system_message,
             "Developer Agent",
             tools=tools,
@@ -92,7 +90,6 @@ These are only example questions to help you understand the project vision and g
 
     def __init__(
         self,
-        llm,
         tools=[tools.read_files, tools.move_files, tools.read_file_from_url],
         default_context_files=["PROJECT_OVERVIEW.md"],
     ):
@@ -105,7 +102,6 @@ These are only example questions to help you understand the project vision and g
             FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
         )
         super().__init__(
-            llm,
             system_message,
             "Domain Stakeholder Agent",
             tools=tools,
@@ -150,7 +146,6 @@ THE PROPOSAL NEVER IS FULLY CORRECT, WAS MADE BY AN IA, FIND THOSE DETAILS TO IM
 
     def __init__(
         self,
-        llm,
         tools=[tools.read_files, tools.move_files, tools.read_file_from_url],
         default_context_files=["PROJECT_OVERVIEW.md", "CODING_GUIDELINES.md"],
     ):
@@ -163,7 +158,6 @@ THE PROPOSAL NEVER IS FULLY CORRECT, WAS MADE BY AN IA, FIND THOSE DETAILS TO IM
             FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
         )
         super().__init__(
-            llm,
             system_message,
             "Domain Expert Agent",
             tools=tools,
@@ -212,7 +206,6 @@ When creating a plan, follow this structure:
 
     def __init__(
         self,
-        llm,
         tools=[tools.read_files, tools.move_files, tools.read_file_from_url],
         default_context_files=["PROJECT_OVERVIEW.md", "CODING_GUIDELINES.md"],
     ):
@@ -225,7 +218,6 @@ When creating a plan, follow this structure:
             FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
         )
         super().__init__(
-            llm,
             system_message,
             "Planning Agent",
             tools=tools,

@@ -17,7 +17,6 @@ from pluscoder.type import AgentState
 class CustomAgent(Agent):
     def __init__(
         self,
-        llm,
         name: str,
         prompt: str,
         read_only: bool,
@@ -31,7 +30,6 @@ class CustomAgent(Agent):
         self.description = description
         system_message = self._get_system_message()
         super().__init__(
-            llm,
             system_message,
             name,
             tools=tools,

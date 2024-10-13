@@ -126,9 +126,8 @@ def mock_llm():
 
 
 @pytest.fixture
-def agent(mock_llm):
+def agent():
     return Agent(
-        llm=mock_llm,
         system_message="You are a helpful assistant.",
         name="TestAgent",
         tools=[],
@@ -172,14 +171,15 @@ def test_build_assistant_prompt(
 
 
 # @patch.object(Repository, 'generate_repomap')
+@patch("pluscoder.agents.base.get_llm")
 @patch("pluscoder.agents.base.get_formatted_files_content")
 @patch("pluscoder.agents.base.io")
 @patch("pluscoder.agents.base.file_callback")
 def test_call_agent(
-    mock_file_callback, mock_io, mock_get_formatted_files_content, agent, mock_llm
+    mock_file_callback, mock_io, mock_get_formatted_files_content, mock_get_llm, agent
 ) -> None:
     # mock_generate_repomap.return_value = "My Repomap"
-    mock_llm.bind_tools.return_value.return_value = AIMessage(
+    mock_get_llm.bind_tools.return_value.return_value = AIMessage(
         content="AI response with file mention `some_file.txt`"
     )
     # mock_get_formatted_files_content.return_value = "Mocked file content"

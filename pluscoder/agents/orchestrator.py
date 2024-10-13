@@ -9,6 +9,7 @@ from pluscoder.agents.prompts import (
     combine_prompts,
 )
 from pluscoder.message_utils import HumanMessage
+from pluscoder.model import get_orchestrator_llm
 from pluscoder.type import AgentInstructions
 
 
@@ -157,7 +158,6 @@ You *must follow* following rules when suggesting a task list:
 
     def __init__(
         self,
-        llm,
         tools=[tools.read_files],
         extraction_tools=[tools.delegate_tasks, tools.is_task_completed],
     ):
@@ -167,7 +167,6 @@ You *must follow* following rules when suggesting a task list:
             READONLY_MODE_PROMPT,
         )
         super().__init__(
-            llm,
             system_message,
             "Orchestrator Agent",
             tools=tools,
@@ -198,6 +197,9 @@ You *must follow* following rules when suggesting a task list:
         if state["status"] == "delegating":
             return tools.is_task_completed.name
         return "auto"
+
+    def get_agent_model(self):
+        return get_orchestrator_llm()
 
     def is_agent_response(self, state: AgentState) -> bool:
         """

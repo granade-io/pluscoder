@@ -95,3 +95,30 @@ def test_config_precedence_empty_configs():
             assert config.display_internal_outputs is False
             assert config.overview_filename == "PROJECT_OVERVIEW.md"
             assert config.log_filename == "pluscoder.log"
+
+
+def test_update_method_non_persisting():
+    with patch.object(sys, "argv", ["config.py"]):
+        config = Settings(_env_file=None, ignore_yaml=True)
+        
+        # Initial values
+        assert config.streaming is True
+        assert config.model == "anthropic.claude-3-5-sonnet-20240620-v1:0"
+        
+        # Update without persisting
+        config.update(streaming=False, model="new-model", persist=False)
+        
+        # Check if values are updated in the instance
+        assert config.streaming is False
+        assert config.model == "new-model"
+        
+        # Ensure YAML file hasn't been modified
+        with open(".pluscoder-config.yml", "r") as f:
+            yaml_content = f.read()
+        assert "streaming: false" not in yaml_content
+        assert "model: new-model" not in yaml_content
+        
+        # Re-initialize to check if changes persist
+        new_config = Settings(_env_file=None, ignore_yaml=True)
+        assert new_config.streaming is True
+        assert new_config.model == "anthropic.claude-3-5-sonnet-20240620-v1:0"

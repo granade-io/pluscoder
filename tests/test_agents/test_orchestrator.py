@@ -9,7 +9,7 @@ from pluscoder.message_utils import HumanMessage
 
 @pytest.fixture
 def orchestrator_agent():
-    return OrchestratorAgent(llm=None)  # We don't need a real LLM for these tests
+    return OrchestratorAgent()  # We don't need a real LLM for these tests
 
 
 def test_is_agent_response_empty_state(orchestrator_agent):

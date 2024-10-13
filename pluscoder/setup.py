@@ -29,6 +29,7 @@ CONFIG_TEMPLATE = """
 # display_internal_outputs: false # Display internal agent outputs
 # auto_confirm: false             # Auto-confirm pluscoder execution
 # init: true                      # Enable/disable initial setup
+# initialized: false              # Pluscoder was or not initialized
 # read_only: false                # Enable/disable read-only mode
 # user_input: ""                  # Predefined user input
 
@@ -190,7 +191,7 @@ def prompt_for_config():
         elif isinstance(default, float):
             value = Prompt.ask(prompt, default=str(default), validator=float)
         else:
-            value = Prompt.ask(prompt, default=str(default))
+            value = Prompt.ask(prompt, default=str(default) if default is not None else "null")
 
         # Update the config text with the new value
         example_config_text = re.sub(
@@ -386,6 +387,9 @@ def initialize_repository():
         )
         return
 
+    # Update the 'initialized' field in persistent mode
+    config.update(initialized='true', persist=True)
+
     io.event("> Repository initialization completed.")
     io.console.print(
         "Files `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md` were generated and will be used as context for Pluscoder.\n"
@@ -399,7 +403,7 @@ def setup() -> bool:
     # TODO: Get repository path from config
     repo = Repository(io=io)
 
-    if not Path(CONFIG_FILE).exists() and config.init:
+    if not Path(CONFIG_FILE).exists() or not config.initialized and config.init:
         io.console.print(
             "Welcome to Pluscoder! Let's customize your project configuration.",
             style="bold green",
@@ -408,8 +412,10 @@ def setup() -> bool:
         # Load example config and prompt for configuration
         config_data = prompt_for_config()
 
-        # Write the updated config
+        # Write the updated config & update re-initialize config
         write_yaml(CONFIG_FILE, config_data)
+        config.__init__(**{})
+
         repo.create_default_files()
 
         io.event(f"> Configuration saved to {CONFIG_FILE}.")

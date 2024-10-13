@@ -21,6 +21,7 @@ from pluscoder.fs import apply_block_update, get_formatted_files_content
 from pluscoder.io_utils import io
 from pluscoder.logs import file_callback
 from pluscoder.message_utils import HumanMessage, get_message_content_str
+from pluscoder.model import get_llm
 from pluscoder.repo import Repository
 from pluscoder.type import AgentState
 
@@ -31,7 +32,7 @@ def parse_block(text):
         r"^<\/source>$(?!\n*`[^\s]+`\n*<source>)[^(?>$<)]*<source>",
         "",
         text,
-        flags=re.DOTALL|re.MULTILINE,
+        flags=re.DOTALL | re.MULTILINE,
     )
 
     pattern = r"`([^`\n]+):?`\n{1,2}^<source>\n(>>> FIND.*?===.*?<<< REPLACE|.*?)\n^<\/source>$"
@@ -54,7 +55,6 @@ class Agent:
 
     def __init__(
         self,
-        llm,
         system_message: str,
         name: str,
         tools=[],
@@ -62,7 +62,6 @@ class Agent:
         default_context_files: List[str] = [],
     ):
         self.name = name
-        self.llm = llm
         self.system_message = system_message
         self.tools = tools
         self.extraction_tools = extraction_tools
@@ -153,11 +152,15 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         """Chooses a the tool to use when calling the llm"""
         return "auto"
 
+    def get_agent_model(self):
+        return get_llm()
+
     def _invoke_llm_chain(self, state: AgentState, deflection_messages: List[str] = []):
         assistant_prompt = self.build_assistant_prompt(
             state, deflection_messages=deflection_messages
         )
-        chain: Runnable = assistant_prompt | self.llm.bind_tools(
+        llm = self.get_agent_model()
+        chain: Runnable = assistant_prompt | llm.bind_tools(
             self.tools + self.extraction_tools, tool_choice=self.get_tool_choice(state)
         )
         response = chain.invoke(

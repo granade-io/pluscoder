@@ -33,17 +33,16 @@ llm = get_llm()
 orchestrator_llm = get_orchestrator_llm()
 
 # Create the vision agent
-orchestrator_agent = OrchestratorAgent(orchestrator_llm)
-domain_stakeholder_agent = DomainStakeholderAgent(llm)
-planning_agent = PlanningAgent(llm)
-developer_agent = DeveloperAgent(llm)
-domain_expert_agent = DomainExpertAgent(llm)
+orchestrator_agent = OrchestratorAgent()
+domain_stakeholder_agent = DomainStakeholderAgent()
+planning_agent = PlanningAgent()
+developer_agent = DeveloperAgent()
+domain_expert_agent = DomainExpertAgent()
 
 # Initialize custom agents
 custom_agents = []
 for agent_config in config.custom_agents:
     custom_agent = CustomAgent(
-        llm,
         name=agent_config["name"],
         prompt=agent_config["prompt"],
         description=agent_config["description"],

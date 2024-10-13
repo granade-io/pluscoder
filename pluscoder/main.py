@@ -84,7 +84,7 @@ def display_initial_messages():
         io.event("> Running on 'read-only' mode")
 
     io.console.print(
-        "Look at https://gitlab.com/codematos/pluscoder/-/blob/main/README.md for more documentation."
+        "Look at https://gitlab.com/codematos/pluscoder-repository/-/blob/main/README.md for more documentation."
     )
 
 

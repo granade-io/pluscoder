@@ -1,3 +1,4 @@
+import re
 import sys
 from typing import Any, Dict, List, Optional, Tuple, Type
 
@@ -82,6 +83,9 @@ class Settings(BaseSettings):
     # Application behavior
     init: CliImplicitFlag[bool] = Field(
         True, description="Enable/disable initial setup"
+    )
+    initialized: CliImplicitFlag[bool] = Field(
+        False, description="Pluscoder was or not initialized"
     )
     read_only: CliImplicitFlag[bool] = Field(
         False, description="Enable/disable read-only mode"
@@ -228,6 +232,31 @@ class Settings(BaseSettings):
             yaml_config = YamlConfigSettingsSource(settings_cls)
             return init_settings, dotenv_settings, yaml_config, env_settings
         return init_settings, dotenv_settings, env_settings
+
+    def update(self, persist: bool = False, **kwargs):
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+
+        if persist:
+            config_file = ".pluscoder-config.yml"
+            with open(config_file) as f:
+                config_text = f.read()
+
+            for option, value in kwargs.items():
+                config_text = re.sub(
+                    rf"^#?\s*{option}:.*$",
+                    f"{option}: {value}",
+                    config_text,
+                    flags=re.MULTILINE,
+                )
+
+            with open(config_file, "w") as f:
+                f.write(config_text)
+
+        # Re-execute initialization
+        new_config = {key: getattr(self, key) for key in self.__fields__}
+        self.__init__(**new_config)
 
 
 def get_settings():
