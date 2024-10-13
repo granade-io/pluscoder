@@ -191,7 +191,9 @@ def prompt_for_config():
         elif isinstance(default, float):
             value = Prompt.ask(prompt, default=str(default), validator=float)
         else:
-            value = Prompt.ask(prompt, default=str(default) if default is not None else "null")
+            value = Prompt.ask(
+                prompt, default=str(default) if default is not None else "null"
+            )
 
         # Update the config text with the new value
         example_config_text = re.sub(
@@ -388,7 +390,7 @@ def initialize_repository():
         return
 
     # Update the 'initialized' field in persistent mode
-    config.update(initialized='true', persist=True)
+    config.update(initialized="true", persist=True)
 
     io.event("> Repository initialization completed.")
     io.console.print(
