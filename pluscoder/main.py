@@ -16,6 +16,39 @@ from pluscoder.type import AgentState, TokenUsage
 from pluscoder.workflow import agent_dict, run_workflow
 
 
+def banner() -> None:
+    """Display the Pluscoder banner."""
+    io.console.print(
+        f"""
+[bold green]
+-------------------------------------------------------------------------------
+
+                      @@@@@@@   @@@@@@   @@@@@@@   @@@@@@@@  @@@@@@@
+                     @@@@@@@@  @@@@@@@@  @@@@@@@@  @@@@@@@@  @@@@@@@@
+             @@!     !@@       @@!  @@@  @@!  @@@  @@!       @@!  @@@
+             !@!     !@!       !@!  @!@  !@!  @!@  !@!       !@!  @!@
+          @!@!@!@!@  !@!       @!@  !@!  @!@  !@!  @!!!:!    @!@!!@!
+          !!!@!@!!!  !!!       !@!  !!!  !@!  !!!  !!!!!:    !!@!@!
+             !!:     :!!       !!:  !!!  !!:  !!!  !!:       !!: :!!
+             :!:     :!:       :!:  !:!  :!:  !:!  :!:       :!:  !:!
+                      ::: :::  ::::: ::   :::: ::   :: ::::  ::   :::
+                      :: :: :   : :  :   :: :  :   : :: ::    :   : :
+
+-------------------------------------------------------------------------------
+
+{'Looking for help, check the documentation at'.center(80)}
+
+{'https://gitlab.com/codematos/pluscoder-repository/-/blob/main/README.md'.center(80)}
+
+{'or type ´help´ to get started'.center(80)}
+
+-------------------------------------------------------------------------------
+[/bold green]
+
+"""
+    )
+
+
 def run_silent_checks():
     """Run tests and linter silently and return any warnings."""
     repo = Repository(io)
@@ -37,6 +70,8 @@ def run_silent_checks():
 
 def display_initial_messages():
     """Display initial message with the number of files detected by git, excluded files, and model information."""
+    banner()
+
     repo = Repository(io)
 
     # Get all tracked files (including those in the index) and untracked files
@@ -83,14 +118,8 @@ def display_initial_messages():
     if config.read_only:
         io.event("> Running on 'read-only' mode")
 
-    io.console.print(
-        "Look at https://gitlab.com/codematos/pluscoder-repository/-/blob/main/README.md for more documentation."
-    )
-
 
 # Run the workflow
-
-
 def choose_chat_agent_node():
     """Allows the user to choose which agent to chat with."""
 
