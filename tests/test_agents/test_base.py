@@ -67,12 +67,30 @@ def hello():
 This is some plain text content.
 Multiple lines are supported.
 </source>
+
+`file2.py`
+<source>
+1st source
+</source>
+
+Modify this other file:
+<source>
+2nd source
+</source>
+
+<source>
+3rd source
+</source>
 """
 
     expected_output = [
         {
             "file_path": "file1.py",
             "content": 'def hello():\n    print("Hello, World!")\n\nThis is some plain text content.\nMultiple lines are supported.',
+        },
+        {
+            "file_path": "file2.py",
+            "content": '1st source\n\n2nd source\n\n3rd source',
         }
     ]
 
