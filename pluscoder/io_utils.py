@@ -308,6 +308,7 @@ class IO:
 
     def start_stream(self):
         self.in_block = False
+        self.seen_nl = False
         if self.progress and not self.progress.started:
             self.progress.start()
 
@@ -397,8 +398,9 @@ class IO:
         #     self.buffer = ""
 
     def stream(self, chunk: str):
+        self.seen_nl = self.seen_nl or "\n<" in chunk
+
         # Update filepath_buffer
-        first_chunk = self.filepath_buffer == ""
         self.filepath_buffer += chunk
         self.filepath_buffer = self.filepath_buffer[
             -100:
@@ -410,7 +412,7 @@ class IO:
         # Look for block start/end with capturing group for block type
         start_match = re.search(
             r"\n<(thinking|output|source)>"
-            if not first_chunk
+            if self.seen_nl
             else r"\n?<(thinking|output|source)>",
             self.buffer,
         )
