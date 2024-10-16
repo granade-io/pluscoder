@@ -117,3 +117,9 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
+      - id: ruff-fmt
+        name: "  [fmt]: run the ruff formatter"
+        entry: ruff format .
+        language: system
+        pass_filenames: false
+        always_run: true
