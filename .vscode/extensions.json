@@ -9,6 +9,7 @@
         "ms-python.python",
         "ms-python.vscode-pylance",
         "tamasfe.even-better-toml",
+        "ms-azuretools.vscode-docker",
         // "bierner.markdown-mermaid",
         // "davidanson.vscode-markdownlint",
         // "ms-vsliveshare.vsliveshare",

@@ -2,10 +2,6 @@ image: node:latest
 
 stages:
   - prepare
-#   - build-wheel
-#   - create_release_macos
-#   - create_release_windows
-#   - create_release_linux
   - test
   - docker-build-push
   - release
@@ -41,35 +37,6 @@ prepare:
         - requirements.txt
         - Dockerfile
 
-# create_wheel:
-#   image: python:3.12
-#   stage: build-wheel
-#   script:
-#     - pip wheel tree-sitter-language-pack==0.2.0 --wheel-dir ./wheels
-#   artifacts:
-#     paths:
-#       - ./wheels/*.whl
-#     expire_in: 4 week
-#   cache:
-#     key:
-#       files:
-#         - requirements.txt  # Asume que tienes un archivo de requerimientos
-#     paths:
-#       - ./wheels
-#       - $PIP_CACHE_DIR
-#     policy: pull-push
-#   rules:
-#     - changes:
-#         - pluscoder/**/*
-#         - tests/**/*
-#         - requirements.txt
-#         - Dockerfile
-
-# TODO: create release package for MacOS, Windows and Linux
-# create_release_macos
-# create_release_windows
-# create_release_linux
-
 test:
   image: python:3.12
   stage: test
@@ -78,13 +45,12 @@ test:
       files:
         - requirements.txt
     paths:
-#       - ./wheels
       - $PIP_CACHE_DIR
     policy: pull
   before_script:
     - python --version
     - pip install --upgrade pip
-#    - pip install --no-index --find-links=./wheels tree-sitter-language-pack==0.2.0
+    # TODO: add requirements-dev.txt and requirements-test.txt
     - pip install -r requirements.txt
   script:
     - pytest
@@ -103,7 +69,7 @@ docker-build:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker build --build-arg WHEELS_DIR=./wheels -t $CI_REGISTRY_IMAGE:$NEXT_VERSION -t $CI_REGISTRY_IMAGE:latest .
+    - docker build -t $CI_REGISTRY_IMAGE:$NEXT_VERSION -t $CI_REGISTRY_IMAGE:latest .
     - docker push $CI_REGISTRY_IMAGE:$NEXT_VERSION
     - docker push $CI_REGISTRY_IMAGE:latest
   rules:
@@ -112,9 +78,6 @@ docker-build:
         - pluscoder/**/*
         - requirements.txt
         - Dockerfile
-  # artifacts:
-  #   paths:
-  #     - ./wheels
 
 release:
   image: node:latest

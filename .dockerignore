@@ -1,0 +1,10 @@
+# Python Build
+*.pyc
+*.pyo
+dist/*
+build/*
+.pluscoder
+.pytest_cache
+.ruff_cache
+.vscode
+*.egg-info
