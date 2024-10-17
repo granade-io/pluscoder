@@ -67,6 +67,9 @@ repos:
 
       - id: check-vcs-permalinks
         name: "[check]: ensures that links to vcs websites are permalinks"
+      
+      - id: detect-private-key
+        name: "[check]: detect private key"
 
   - repo: https://github.com/pre-commit/pygrep-hooks
     rev: v1.10.0
@@ -84,14 +87,14 @@ repos:
         name: "[check]: check for eval()"
 
   - repo: https://github.com/abravalheri/validate-pyproject
-    rev: v0.20.2
+    rev: v0.21
     hooks:
       - id: validate-pyproject
         name: "[check]: validate pyproject.toml"
         files: pyproject\.toml$
 
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: "2.3.0"
+    rev: "2.3.1"
     hooks:
       - id: pyproject-fmt
         name: "  [fix]: format pyproject.toml"
