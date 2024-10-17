@@ -1,5 +1,9 @@
 import subprocess
-from unittest.mock import ANY, MagicMock, Mock, patch, call
+from unittest.mock import ANY
+from unittest.mock import MagicMock
+from unittest.mock import Mock
+from unittest.mock import call
+from unittest.mock import patch
 
 import pytest
 from git import GitCommandError
@@ -24,9 +28,7 @@ def test_commit_clean_repo(mock_repo):
 
     assert result is True
     mock_repo_instance.git.add.assert_called_once_with(A=True)
-    mock_repo_instance.index.commit.assert_called_once_with(
-        "Test commit", author=ANY, committer=ANY
-    )
+    mock_repo_instance.index.commit.assert_called_once_with("Test commit", author=ANY, committer=ANY)
 
 
 def test_commit_dirty_repo_allowed(mock_repo):
@@ -41,9 +43,7 @@ def test_commit_dirty_repo_allowed(mock_repo):
 
         assert result is True
         mock_repo_instance.git.add.assert_called_once_with(A=True)
-        mock_repo_instance.index.commit.assert_called_once_with(
-            "Test commit", author=ANY, committer=ANY
-        )
+        mock_repo_instance.index.commit.assert_called_once_with("Test commit", author=ANY, committer=ANY)
 
 
 def test_commit_dirty_repo_not_allowed(mock_repo):
@@ -143,9 +143,7 @@ def test_get_tracked_files_successful(mock_repo):
 def test_get_tracked_files_git_error(mock_repo):
     mock_repo_instance = Mock()
     mock_repo.return_value = mock_repo_instance
-    mock_repo_instance.git.ls_files.side_effect = GitCommandError(
-        "git ls-files", "error"
-    )
+    mock_repo_instance.git.ls_files.side_effect = GitCommandError("git ls-files", "error")
 
     repo = Repository(io=io)
     result = repo.get_tracked_files()
@@ -190,9 +188,7 @@ def test_setup_all_files_exist(mock_isfile, mock_input, mock_repo):
 @patch("pluscoder.repo.open", new_callable=MagicMock)
 @patch("builtins.input", side_effect=["y", "y"])
 @patch("pluscoder.repo.config")
-def test_setup_missing_files_user_agrees(
-    mock_config, mock_input, mock_open, mock_isfile, mock_repo
-):
+def test_setup_missing_files_user_agrees(mock_config, mock_input, mock_open, mock_isfile, mock_repo):
     mock_isfile.side_effect = [
         False,
         False,
@@ -215,9 +211,7 @@ def test_setup_missing_files_user_agrees(
 @patch("pluscoder.repo.os.path.isfile")
 @patch("pluscoder.repo.open", new_callable=Mock)
 @patch("builtins.input", return_value="n")
-def test_setup_missing_files_user_disagrees(
-    mock_input, mock_open, mock_isfile, mock_repo
-):
+def test_setup_missing_files_user_disagrees(mock_input, mock_open, mock_isfile, mock_repo):
     mock_isfile.return_value = False
 
     repo = Repository(io=io)
@@ -240,11 +234,9 @@ def test_commit_with_custom_committer(mock_repo):
 
     assert result is True
     mock_repo_instance.git.add.assert_called_once_with(A=True)
-    mock_repo_instance.index.commit.assert_called_once_with(
-        "Test commit", author=ANY, committer=ANY
-    )
+    mock_repo_instance.index.commit.assert_called_once_with("Test commit", author=ANY, committer=ANY)
     # Check if the author and committer are set correctly
-    args, kwargs = mock_repo_instance.index.commit.call_args
+    _args, kwargs = mock_repo_instance.index.commit.call_args
     assert kwargs["author"].name == "Test User (pluscoder)"
     assert kwargs["author"].email == "test@example.com"
     assert kwargs["committer"].name == "Test User (pluscoder)"
@@ -269,7 +261,7 @@ def test_commit_with_specific_files(mock_repo):
         "Test commit with specific files", author=ANY, committer=ANY
     )
     # Check if the author and committer are set correctly
-    args, kwargs = mock_repo_instance.index.commit.call_args
+    _args, kwargs = mock_repo_instance.index.commit.call_args
     assert kwargs["author"].name == "Test User (pluscoder)"
     assert kwargs["author"].email == "test@example.com"
     assert kwargs["committer"].name == "Test User (pluscoder)"
@@ -314,9 +306,7 @@ def test_run_lint_success(mock_config, mock_subprocess_run):
     result = repo.run_lint()
 
     assert result is None
-    mock_subprocess_run.assert_called_with(
-        "pylint .", shell=True, check=True, capture_output=True, text=True
-    )
+    mock_subprocess_run.assert_called_with("pylint .", shell=True, check=True, capture_output=True, text=True)
 
 
 @patch("pluscoder.repo.subprocess.run")
@@ -344,18 +334,14 @@ def test_run_test_success(mock_config, mock_subprocess_run):
     result = repo.run_test()
 
     assert result is None
-    mock_subprocess_run.assert_called_once_with(
-        "pytest", shell=True, check=True, capture_output=True, text=True
-    )
+    mock_subprocess_run.assert_called_once_with("pytest", shell=True, check=True, capture_output=True, text=True)
 
 
 @patch("pluscoder.repo.subprocess.run")
 @patch("pluscoder.repo.config")
 def test_run_test_failure(mock_config, mock_subprocess_run):
     mock_config.test_command = "pytest"
-    mock_subprocess_run.side_effect = subprocess.CalledProcessError(
-        1, "pytest", stderr="Test failures found"
-    )
+    mock_subprocess_run.side_effect = subprocess.CalledProcessError(1, "pytest", stderr="Test failures found")
 
     repo = Repository(io=io)
     result = repo.run_test()

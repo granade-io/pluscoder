@@ -5,15 +5,19 @@ import sys
 from rich.prompt import Prompt
 
 from pluscoder.agents.custom import CustomAgent
-from pluscoder.commands import show_config, show_repo, show_repomap
+from pluscoder.commands import show_config
+from pluscoder.commands import show_repo
+from pluscoder.commands import show_repomap
 from pluscoder.config import config
 from pluscoder.display_utils import display_agent
 from pluscoder.io_utils import io
 from pluscoder.model import get_inferred_provider
 from pluscoder.repo import Repository
 from pluscoder.setup import setup
-from pluscoder.type import AgentState, TokenUsage
-from pluscoder.workflow import agent_dict, run_workflow
+from pluscoder.type import AgentState
+from pluscoder.type import TokenUsage
+from pluscoder.workflow import agent_dict
+from pluscoder.workflow import run_workflow
 
 
 def banner() -> None:
@@ -56,15 +60,11 @@ def run_silent_checks():
 
     test_result = repo.run_test()
     if test_result:
-        warnings.append(
-            "Tests are failing. This may lead to issues when editing files."
-        )
+        warnings.append("Tests are failing. This may lead to issues when editing files.")
 
     lint_result = repo.run_lint()
     if lint_result:
-        warnings.append(
-            "Linter checks are failing. This may lead to issues when editing files."
-        )
+        warnings.append("Linter checks are failing. This may lead to issues when editing files.")
     return warnings
 
 
@@ -76,8 +76,7 @@ def display_initial_messages():
 
     # Get all tracked files (including those in the index) and untracked files
     all_files = set(
-        repo.repo.git.ls_files().splitlines()
-        + repo.repo.git.ls_files(others=True, exclude_standard=True).splitlines()
+        repo.repo.git.ls_files().splitlines() + repo.repo.git.ls_files(others=True, exclude_standard=True).splitlines()
     )
 
     # Get tracked files after applying exclusion patterns
@@ -86,15 +85,11 @@ def display_initial_messages():
     # Calculate the number of excluded files
     excluded_files_count = len(all_files) - len(tracked_files)
 
-    io.event(
-        f"> Files detected by git: {len(tracked_files)} (excluded: {excluded_files_count})"
-    )
+    io.event(f"> Files detected by git: {len(tracked_files)} (excluded: {excluded_files_count})")
 
     # Get model and provider information
     main_provider = get_inferred_provider()
-    orchestrator_model = (
-        config.orchestrator_model if config.orchestrator_model else config.model
-    )
+    orchestrator_model = config.orchestrator_model if config.orchestrator_model else config.model
     orchestrator_provider = config.orchestrator_model_provider or main_provider
     weak_model = config.weak_model if config.weak_model else config.model
     weak_provider = config.weak_model_provider or main_provider
@@ -148,11 +143,7 @@ def display_agent_list():
     """Display the list of available agents with their indices."""
     io.console.print("\n[bold green]Available agents:[/bold green]")
     for i, (_agent_id, agent) in enumerate(agent_dict.items(), 1):
-        agent_type = (
-            "[cyan]Custom[/cyan]"
-            if isinstance(agent, CustomAgent)
-            else "[yellow]Predefined[/yellow]"
-        )
+        agent_type = "[cyan]Custom[/cyan]" if isinstance(agent, CustomAgent) else "[yellow]Predefined[/yellow]"
         io.console.print(f"{i}. {display_agent(agent, agent_type)}")
 
 
@@ -193,18 +184,13 @@ def main() -> None:
         if config.default_agent and (
             # Check if valid number
             config.default_agent.isdigit()
-            and (
-                int(config.default_agent) < 1
-                or int(config.default_agent) > len(agent_dict)
-            )
+            and (int(config.default_agent) < 1 or int(config.default_agent) > len(agent_dict))
             # Check if valid name
             or not config.default_agent.isdigit()
             and config.default_agent not in agent_dict
         ):
             display_agent_list()
-            io.console.print(
-                f"Error: Invalid agent: {config.default_agent}", style="bold red"
-            )
+            io.console.print(f"Error: Invalid agent: {config.default_agent}", style="bold red")
             sys.exit(1)
 
         warnings = run_silent_checks()

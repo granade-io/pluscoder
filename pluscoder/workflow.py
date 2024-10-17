@@ -2,27 +2,32 @@ import functools
 import warnings
 
 from langchain_core.globals import set_debug
-from langgraph.graph import END, START, StateGraph
+from langgraph.graph import END
+from langgraph.graph import START
+from langgraph.graph import StateGraph
 from rich.markdown import Markdown
 from rich.rule import Rule
 
-from pluscoder.agents.base import Agent, AgentState
-from pluscoder.agents.core import (
-    DeveloperAgent,
-    DomainExpertAgent,
-    DomainStakeholderAgent,
-    PlanningAgent,
-)
+from pluscoder.agents.base import Agent
+from pluscoder.agents.base import AgentState
+from pluscoder.agents.core import DeveloperAgent
+from pluscoder.agents.core import DomainExpertAgent
+from pluscoder.agents.core import DomainStakeholderAgent
+from pluscoder.agents.core import PlanningAgent
 from pluscoder.agents.custom import CustomAgent
 from pluscoder.agents.event.config import event_emitter
 from pluscoder.agents.orchestrator import OrchestratorAgent
-from pluscoder.commands import handle_command, is_command
+from pluscoder.commands import handle_command
+from pluscoder.commands import is_command
 from pluscoder.config import config
 from pluscoder.io_utils import io
-from pluscoder.message_utils import HumanMessage, get_message_content_str
-from pluscoder.model import get_llm, get_orchestrator_llm
+from pluscoder.message_utils import HumanMessage
+from pluscoder.message_utils import get_message_content_str
+from pluscoder.model import get_llm
+from pluscoder.model import get_orchestrator_llm
 from pluscoder.state_utils import accumulate_token_usage
-from pluscoder.type import OrchestrationState, TokenUsage
+from pluscoder.type import OrchestrationState
+from pluscoder.type import TokenUsage
 
 set_debug(False)
 
@@ -75,8 +80,8 @@ def user_input(state: OrchestrationState):
 
     if is_command(user_input):
         # Commands handles the update to state
-        updated_state = handle_command(user_input, state=state)
-        return updated_state
+        # updated_state
+        return handle_command(user_input, state=state)
 
     # Routes messages to the chosen agent
     chat_agent_id = state["chat_agent"] + "_state"
@@ -86,8 +91,7 @@ def user_input(state: OrchestrationState):
         "return_to_user": False,
         chat_agent_id: {
             **chat_agent_state,
-            "messages": chat_agent_state["messages"]
-            + [HumanMessage(content=user_input)],
+            "messages": chat_agent_state["messages"] + [HumanMessage(content=user_input)],
         },
     }
 
@@ -103,9 +107,7 @@ def user_router(state: OrchestrationState):
         return state["chat_agent"]
 
     user_message = state[state["chat_agent"] + "_state"]["messages"][-1].content
-    user_input = (
-        user_message.strip().lower() if type(user_message) is str else user_message
-    )
+    user_input = user_message.strip().lower() if type(user_message) is str else user_message
 
     # On empty user inputs return to the user
     if not user_input:
@@ -130,9 +132,7 @@ def router(state: OrchestrationState):
 
     # When summarizing result into a response or when there are no more tasks, end the interaction if user_input is defined or is a task list workflow
     if orch_state["status"] == "summarizing" or task is None:
-        return (
-            END if config.user_input or state["is_task_list_workflow"] else "user_input"
-        )
+        return END if config.user_input or state["is_task_list_workflow"] else "user_input"
 
     # When delegating always delegate to other agents
     if orch_state["status"] == "delegating":
@@ -191,9 +191,7 @@ async def agent_node(state: OrchestrationState, agent: Agent) -> OrchestrationSt
     return {**state, agent.id + "_state": {**agent_state, **agent_state_output}}
 
 
-async def orchestrator_agent_node(
-    state: OrchestrationState, agent: OrchestratorAgent
-) -> OrchestrationState:
+async def orchestrator_agent_node(state: OrchestrationState, agent: OrchestratorAgent) -> OrchestrationState:
     """
     Agent node process its message list to return a new answer and a updated state
     Orchestrator acts as an user when talking to other agents.
@@ -226,10 +224,7 @@ async def orchestrator_agent_node(
     # Active behaviour when orchestrator receives a message
     if state["status"] == "active":
         # If user message and no active task (or are all completed)
-        if (
-            not orchestrator_agent.is_agent_response(state)
-            and not global_state["is_task_list_workflow"]
-        ):
+        if not orchestrator_agent.is_agent_response(state) and not global_state["is_task_list_workflow"]:
             # Display agent information
             io.console.print(Rule(agent.id))
 
@@ -278,13 +273,7 @@ async def orchestrator_agent_node(
                     target_agent,
                     {
                         "messages": target_agent_state["messages"]
-                        + [
-                            HumanMessage(
-                                content=orchestrator_agent.task_to_instruction(
-                                    task, state
-                                )
-                            )
-                        ]
+                        + [HumanMessage(content=orchestrator_agent.task_to_instruction(task, state))]
                     },
                 ),
             }
@@ -305,9 +294,7 @@ async def orchestrator_agent_node(
     target_agent_state = global_state[target_agent + "_state"]
 
     # Add response message from the executor agent to validate if the task has been completed
-    executor_agent_response = get_message_content_str(
-        target_agent_state["messages"][-1]
-    )
+    executor_agent_response = get_message_content_str(target_agent_state["messages"][-1])
     # state = {**state, "agent_messages": state["agent_messages"] + }
 
     # io.event(f"> [bold]Agent response received. Checking if task has been completed")
@@ -333,18 +320,16 @@ async def orchestrator_agent_node(
 
     if not agent.was_task_validation_tool_used(validation_response):
         # Task ALWAYS must be used when validating the current task
-        raise ValueError("Validation tool did not return a boolean value")
-    elif agent.validate_current_task_completed(validation_response) or (
+        msg = "Validation tool did not return a boolean value"
+        raise ValueError(msg)
+    if agent.validate_current_task_completed(validation_response) or (
         # Manual validation when max reflections are reached
-        global_state["current_agent_deflections"]
-        >= global_state["max_agent_deflections"]
+        global_state["current_agent_deflections"] >= global_state["max_agent_deflections"]
         and io.confirm(f"Was the task `{task["objective"]}` completed by the agent?")
     ):
         # Task has been completed. Move to next task
 
-        state_update = agent.mark_current_task_as_completed(
-            state, executor_agent_response
-        )
+        state_update = agent.mark_current_task_as_completed(state, executor_agent_response)
         await event_emitter.emit(
             "task_completed",
             agent_instructions=orchestrator_agent.get_agent_instructions(state_update),
@@ -354,9 +339,7 @@ async def orchestrator_agent_node(
         if agent.is_task_list_complete(state_update):
             await event_emitter.emit(
                 "task_list_completed",
-                agent_instructions=orchestrator_agent.get_agent_instructions(
-                    state_update
-                ),
+                agent_instructions=orchestrator_agent.get_agent_instructions(state_update),
             )
 
             # Display agent information
@@ -372,7 +355,7 @@ async def orchestrator_agent_node(
             final_response = await agent.graph_node(
                 {
                     **state_update,
-                    "status": "summarizing",  ## Next call to the orchestrator is to summarize the results
+                    "status": "summarizing",  # Next call to the orchestrator is to summarize the results
                     "messages": state_update["messages"]
                     + [
                         HumanMessage(
@@ -383,9 +366,7 @@ async def orchestrator_agent_node(
             )
 
             # no more tasks to delegate. Return to user by setting status to active. Resets the agent messages
-            return update_global_state(
-                agent.id, {**final_response, "status": "active", "agent_messages": []}
-            )
+            return update_global_state(agent.id, {**final_response, "status": "active", "agent_messages": []})
 
         io.event("> [bold]Task completed![/bold]")
 
@@ -393,9 +374,7 @@ async def orchestrator_agent_node(
         if not io.confirm("Do you want to proceed with next task?"):
             await event_emitter.emit(
                 "task_list_interrumpted",
-                agent_instructions=orchestrator_agent.get_agent_instructions(
-                    state_update
-                ),
+                agent_instructions=orchestrator_agent.get_agent_instructions(state_update),
             )
 
             # Return to user to give obtain more feedback & set status to active to allow agent to
@@ -423,11 +402,7 @@ async def orchestrator_agent_node(
             # Adds message to new agent
             f"{next_target_agent}_state": {
                 **AgentState.default(),
-                "messages": [
-                    HumanMessage(
-                        content=orchestrator_agent.task_to_instruction(task, state)
-                    )
-                ],
+                "messages": [HumanMessage(content=orchestrator_agent.task_to_instruction(task, state))],
             },
             # Update orchestrator with validation response
             f"{agent.id}_state": {
@@ -441,14 +416,9 @@ async def orchestrator_agent_node(
     # Task is still incomplete. Keep delegating to the same agent
     # io.event(f"> [bold]Task incompleted. Re-delegating. [/bold]")
 
-    if (
-        global_state["current_agent_deflections"]
-        >= global_state["max_agent_deflections"]
-    ):
+    if global_state["current_agent_deflections"] >= global_state["max_agent_deflections"]:
         # Max reflections reached and user does not confirm the task as completed.
-        io.event(
-            "> Max reflections reached. Validate changes and refine task list properly."
-        )
+        io.event("> Max reflections reached. Validate changes and refine task list properly.")
 
         await event_emitter.emit(
             "task_list_interrumpted",
@@ -468,35 +438,24 @@ async def orchestrator_agent_node(
     )
     global_updated = update_global_state(
         target_agent,
-        {
-            "messages": messages
-            + [HumanMessage(content=agent.task_to_instruction(task, state))]
-        },
+        {"messages": messages + [HumanMessage(content=agent.task_to_instruction(task, state))]},
     )
     global_updated = {
         **global_updated,
-        **update_global_state(
-            agent.id, {"agent_messages": validation_response["messages"]}
-        ),
+        **update_global_state(agent.id, {"agent_messages": validation_response["messages"]}),
         "current_agent_deflections": global_updated["current_agent_deflections"] + 1,
     }
-    return global_updated
+    return global_updated  # noqa: RET504
 
 
-orchestrator_agent_node = functools.partial(
-    orchestrator_agent_node, agent=orchestrator_agent
-)
-domain_stakeholder_agent_node = functools.partial(
-    agent_node, agent=domain_stakeholder_agent
-)
+orchestrator_agent_node = functools.partial(orchestrator_agent_node, agent=orchestrator_agent)
+domain_stakeholder_agent_node = functools.partial(agent_node, agent=domain_stakeholder_agent)
 planning_agent_node = functools.partial(agent_node, agent=planning_agent)
 developer_agent_node = functools.partial(agent_node, agent=developer_agent)
 domain_expert_agent_node = functools.partial(agent_node, agent=domain_expert_agent)
 
 # Create custom agent nodes
-custom_agent_nodes = {
-    agent.id: functools.partial(agent_node, agent=agent) for agent in custom_agents
-}
+custom_agent_nodes = {agent.id: functools.partial(agent_node, agent=agent) for agent in custom_agents}
 
 # Create the graph
 workflow = StateGraph(OrchestrationState)
@@ -537,9 +496,7 @@ app = workflow.compile()
 
 
 async def run_workflow(state: OrchestrationState) -> None:
-    async for event in app.astream_events(
-        state, config={"recursion_limit": 100}, version="v1"
-    ):
+    async for event in app.astream_events(state, config={"recursion_limit": 100}, version="v1"):
         kind = event["event"]
         if kind == "on_chain_end":
             pass

@@ -6,11 +6,15 @@ from pathlib import Path
 from rich.prompt import Prompt
 
 from pluscoder import tools
-from pluscoder.config import Settings, config
+from pluscoder.config import Settings
+from pluscoder.config import config
 from pluscoder.io_utils import io
 from pluscoder.repo import Repository
 from pluscoder.state_utils import get_model_token_info
-from pluscoder.type import AgentInstructions, AgentState, OrchestrationState, TokenUsage
+from pluscoder.type import AgentInstructions
+from pluscoder.type import AgentState
+from pluscoder.type import OrchestrationState
+from pluscoder.type import TokenUsage
 
 # TODO: Move this?
 CONFIG_FILE = ".pluscoder-config.yml"
@@ -161,8 +165,7 @@ def read_file_as_text(file_path):
 
 
 def load_example_config():
-    content = CONFIG_TEMPLATE
-    return content
+    return CONFIG_TEMPLATE
 
 
 def write_yaml(file_path, data):
@@ -182,18 +185,14 @@ def prompt_for_config():
         prompt = f"{option} ({description})"
 
         if isinstance(default, bool):
-            value = Prompt.ask(
-                prompt, default=str(default).lower(), choices=["true", "false"]
-            )
+            value = Prompt.ask(prompt, default=str(default).lower(), choices=["true", "false"])
             value = value.lower() == "true"
         elif isinstance(default, int):
             value = Prompt.ask(prompt, default=str(default), validator=int)
         elif isinstance(default, float):
             value = Prompt.ask(prompt, default=str(default), validator=float)
         else:
-            value = Prompt.ask(
-                prompt, default=str(default) if default is not None else "null"
-            )
+            value = Prompt.ask(prompt, default=str(default) if default is not None else "null")
 
         # Update the config text with the new value
         example_config_text = re.sub(
@@ -217,26 +216,20 @@ def additional_config():
         files_to_add = [file for file in files_to_ignore if file not in content]
 
         if files_to_add:
-            if io.confirm(
-                f"Do you want to add {', '.join(files_to_add)} to .gitignore?"
-            ):
+            if io.confirm(f"Do you want to add {', '.join(files_to_add)} to .gitignore?"):
                 with open(gitignore_path, "a") as f:
                     f.write("\n" + "\n".join(files_to_add) + "\n")
                 io.event(f"> Added {', '.join(files_to_add)} to .gitignore")
             else:
                 io.event("> No changes made to .gitignore")
         else:
-            io.event(
-                "> PROJECT_OVERVIEW.md and CODING_GUIDELINES.md are already in .gitignore"
-            )
+            io.event("> PROJECT_OVERVIEW.md and CODING_GUIDELINES.md are already in .gitignore")
     elif io.confirm(
         "> .gitignore file not found. Do you want to create it with PROJECT_OVERVIEW.md and CODING_GUIDELINES.md?"
     ):
         with open(gitignore_path, "w") as f:
             f.write("\n".join(files_to_ignore) + "\n")
-        io.event(
-            "> Created .gitignore with PROJECT_OVERVIEW.md and CODING_GUIDELINES.md"
-        )
+        io.event("> Created .gitignore with PROJECT_OVERVIEW.md and CODING_GUIDELINES.md")
     else:
         io.event("> Skipped creating .gitignore")
 
@@ -354,7 +347,6 @@ def initialize_repository():
         task_list=TASK_LIST,
         resources=[],
     ).dict()
-
     initial_state = OrchestrationState(
         **{
             "return_to_user": False,
@@ -379,10 +371,7 @@ def initialize_repository():
     config.auto_commits = auto_commits
 
     # Check if both files were created
-    if not (
-        Path(config.overview_file_path).exists()
-        and Path(config.guidelines_file_path).exists()
-    ):
+    if not (Path(config.overview_file_path).exists() and Path(config.guidelines_file_path).exists()):
         io.console.print(
             "Error: Could not create `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md`. Please try again.",
             style="bold red",
@@ -431,9 +420,7 @@ def setup() -> bool:
         if io.confirm("Do you want to initialize it now (takes ~1min)? (recommended)"):
             initialize_repository()
         else:
-            io.event(
-                "> Skipping initialization. You can run it later using the /init command."
-            )
+            io.event("> Skipping initialization. You can run it later using the /init command.")
     elif not Path(CONFIG_FILE).exists() and not config.init:
         io.event("> Skipping initialization due to --no-init flag.")
         # Path.touch(CONFIG_FILE)

@@ -1,6 +1,8 @@
 import subprocess
 from functools import wraps
-from typing import Callable, Dict, Union
+from typing import Callable
+from typing import Dict
+from typing import Union
 
 from pydantic import ValidationError
 from rich.panel import Panel
@@ -15,7 +17,8 @@ from pluscoder.display_utils import display_agent
 from pluscoder.io_utils import io
 from pluscoder.message_utils import HumanMessage
 from pluscoder.repo import Repository
-from pluscoder.type import AgentState, OrchestrationState
+from pluscoder.type import AgentState
+from pluscoder.type import OrchestrationState
 
 
 class CommandRegistry:
@@ -43,7 +46,7 @@ command_registry = CommandRegistry()
 def _clear(state: OrchestrationState):
     """Clear entire chat history"""
     # Filters values from dict where key ends with "_state"
-    for key, _value in state.items():
+    for key in state:
         if key.endswith("_state"):
             # Reset AgentState to default values
             state[key] = AgentState.default()
@@ -77,16 +80,12 @@ def diff(state: OrchestrationState):
 def config_command(state: OrchestrationState, key: str, value: str, *args):
     """Override any pluscoder configuration. e.g: `/config auto_commits false`"""
     if key not in config.__dict__:
-        io.console.print(
-            f"Error: '{key}' is not a valid configuration option.", style="bold red"
-        )
+        io.console.print(f"Error: '{key}' is not a valid configuration option.", style="bold red")
         return state
     old_value = getattr(config, key)
     try:
         config.__init__(**{key: value})
-        io.console.print(
-            f"Config updated: {key} = {getattr(config, key)} (was: {old_value})"
-        )
+        io.console.print(f"Config updated: {key} = {getattr(config, key)} (was: {old_value})")
     except ValidationError:
         io.console.print("Invalid value.", style="bold red")
 
@@ -99,7 +98,7 @@ def undo(state: OrchestrationState):
     repo = Repository(io=io)
     if repo.undo():
         # Filters values from dict where key ends with "_state"
-        for key, _value in state.items():
+        for key in state:
             if not key.endswith("_state") or len(state[key]["messages"]) < 1:
                 # Skip non-message-containing keys
                 continue
@@ -108,9 +107,8 @@ def undo(state: OrchestrationState):
             state[key]["messages"] = state[key]["messages"][:-1]
         io.event("Last commit reverted and last message removed from chat history.")
         return state
-    else:
-        io.console.print("Failed to revert last commit.", style="bold red")
-        return state
+    io.console.print("Failed to revert last commit.", style="bold red")
+    return state
 
 
 @command_registry.register("agent")
@@ -122,11 +120,7 @@ def agent(state: OrchestrationState):
     io.console.print("[bold green]Choose an agent to chat with:[/bold green]")
 
     for i, (_agent_id, agent) in enumerate(agent_dict.items(), 1):
-        agent_type = (
-            "[cyan]Custom[/cyan]"
-            if isinstance(agent, CustomAgent)
-            else "[yellow]Predefined[/yellow]"
-        )
+        agent_type = "[cyan]Custom[/cyan]" if isinstance(agent, CustomAgent) else "[yellow]Predefined[/yellow]"
         io.console.print(f"{i}. {display_agent(agent, agent_type)}")
 
     choice = Prompt.ask(
@@ -141,8 +135,7 @@ def agent(state: OrchestrationState):
     state["chat_agent"] = chosen_agent
 
     # Clear chats to start new conversations
-    cleared_state = _clear(state)
-    return cleared_state
+    return _clear(state)
 
 
 @command_registry.register("help")
@@ -165,7 +158,11 @@ def run_command(state: OrchestrationState, *args) -> OrchestrationState:
     command = " ".join(args)
     try:
         result = subprocess.run(
-            command, shell=True, check=True, capture_output=True, text=True
+            command,
+            shell=True,
+            check=True,
+            capture_output=True,
+            text=True,
         )
         output = result.stdout
         io.console.print(f"Command executed successfully:\n{output}")
@@ -250,17 +247,11 @@ def custom_command(state: OrchestrationState, prompt_name: str = "", *args):
         return state
 
     custom_prompt = next(
-        (
-            prompt
-            for prompt in config.custom_prompt_commands
-            if prompt["prompt_name"] == prompt_name
-        ),
+        (prompt for prompt in config.custom_prompt_commands if prompt["prompt_name"] == prompt_name),
         None,
     )
     if not custom_prompt:
-        io.console.print(
-            f"Error: Custom prompt '{prompt_name}' not found.", style="bold red"
-        )
+        io.console.print(f"Error: Custom prompt '{prompt_name}' not found.", style="bold red")
         return state
 
     user_input = " ".join(args)
@@ -275,20 +266,14 @@ def custom_command(state: OrchestrationState, prompt_name: str = "", *args):
     # Do not return to the user to execute agent with the added human message
     state["return_to_user"] = False
 
-    io.console.print(
-        f"Custom prompt '{prompt_name}' executed and added to {current_agent}'s message history."
-    )
+    io.console.print(f"Custom prompt '{prompt_name}' executed and added to {current_agent}'s message history.")
     return state
 
 
 def is_command(command: Union[str, dict]) -> bool:
     if isinstance(command, str):
         return command.strip().startswith("/")
-    elif (
-        isinstance(command, dict) and "type" in command and command["type"] == "command"
-    ):
-        return True
-    return False
+    return bool(isinstance(command, dict) and "type" in command and command["type"] == "command")
 
 
 def parse_command(command: str) -> Union[str, dict, None]:
@@ -306,7 +291,8 @@ def handle_command(command: str, state: OrchestrationState = None) -> bool:
     if parsed_command["type"] == "command":
         cmd_func = command_registry.get(parsed_command["command"])
         if cmd_func:
-            updated_sate = cmd_func(
+            # updated state
+            return cmd_func(
                 {
                     **state,
                     # All commands return to the user by default, can be overridden by each command
@@ -314,6 +300,5 @@ def handle_command(command: str, state: OrchestrationState = None) -> bool:
                 },
                 *parsed_command["args"],
             )
-            return updated_sate
 
     return state

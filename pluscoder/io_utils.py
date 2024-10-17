@@ -5,14 +5,22 @@ import re
 import sys
 import tempfile
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Union
 
 from PIL import ImageGrab
 from prompt_toolkit import PromptSession
-from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.completion import Completer
+from prompt_toolkit.completion import Completion
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.key_binding import KeyBindings
-from rich.console import Console, ConsoleRenderable, Group, RichCast
+from rich.console import Console
+from rich.console import ConsoleRenderable
+from rich.console import Group
+from rich.console import RichCast
 from rich.live import Live
 from rich.progress import Progress
 from rich.prompt import Confirm
@@ -68,10 +76,7 @@ class CommandCompleter(Completer):
                 # Complete custom prompt names
                 prompt_name = words[1]
                 for prompt in config.custom_prompt_commands:
-                    if (
-                        prompt["prompt_name"].startswith(prompt_name)
-                        and prompt_name != prompt["prompt_name"]
-                    ):
+                    if prompt["prompt_name"].startswith(prompt_name) and prompt_name != prompt["prompt_name"]:
                         yield Completion(
                             prompt["prompt_name"],
                             start_position=-len(prompt_name),
@@ -84,9 +89,7 @@ class CommandCompleter(Completer):
                         completion.start_position,
                         display=completion.display,
                     )
-                    for completion in self.file_completer.get_completions(
-                        document, complete_event
-                    )
+                    for completion in self.file_completer.get_completions(document, complete_event)
                 )
 
 
@@ -109,10 +112,7 @@ class FileNameCompleter(Completer):
         for filepath in repo_files:
             # splits filepath into directories and filename
             directories, filename = os.path.split(filepath)
-            if any(
-                part.startswith(last_word)
-                for part in directories.split(os.sep) + [filename]
-            ):
+            if any(part.startswith(last_word) for part in directories.split(os.sep) + [filename]):
                 yield Completion(filepath, start_position=-len(last_word))
 
 
@@ -176,10 +176,7 @@ class CustomProgress(Progress):
         return Text("".join(self.chunks), style=self.style)
 
     def get_renderable(self) -> ConsoleRenderable | RichCast | str:
-        renderable = Group(
-            self.get_stream_renderable(), Rule(), *self.get_renderables()
-        )
-        return renderable
+        return Group(self.get_stream_renderable(), Rule(), *self.get_renderables())
 
 
 class IO:
@@ -197,9 +194,7 @@ class IO:
         self.ctrl_c_count = 0
         self.last_input = ""
         self.buffer = ""  # Buffer para acumular los pequeños chunks
-        self.filepath_buffer = (
-            ""  # Buffer to store last 100 characters for filepath detection
-        )
+        self.filepath_buffer = ""  # Buffer to store last 100 characters for filepath detection
         self.in_block = False  # Indicador de si estamos dentro de un bloque
         self.block_content = ""  # Contenido dentro de un bloque
         self.block_type = ""
@@ -208,14 +203,10 @@ class IO:
         self.valid_blocks = {"thinking", "source"}
 
     def _check_block_start(self, text):
-        return re.match(
-            r"^<(thinking|output|source)>", text.strip()
-        )  # Detectar inicio de bloque
+        return re.match(r"^<(thinking|output|source)>", text.strip())  # Detectar inicio de bloque
 
     def _check_block_end(self, text):
-        return re.match(
-            f"^</{self.block_type}>", text.strip()
-        )  # Detectar fin de bloque
+        return re.match(f"^</{self.block_type}>", text.strip())  # Detectar fin de bloque
 
     def event(self, string: str):
         return self.console.print(string, style="yellow")
@@ -280,13 +271,9 @@ class IO:
         if config.auto_confirm:
             io.event("> Auto-confirming...")
             return True
-        return Confirm.ask(
-            f"[green]{message}[/green]", console=self.console, default=True
-        )
+        return Confirm.ask(f"[green]{message}[/green]", console=self.console, default=True)
 
-    def log_to_debug_file(
-        self, message: Optional[str] = None, json_data: Optional[dict] = None
-    ) -> None:
+    def log_to_debug_file(self, message: Optional[str] = None, json_data: Optional[dict] = None) -> None:
         if json_data is not None:
             try:
                 content = json.dumps(json_data, indent=2)
@@ -295,7 +282,8 @@ class IO:
         elif message is not None:
             content = message
         else:
-            raise ValueError("Either message or json_data must be provided")
+            msg = "Either message or json_data must be provided"
+            raise ValueError(msg)
 
         # Create the directory if it doesn't exist
         path = Path(self.DEBUG_FILE)
@@ -336,14 +324,7 @@ class IO:
             self.progress.stream(chunk, style)
 
     def get_block_color(self) -> str:
-        pass
-        return (
-            "light_salmon3"
-            if self.block_type == "thinking"
-            else "blue"
-            if self.block_type == "output"
-            else "blue"
-        )
+        return "light_salmon3" if self.block_type == "thinking" else "blue" if self.block_type == "output" else "blue"
 
     def start_block(self, block_type: str) -> None:
         # starts new block
@@ -359,9 +340,7 @@ class IO:
     def end_block(self) -> None:
         if self.block_type == "source":
             self.flush()
-            displayed = display_file_diff(
-                self.block_content, self.current_filepath, self.console
-            )
+            displayed = display_file_diff(self.block_content, self.current_filepath, self.console)
 
             # Fall back to display raw code if fails to display diff
             if not displayed and not config.hide_source_blocks:
@@ -402,18 +381,14 @@ class IO:
 
         # Update filepath_buffer
         self.filepath_buffer += chunk
-        self.filepath_buffer = self.filepath_buffer[
-            -100:
-        ]  # Keep only last 100 characters
+        self.filepath_buffer = self.filepath_buffer[-100:]  # Keep only last 100 characters
 
         # Update main buffer
         self.buffer += chunk
 
         # Look for block start/end with capturing group for block type
         start_match = re.search(
-            r"\n<(thinking|output|source)>"
-            if self.seen_nl
-            else r"\n?<(thinking|output|source)>",
+            r"\n<(thinking|output|source)>" if self.seen_nl else r"\n?<(thinking|output|source)>",
             self.buffer,
         )
         end_match = re.search(r"\n</(thinking|output|source)>", self.buffer)
@@ -444,14 +419,10 @@ class IO:
             block_type = start_match.group(1)
             if block_type in self.valid_blocks:
                 # Check for filepath pattern in filepath_buffer
-                filepath_match = re.search(
-                    r"`([^`\n]+):?`\n{1,2}^<source>", self.buffer, re.MULTILINE
-                )
+                filepath_match = re.search(r"`([^`\n]+):?`\n{1,2}^<source>", self.buffer, re.MULTILINE)
                 if filepath_match:
                     self.current_filepath = filepath_match.group(1)
-                    self.filepath_buffer = self.filepath_buffer.replace(
-                        filepath_match.group(0), "<source>"
-                    )
+                    self.filepath_buffer = self.filepath_buffer.replace(filepath_match.group(0), "<source>")
 
                 start_pos = start_match.start()
                 self._stream_to_user(self.buffer[:start_pos])
