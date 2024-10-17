@@ -27,10 +27,24 @@ MSG_WRONG_FORMAT = f"""Invalid file update format when updating '%s' file. Pleas
 """
 MSG_FIND_NOT_FOUND = f"""Couldn't replace some changes at file `{{file_path}}`.
 
+>>> FIND
+{{content}}
+===
+
+The previous content was not found in the file to be replaced. Please try again this file operation.
+
 Remember to use the format:
 {BLOCK_FORMAT}
 
-Read the `{{file_path}}` file again, identify content that was not replaced properly and add them performing exact content match for replacements using the format above.
+Read the `{{file_path}}` file again, identify content that was not replaced properly and them perform exact content match for replacements.
+"""
+
+MSG_WHOLE_FILE_REPLACEMENT = f"""Couldn't replace some changes at file `{{file_path}}`. You are trying to replace the entire file but it already have a content.
+
+Remember to use the format:
+{BLOCK_FORMAT}
+
+Read the `{{file_path}}` file again, identify content that was not replaced properly and the perform exact content match for replacements.
 """
 
 
@@ -76,10 +90,12 @@ def apply_block_update(file_path: str, block_content: str):
                 continue
 
             # Apply the replacement, make it fail raising an error if find_content is not found or trying to replace entire file
-            if find_content not in current_content or (
-                not find_content and current_content
-            ):
-                return MSG_FIND_NOT_FOUND.format(file_path=file_path)
+            if find_content not in current_content:
+                return MSG_FIND_NOT_FOUND.format(
+                    file_path=file_path, content=find_content
+                )
+            elif not find_content and current_content:
+                return MSG_WHOLE_FILE_REPLACEMENT.format(file_path=file_path)
 
             current_content = current_content.replace(find_content, replace_content)
 
@@ -99,7 +115,7 @@ def apply_block_update(file_path: str, block_content: str):
             current_content = path.read_text()
             if current_content:
                 # If there are content, force block update format
-                return MSG_FIND_NOT_FOUND.format(file_path=file_path)
+                return MSG_WHOLE_FILE_REPLACEMENT.format(file_path=file_path)
 
     # Create the directory if it doesn't exist
     path.parent.mkdir(parents=True, exist_ok=True)
