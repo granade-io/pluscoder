@@ -304,4 +304,4 @@ async def test_graph_node_max_deflections_no_recover(
     assert "Persistent error" in str(result["messages"][-1].content)
     # 1 deflection means 1 more try, so more tries occurs at max_deflections + 1
     assert agent.current_deflection == agent.max_deflections + 1
-    assert len(result["messages"]) == 8
+    assert len(result["messages"]) == 9

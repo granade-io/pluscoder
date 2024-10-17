@@ -166,6 +166,29 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
     def get_agent_model(self):
         return get_llm()
 
+    def _stream_events(self, chain, state: AgentState, deflection_messages: List[str]):
+        io.start_stream()
+        first = True
+        gathered = None
+        try:
+            for chunk in chain.stream(
+                {
+                    "messages": state["messages"],
+                    "deflection_messages": deflection_messages,
+                },
+                {"callbacks": [file_callback]},
+            ):
+                if first:
+                    io.stream(chunk.content)
+                    gathered = chunk
+                    first = False
+                else:
+                    io.stream(chunk.content)
+                    gathered = gathered + chunk
+        finally:
+            io.stop_stream()
+        return gathered
+
     def _invoke_llm_chain(self, state: AgentState, deflection_messages: List[str] = []):
         assistant_prompt = self.build_assistant_prompt(
             state, deflection_messages=deflection_messages
@@ -174,12 +197,18 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         chain: Runnable = assistant_prompt | llm.bind_tools(
             self.tools + self.extraction_tools, tool_choice=self.get_tool_choice(state)
         )
-        response = chain.invoke(
-            {"messages": state["messages"], "deflection_messages": deflection_messages},
-            {"callbacks": [file_callback]},
-        )
 
-        return response
+        if config.streaming:
+            return self._stream_events(chain, state, deflection_messages)
+        else:
+            response = chain.invoke(
+                {
+                    "messages": state["messages"],
+                    "deflection_messages": deflection_messages,
+                },
+                {"callbacks": [file_callback]},
+            )
+            return response
 
     def call_agent(self, state):
         """When entering this agent graph, this function is the first node to be called"""
@@ -325,55 +354,7 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         # Restart deflection counter
         self.current_deflection = 0
 
-        if config.streaming:
-            io.start_stream()
-            async for event in self.graph.astream_events(state_updates, version="v1"):
-                kind = event["event"]
-                if kind == "on_chat_model_stream":
-                    content = event["data"]["chunk"].content
-                    if content:
-                        if type(content) is str:
-                            io.stream(content)
-                        elif type(content) is list:
-                            for entry in content:
-                                if "text" in entry:
-                                    # io.console.print(entry["text"], style="bright_green", end="")
-                                    io.stream(entry["text"])
-                elif kind == "on_chat_model_end":
-                    io.flush()
-                    # io.console.print("on_chat_model_end")
-                    io.end_block()
-                    # io.console.print("\n")
-                elif kind == "on_llm_end":
-                    pass
-                    # io.console.print("on_llm_end")
-                    # io.console.print("\n")
-                elif kind == "on_tool_start":
-                    # io.console.print("on_tool_start")
-                    io.end_block()
-                    # io.console.print(f"> Tool calling: {event['data'].get('input')}", style="blue")
-                    pass
-                elif kind == "on_tool_end":
-                    pass
-                    # io.console.print(Text(f"Tool output: {event['data'].get('output')}", style="italic"))
-                elif kind == "on_chain_end" and event["name"] == "LangGraph":
-                    # io.console.print("on_chain_end")
-                    if "agent" in event["data"]["output"]:
-                        state_updates = {
-                            **state_updates,
-                            **event["data"]["output"]["agent"],
-                        }
-                    else:
-                        state_updates = {**state_updates, **event["data"]["output"]}
-            io.stop_stream()
-        else:
-            state_updates = self.graph.invoke(
-                state_updates, {"callbacks": [file_callback]}
-            )
-            # get last message
-            last_message = state_updates["messages"][-1]
-
-            io.console.print(get_message_content_str(last_message))
+        state_updates = self.graph.invoke(state_updates, {"callbacks": [file_callback]})
 
         io.console.print("")
         return state_updates
