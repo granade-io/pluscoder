@@ -121,17 +121,17 @@ def display_initial_messages():
 
 # Run the workflow
 def choose_chat_agent_node():
-    """Allows the user to choose which agent to chat with."""
+    """Allows the user to choose which agent to chat with or uses the default agent if specified."""
+    if config.default_agent:
+        if config.default_agent.isdigit():
+            agent_index = int(config.default_agent)
+            agent = list(agent_dict.keys())[agent_index - 1]
+        else:
+            agent = config.default_agent
+        io.event(f"> Using default agent: [green]{agent}[/green]")
+        return agent
 
-    io.console.print("[bold green]Choose an agent to chat with:[/bold green]")
-
-    for i, (_agent_id, agent) in enumerate(agent_dict.items(), 1):
-        agent_type = (
-            "[cyan]Custom[/cyan]"
-            if isinstance(agent, CustomAgent)
-            else "[yellow]Predefined[/yellow]"
-        )
-        io.console.print(f"{i}. {display_agent(agent, agent_type)}")
+    display_agent_list()
 
     choice = Prompt.ask(
         "Select an agent",
@@ -144,6 +144,28 @@ def choose_chat_agent_node():
     return chosen_agent
 
 
+def display_agent_list():
+    """Display the list of available agents with their indices."""
+    io.console.print("\n[bold green]Available agents:[/bold green]")
+    for i, (_agent_id, agent) in enumerate(agent_dict.items(), 1):
+        agent_type = (
+            "[cyan]Custom[/cyan]"
+            if isinstance(agent, CustomAgent)
+            else "[yellow]Predefined[/yellow]"
+        )
+        io.console.print(f"{i}. {display_agent(agent, agent_type)}")
+
+
+def explain_default_agent_usage():
+    """Explain how to use the --default_agent option."""
+    io.console.print(
+        "\n[bold]How to use --default_agent:[/bold]"
+        "\n1. Use the agent name: --default_agent=orchestrator"
+        "\n2. Use the agent index: --default_agent=1"
+        "\nExample: python -m pluscoder --default_agent=orchestrator"
+    )
+
+
 def main() -> None:
     """
     Main entry point for the Pluscoder application.
@@ -151,12 +173,6 @@ def main() -> None:
     try:
         if not setup():
             return
-
-        warnings = run_silent_checks()
-        for warning in warnings:
-            io.console.print(f"Warning: {warning}", style="bold dark_goldenrod")
-            if not io.confirm("Proceed anyways?"):
-                sys.exit(0)
 
         display_initial_messages()
 
@@ -172,6 +188,30 @@ def main() -> None:
         if config.show_config:
             show_config()
             return
+
+        # Check if the default_agent is valid
+        if config.default_agent and (
+            # Check if valid number
+            config.default_agent.isdigit()
+            and (
+                int(config.default_agent) < 1
+                or int(config.default_agent) > len(agent_dict)
+            )
+            # Check if valid name
+            or not config.default_agent.isdigit()
+            and config.default_agent not in agent_dict
+        ):
+            display_agent_list()
+            io.console.print(
+                f"Error: Invalid agent: {config.default_agent}", style="bold red"
+            )
+            sys.exit(1)
+
+        warnings = run_silent_checks()
+        for warning in warnings:
+            io.console.print(f"Warning: {warning}", style="bold dark_goldenrod")
+            if not io.confirm("Proceed anyways?"):
+                sys.exit(0)
     except Exception as err:
         io.event(f"An error occurred. {err}")
         return
