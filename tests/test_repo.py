@@ -1,5 +1,5 @@
 import subprocess
-from unittest.mock import ANY, MagicMock, Mock, patch
+from unittest.mock import ANY, MagicMock, Mock, patch, call
 
 import pytest
 from git import GitCommandError
@@ -242,6 +242,31 @@ def test_commit_with_custom_committer(mock_repo):
     mock_repo_instance.git.add.assert_called_once_with(A=True)
     mock_repo_instance.index.commit.assert_called_once_with(
         "Test commit", author=ANY, committer=ANY
+    )
+    # Check if the author and committer are set correctly
+    args, kwargs = mock_repo_instance.index.commit.call_args
+    assert kwargs["author"].name == "Test User (pluscoder)"
+    assert kwargs["author"].email == "test@example.com"
+    assert kwargs["committer"].name == "Test User (pluscoder)"
+    assert kwargs["committer"].email == "test@example.com"
+
+
+def test_commit_with_specific_files(mock_repo):
+    mock_repo_instance = Mock()
+    mock_repo.return_value = mock_repo_instance
+    mock_repo_instance.is_dirty.return_value = False
+    mock_config_reader = Mock()
+    mock_repo_instance.config_reader.return_value = mock_config_reader
+    mock_config_reader.get_value.side_effect = ["Test User", "test@example.com"]
+
+    repo = Repository(io=io)
+    updated_files = ["file1.py", "file2.py", "file3.py"]
+    result = repo.commit("Test commit with specific files", updated_files=updated_files)
+
+    assert result is True
+    mock_repo_instance.git.add.assert_has_calls([call(file) for file in updated_files])
+    mock_repo_instance.index.commit.assert_called_once_with(
+        "Test commit with specific files", author=ANY, committer=ANY
     )
     # Check if the author and committer are set correctly
     args, kwargs = mock_repo_instance.index.commit.call_args
