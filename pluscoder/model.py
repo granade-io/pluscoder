@@ -51,10 +51,11 @@ def get_llm_base(model_id, provider):
     if config.openai_api_key and provider == "openai":
         return ChatOpenAI(
             model=model_id.replace("openai/", ""),
-            base_url=config.openai_api_base,
+            base_url=config.openai_api_base or None,
             api_key=config.openai_api_key,
             max_tokens=4096,
-            streaming=True,
+            streaming=config.streaming,
+            stream_usage=True,
         )
 
     # Uses Litellm

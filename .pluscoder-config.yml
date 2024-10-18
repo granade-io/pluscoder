@@ -10,6 +10,7 @@
 # display_internal_outputs: false # Display internal agent outputs
 # auto_confirm: false             # Auto-confirm pluscoder execution
 # init: true                      # Enable/disable initial setup
+initialized: true                      # Enable/disable initial setup
 # read_only: false                # Enable/disable read-only mode
 # user_input: ""                  # Predefined user input
 
@@ -40,18 +41,18 @@ provider: openai           # Provider (aws_bedrock, openai, litellm, anthropic)
 #------------------------------------------------------------------------------
 # Git Settings
 #------------------------------------------------------------------------------
-auto_commits: false       # Enable/disable automatic Git commits
+auto_commits: true       # Enable/disable automatic Git commits
 allow_dirty_commits: true # Allow commits in a dirty repository
 
 #------------------------------------------------------------------------------
 # Test and Lint Settings
 #------------------------------------------------------------------------------
-run_tests_after_edit: true  # Run tests after file edits
-run_lint_after_edit: true   # Run linter after file edits
+run_tests_after_edit: false  # Run tests after file edits
+run_lint_after_edit: false   # Run linter after file edits
 test_command: pytest                # Command to run tests
 lint_command: ruff check .                # Command to run linter
 auto_run_linter_fix: true   # Auto-run linter fix before linting
-lint_fix_command: python -m ruff format . && python -m ruff check --fix .            # Command to run linter fix
+lint_fix_command: make format && python -m ruff check --fix .            # Command to run linter fix
 
 #------------------------------------------------------------------------------
 # Repomap Settings
