@@ -10,7 +10,7 @@ from pluscoder.config import Settings, config
 from pluscoder.io_utils import io
 from pluscoder.repo import Repository
 from pluscoder.state_utils import get_model_token_info
-from pluscoder.type import AgentInstructions, AgentState, OrchestrationState, TokenUsage
+from pluscoder.type import AgentInstructions, AgentState, TokenUsage
 
 # TODO: Move this?
 CONFIG_FILE = ".pluscoder-config.yml"
@@ -336,9 +336,11 @@ TASK_LIST = [
 
 
 def initialize_repository():
-    from pluscoder.workflow import run_workflow
+    from pluscoder.workflow import build_agents, build_workflow, run_workflow
 
     io.event("> Starting repository initialization...")
+    agents = build_agents()
+    app = build_workflow(agents)
 
     # Setup config to automatize agents calls
     auto_confirm = config.auto_confirm
@@ -355,23 +357,21 @@ def initialize_repository():
         resources=[],
     ).dict()
 
-    initial_state = OrchestrationState(
-        **{
-            "return_to_user": False,
-            "orchestrator_state": orchestrator_state,
-            "domain_stakeholder_state": AgentState.default(),
-            "planning_state": AgentState.default(),
-            "developer_state": AgentState.default(),
-            "domain_expert_state": AgentState.default(),
-            "accumulated_token_usage": TokenUsage.default(),
-            "chat_agent": "orchestrator",
-            "is_task_list_workflow": True,
-            "max_agent_deflections": 2,
-            "current_agent_deflections": 0,
-        }
-    )
+    initial_state = {
+        "return_to_user": False,
+        "orchestrator_state": orchestrator_state,
+        "accumulated_token_usage": TokenUsage.default(),
+        "chat_agent": "orchestrator",
+        "is_task_list_workflow": True,
+        "max_agent_deflections": 2,
+        "current_agent_deflections": 0,
+    }
+    for agent_id in agents:
+        if agent_id == "orchestrator":
+            continue
+        initial_state[f"{agent_id.lower()}_state"] = AgentState.default()
 
-    asyncio.run(run_workflow(initial_state))
+    asyncio.run(run_workflow(app, initial_state))
 
     # Restore config values
     config.auto_confirm = auto_confirm
