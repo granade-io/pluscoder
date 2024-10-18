@@ -179,9 +179,9 @@ def test_call_agent(
     mock_file_callback, mock_io, mock_get_formatted_files_content, mock_get_llm, agent
 ) -> None:
     # mock_generate_repomap.return_value = "My Repomap"
-    mock_get_llm.bind_tools.return_value.return_value = AIMessage(
-        content="AI response with file mention `some_file.txt`"
-    )
+    # mock_get_llm.bind_tools.return_value.return_value = AIMessage(
+    #     content="AI response with file mention `some_file.txt`"
+    # )
     # mock_get_formatted_files_content.return_value = "Mocked file content"
     state = AgentState(messages=[HumanMessage(content="Hello")], context_files=[])
 
@@ -304,4 +304,4 @@ async def test_graph_node_max_deflections_no_recover(
     assert "Persistent error" in str(result["messages"][-1].content)
     # 1 deflection means 1 more try, so more tries occurs at max_deflections + 1
     assert agent.current_deflection == agent.max_deflections + 1
-    assert len(result["messages"]) == 8
+    assert len(result["messages"]) == 9

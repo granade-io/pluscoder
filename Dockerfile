@@ -1,5 +1,5 @@
 # Build stage
-FROM python:3.12-slim AS builder
+FROM python:3.12-slim AS base
 
 # Install build essentials
 RUN apt-get update && apt-get install -y \
@@ -10,39 +10,37 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Set the working directory in the container
-WORKDIR /app
+RUN mkdir /workspace
+WORKDIR /workspace
 
 # Copy the requirements file and wheels folder into the container
 COPY requirements.txt .
-# COPY wheels /app/wheels
 
 # Install the Python dependencies using local wheels and falling back to PyPI
-# RUN pip install --no-cache-dir --find-links=/app/wheels -r requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
-# Final stage
-FROM python:3.12-slim
 
-# Install git and X11 clipboard tools (required for the application)
+FROM base AS builder
+# Install build dependencies
+# TODO: Add build dependencies here
+# COPY requirements-dev.txt .
+# RUN pip install --no-cache-dir -r requirements-dev.txt
+COPY pluscoder pluscoder
+RUN pyinstaller --onefile --name pluscoder --add-data pluscoder/assets:assets pluscoder/__main__.py
+
+
+# Final stage
+FROM ubuntu:latest
+
+# Application requirements
 RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Set up a directory for file-based clipboard (fallback mechanism)
-# RUN mkdir -p /tmp/clipboard && chmod 777 /tmp/clipboard
-
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy installed packages from builder stage
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-
-# Copy the application code
-COPY pluscoder /app/pluscoder/
-COPY requirements.txt .
-COPY setup.py .
-
-# Insatll pluscoder
-RUN pip install --no-cache .
+# Copy builded package from builder stage
+COPY --from=builder /workspace/dist/pluscoder /bin/pluscoder
 
 # Set the entrypoint to run pluscoder
 ENTRYPOINT ["pluscoder"]

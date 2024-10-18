@@ -400,6 +400,13 @@ class IO:
     def stream(self, chunk: str):
         self.seen_nl = self.seen_nl or "\n<" in chunk
 
+        if isinstance(chunk, list) and len(chunk) >= 0:
+            chunk = "".join([c["text"] for c in chunk if c["type"] == "text"])
+        elif isinstance(chunk, str):
+            pass
+        else:
+            raise ValueError("Not chunk type")
+
         # Update filepath_buffer
         self.filepath_buffer += chunk
         self.filepath_buffer = self.filepath_buffer[

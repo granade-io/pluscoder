@@ -76,6 +76,8 @@ class Settings(BaseSettings):
         description="List of custom agents with properties: name, description, prompt, and read_only",
     )
 
+    default_agent: Optional[str] = Field(None, description="Default agent to use")
+
     @field_validator("custom_agents")
     def validate_custom_agents_field(cls, v):
         return validate_custom_agents(v)

@@ -112,6 +112,7 @@ Display current configuration settings using command `/show_config` or cmd line 
 - `HIDE_OUTPUT_BLOCKS`: Hide output blocks in LLM output (default: `False`)
 - `HIDE_SOURCE_BLOCKS`: Hide source blocks in LLM output (default: `False`)
 - `SHOW_TOKEN_USAGE`: Show token usage/cost (default: `True`)
+- `DEFAULT_AGENT`: Specify the name/number of the default agent to use. If not specified selection is interactive (default: `None`)
 
 ### File Paths
 - `OVERVIEW_FILENAME`: Filename for project overview (default: `"PROJECT_OVERVIEW.md"`)
@@ -280,57 +281,3 @@ You can set these options using environment variables, command-line arguments (e
    ```bash
    pytest
    ```
-test
-
-
- 1 ⏳ Define Overall Structure and Sections (Agent: domain_stakeholder)                                                                                           
-     • Details: Create a new file src/components/LandingPage.js. Define the main structure with sections: Header, Hero, Key Features, How it Works, Use Cases, and 
-       Footer. Use semantic HTML5 elements and create placeholder components for each section.                                                                     
-     • Restrictions: Use React functional components and hooks. Ensure the structure is responsive using flexbox or grid.                                          
-     • Expected Outcome: New file src/components/LandingPage.js with basic structure and placeholder components.                                                   
-  2 ⏳ Implement Header and Navigation (Agent: developer)                                                                                                          
-     • Details: Create a new file src/components/Header.js. Implement a responsive header with the Pluscoder logo and navigation menu. Include links to different  
-       sections of the landing page. Ensure the header is sticky and collapses into a hamburger menu on mobile devices.                                            
-     • Restrictions: Use React hooks for state management. Implement smooth scrolling to sections.                                                                 
-     • Expected Outcome: New file src/components/Header.js with fully functional responsive header.                                                                
-  3 ⏳ Create Hero Section (Agent: developer)                                                                                                                      
-     • Details: Create a new file src/components/Hero.js. Implement a hero section with a compelling headline, brief description, and a prominent call-to-action   
-       button. Include an illustration or animation that represents Pluscoder's functionality.                                                                     
-     • Restrictions: Use modern CSS techniques for layout and animations. Ensure the hero is fully responsive.                                                     
-     • Expected Outcome: New file src/components/Hero.js with an engaging hero section.                                                                            
-  4 ⏳ Develop Key Features Section (Agent: developer)                                                                                                             
-     • Details: Create a new file src/components/KeyFeatures.js. Implement a section that highlights the three main features: Copilot functionality, Automated     
-       Agent Workflows, and Specialized Knowledge. Use icons or small illustrations for each feature.                                                              
-     • Restrictions: Use a grid or flexbox layout for responsive design. Implement subtle animations on scroll.                                                    
-     • Expected Outcome: New file src/components/KeyFeatures.js with an informative key features section.                                                          
-  5 ⏳ Design and Implement 'How it Works' Section (Agent: domain_expert)                                                                                          
-     • Details: Create a new file src/components/HowItWorks.js. Implement a step-by-step guide or flowchart showing how Pluscoder works, from initial command to   
-       final output. Include brief explanations for each step.                                                                                                     
-     • Restrictions: Use SVG or Canvas for creating interactive visual elements. Ensure the section is responsive and accessible.                                  
-     • Expected Outcome: New file src/components/HowItWorks.js with an informative and visually appealing workflow section.                                        
-  6 ⏳ Create 'Use Cases' Section (Agent: domain_stakeholder)                                                                                                      
-     • Details: Create a new file src/components/UseCases.js. Implement a section that demonstrates how Pluscoder can be used by different types of developers     
-       (e.g., beginners, experienced devs, for automated workflows). Include real-world examples or user testimonials if available.                                
-     • Restrictions: Use a card-based layout for easy readability. Implement a carousel for mobile views.                                                          
-     • Expected Outcome: New file src/components/UseCases.js with comprehensive use cases section.                                                                 
-  7 ⏳ Implement Footer (Agent: developer)                                                                                                                         
-     • Details: Create a new file src/components/Footer.js. Implement a footer with links to important pages (e.g., documentation, GitHub repository), social media
-       links, and copyright information. Include a newsletter signup form if applicable.                                                                           
-     • Restrictions: Ensure the footer is responsive and accessible. Use CSS Grid for layout.                                                                      
-     • Expected Outcome: New file src/components/Footer.js with a comprehensive footer component.                                                                  
-  8 ⏳ Ensure Responsive Design (Agent: developer)                                                                                                                 
-     • Details: Review all components (Header.js, Hero.js, KeyFeatures.js, HowItWorks.js, UseCases.js, Footer.js) and ensure they are fully responsive. Implement  
-       any necessary media queries or responsive adjustments.                                                                                                      
-     • Restrictions: Use modern CSS techniques like CSS Grid, Flexbox, and CSS Variables. Test on multiple device sizes.                                           
-     • Expected Outcome: Updated component files with improved responsiveness.                                                                                     
-  9 ⏳ Optimize Performance and Accessibility (Agent: developer)                                                                                                   
-     • Details: Review all components and the main LandingPage.js file. Optimize images, implement lazy loading where appropriate, and ensure proper semantic HTML 
-       and ARIA attributes are used for accessibility.                                                                                                             
-     • Restrictions: Follow WCAG 2.1 guidelines for accessibility. Use tools like Lighthouse for performance auditing.                                             
-     • Expected Outcome: Updated component files and LandingPage.js with improved performance and accessibility.                                                   
- 10 ⏳ Final Review and Testing (Agent: domain_expert)                                                                                                             
-
- • Details: Review the entire landing page implementation. Test all interactive elements, responsiveness, and cross-browser compatibility. Prepare a list of any   
-   final adjustments or bug fixes needed.                                                                                                                          
- • Restrictions: Use browser developer tools and testing frameworks like Jest and React Testing Library.                                                           
- • Expected Outcome: A comprehensive review report and list of any necessary final adjustments.  

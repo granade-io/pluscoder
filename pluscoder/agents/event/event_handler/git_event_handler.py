@@ -30,10 +30,10 @@ class GitEventHandler(AgentEventBaseHandler):
     ):
         pass
 
-    async def on_files_updated(self, updated_files):
+    async def on_files_updated(self, updated_files=[]):
         if not self.repo:
             self.repo = Repository(io=io)
         if updated_files and config.auto_commits:
             files_str = ", ".join(updated_files)
             commit_message = f"Updated files: {files_str}"
-            self.repo.commit(commit_message)
+            self.repo.commit(commit_message, updated_files)

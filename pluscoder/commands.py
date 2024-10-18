@@ -117,7 +117,9 @@ def undo(state: OrchestrationState):
 def agent(state: OrchestrationState):
     """Start a conversation with a new agent from scratch"""
     from pluscoder.agents.custom import CustomAgent
-    from pluscoder.workflow import agent_dict
+    from pluscoder.workflow import build_agents
+
+    agent_dict = build_agents()
 
     io.console.print("[bold green]Choose an agent to chat with:[/bold green]")
 

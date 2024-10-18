@@ -50,7 +50,7 @@ Guidelines:
         )
         super().__init__(
             system_message,
-            "Developer Agent",
+            "Developer",
             tools=tools,
             default_context_files=default_context_files,
         )
@@ -103,7 +103,7 @@ These are only example questions to help you understand the project vision and g
         )
         super().__init__(
             system_message,
-            "Domain Stakeholder Agent",
+            "Domain Stakeholder",
             tools=tools,
             default_context_files=default_context_files,
         )
@@ -159,7 +159,7 @@ THE PROPOSAL NEVER IS FULLY CORRECT, WAS MADE BY AN IA, FIND THOSE DETAILS TO IM
         )
         super().__init__(
             system_message,
-            "Domain Expert Agent",
+            "Domain Expert",
             tools=tools,
             default_context_files=default_context_files,
         )
@@ -219,7 +219,7 @@ When creating a plan, follow this structure:
         )
         super().__init__(
             system_message,
-            "Planning Agent",
+            "Planning",
             tools=tools,
             default_context_files=default_context_files,
         )

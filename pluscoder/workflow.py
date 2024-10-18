@@ -6,7 +6,7 @@ from langgraph.graph import END, START, StateGraph
 from rich.markdown import Markdown
 from rich.rule import Rule
 
-from pluscoder.agents.base import Agent, AgentState
+from pluscoder.agents.base import Agent
 from pluscoder.agents.core import (
     DeveloperAgent,
     DomainExpertAgent,
@@ -20,39 +20,45 @@ from pluscoder.commands import handle_command, is_command
 from pluscoder.config import config
 from pluscoder.io_utils import io
 from pluscoder.message_utils import HumanMessage, get_message_content_str
-from pluscoder.model import get_llm, get_orchestrator_llm
 from pluscoder.state_utils import accumulate_token_usage
-from pluscoder.type import OrchestrationState, TokenUsage
+from pluscoder.type import AgentState, OrchestrationState, TokenUsage
 
 set_debug(False)
 
 # Ignore deprecation warnings
 warnings.filterwarnings("ignore")
 
-llm = get_llm()
-orchestrator_llm = get_orchestrator_llm()
 
-# Create the vision agent
-orchestrator_agent = OrchestratorAgent()
-domain_stakeholder_agent = DomainStakeholderAgent()
-planning_agent = PlanningAgent()
-developer_agent = DeveloperAgent()
-domain_expert_agent = DomainExpertAgent()
+def build_agents() -> dict:
+    # Create the vision agent
+    orchestrator_agent = OrchestratorAgent()
+    domain_stakeholder_agent = DomainStakeholderAgent()
+    planning_agent = PlanningAgent()
+    developer_agent = DeveloperAgent()
+    domain_expert_agent = DomainExpertAgent()
 
-# Initialize custom agents
-custom_agents = []
-for agent_config in config.custom_agents:
-    custom_agent = CustomAgent(
-        name=agent_config["name"],
-        prompt=agent_config["prompt"],
-        description=agent_config["description"],
-        read_only=agent_config.get("read_only", True),
-    )
-    custom_agents.append(custom_agent)
+    # Initialize custom agents
+    custom_agents = []
+    for agent_config in config.custom_agents:
+        custom_agent = CustomAgent(
+            name=agent_config["name"],
+            prompt=agent_config["prompt"],
+            description=agent_config["description"],
+            read_only=agent_config.get("read_only", True),
+        )
+        custom_agents.append(custom_agent)
 
-# Orchestrator now handles agent selection, so we don't need to set a default agent
+    # Update the available_agents list to include custom agents
+    available_agents = [
+        orchestrator_agent,
+        domain_stakeholder_agent,
+        planning_agent,
+        developer_agent,
+        domain_expert_agent,
+    ] + custom_agents
 
-# OrchestrationState is now imported from pluscoder.type
+    # Create a dictionary mapping agent names to their instances
+    return {agent.id: agent for agent in available_agents}
 
 
 def get_chat_agent_state(state: OrchestrationState) -> AgentState:
@@ -117,7 +123,9 @@ def user_router(state: OrchestrationState):
     return state["chat_agent"]  # Go to chat agent
 
 
-def router(state: OrchestrationState):
+def orchestrator_router(
+    state: OrchestrationState, orchestrator_agent: OrchestratorAgent
+) -> str:
     """Decides the next step in orchestrate mode."""
 
     # Returns to the user when user requested by confirmation input
@@ -142,31 +150,24 @@ def router(state: OrchestrationState):
     return orchestrator_agent.id
 
 
-def agent_router(state: OrchestrationState) -> str:
+def agent_router(
+    state: OrchestrationState, orchestrator_agent: OrchestratorAgent
+) -> str:
     """Decides where to go after an agent was called."""
 
-    if state["chat_agent"] != orchestrator_agent.id:
-        # When chatting an agent different from the orchestrator, go back to the user
-        return "user_input"
+    if state["chat_agent"] == orchestrator_agent.id:
+        # Always return to the orchestrator when called by the orchestrator
+        return orchestrator_agent.id
 
-    # Return to the orchestrator
-    return orchestrator_agent.id
+    if config.user_input:
+        # if called from bash input, exits graph
+        return END
 
-
-# Update the available_agents list to include custom agents
-available_agents = [
-    orchestrator_agent,
-    domain_stakeholder_agent,
-    planning_agent,
-    developer_agent,
-    domain_expert_agent,
-] + custom_agents
-
-# Create a dictionary mapping agent names to their instances
-agent_dict = {agent.id: agent for agent in available_agents}
+    # Otherwise return to the user
+    return "user_input"
 
 
-async def agent_node(state: OrchestrationState, agent: Agent) -> OrchestrationState:
+async def _agent_node(state: OrchestrationState, agent: Agent) -> OrchestrationState:
     """
     Agent node process its message list to return a new answer and a updated state
     """
@@ -191,8 +192,8 @@ async def agent_node(state: OrchestrationState, agent: Agent) -> OrchestrationSt
     return {**state, agent.id + "_state": {**agent_state, **agent_state_output}}
 
 
-async def orchestrator_agent_node(
-    state: OrchestrationState, agent: OrchestratorAgent
+async def _orchestrator_agent_node(
+    state: OrchestrationState, orchestrator_agent: OrchestratorAgent
 ) -> OrchestrationState:
     """
     Agent node process its message list to return a new answer and a updated state
@@ -221,7 +222,7 @@ async def orchestrator_agent_node(
         return _global_state
 
     # Get the current state of the agent
-    state = state[agent.id + "_state"]
+    state = state[orchestrator_agent.id + "_state"]
 
     # Active behaviour when orchestrator receives a message
     if state["status"] == "active":
@@ -231,13 +232,13 @@ async def orchestrator_agent_node(
             and not global_state["is_task_list_workflow"]
         ):
             # Display agent information
-            io.console.print(Rule(agent.id))
+            io.console.print(Rule(orchestrator_agent.id))
 
             # User message received
-            state_output = await agent.graph_node(state)
+            state_output = await orchestrator_agent.graph_node(state)
 
             # Messages already appended to the state by previous call
-            return update_global_state(agent.id, state_output)
+            return update_global_state(orchestrator_agent.id, state_output)
 
         # Active tasks to delegate to other agents
         # Assume all agent messages are from orchestrator itself
@@ -257,7 +258,7 @@ async def orchestrator_agent_node(
             if not io.confirm("Do you want to proceed?"):
                 state = orchestrator_agent.remove_task_list_data(state)
                 return {
-                    **update_global_state(agent.id, state),
+                    **update_global_state(orchestrator_agent.id, state),
                     "return_to_user": True,
                 }
 
@@ -273,7 +274,7 @@ async def orchestrator_agent_node(
 
             # Delegate the task to the target agent
             return {
-                **update_global_state(agent.id, {"status": "delegating"}),
+                **update_global_state(orchestrator_agent.id, {"status": "delegating"}),
                 **update_global_state(
                     target_agent,
                     {
@@ -291,7 +292,7 @@ async def orchestrator_agent_node(
 
         # We asume other tool was called and respond to the caller
         # TODO check what meas respond to the caller
-        return update_global_state(agent.id, {"messages": []})
+        return update_global_state(orchestrator_agent.id, {"messages": []})
 
     # Delegating mode
 
@@ -317,7 +318,7 @@ async def orchestrator_agent_node(
         "task_validation_start",
         agent_instructions=orchestrator_agent.get_agent_instructions(state),
     )
-    validation_response = await agent.graph_node(
+    validation_response = await orchestrator_agent.graph_node(
         {
             **state,
             "messages": [
@@ -331,10 +332,10 @@ async def orchestrator_agent_node(
     # Update global tokens
     global_state = accumulate_token_usage(global_state, validation_response)
 
-    if not agent.was_task_validation_tool_used(validation_response):
+    if not orchestrator_agent.was_task_validation_tool_used(validation_response):
         # Task ALWAYS must be used when validating the current task
         raise ValueError("Validation tool did not return a boolean value")
-    elif agent.validate_current_task_completed(validation_response) or (
+    elif orchestrator_agent.validate_current_task_completed(validation_response) or (
         # Manual validation when max reflections are reached
         global_state["current_agent_deflections"]
         >= global_state["max_agent_deflections"]
@@ -342,7 +343,7 @@ async def orchestrator_agent_node(
     ):
         # Task has been completed. Move to next task
 
-        state_update = agent.mark_current_task_as_completed(
+        state_update = orchestrator_agent.mark_current_task_as_completed(
             state, executor_agent_response
         )
         await event_emitter.emit(
@@ -351,7 +352,7 @@ async def orchestrator_agent_node(
         )
 
         # Check if there are more tasks to delegate
-        if agent.is_task_list_complete(state_update):
+        if orchestrator_agent.is_task_list_complete(state_update):
             await event_emitter.emit(
                 "task_list_completed",
                 agent_instructions=orchestrator_agent.get_agent_instructions(
@@ -360,7 +361,7 @@ async def orchestrator_agent_node(
             )
 
             # Display agent information
-            io.console.print(Rule(agent.id))
+            io.console.print(Rule(orchestrator_agent.id))
 
             # Generate a final summarized answer to the user
             task_results = "\n---\n".join(
@@ -369,7 +370,7 @@ async def orchestrator_agent_node(
                     for task in orchestrator_agent.get_task_list(state)
                 ]
             )
-            final_response = await agent.graph_node(
+            final_response = await orchestrator_agent.graph_node(
                 {
                     **state_update,
                     "status": "summarizing",  ## Next call to the orchestrator is to summarize the results
@@ -384,7 +385,8 @@ async def orchestrator_agent_node(
 
             # no more tasks to delegate. Return to user by setting status to active. Resets the agent messages
             return update_global_state(
-                agent.id, {**final_response, "status": "active", "agent_messages": []}
+                orchestrator_agent.id,
+                {**final_response, "status": "active", "agent_messages": []},
             )
 
         io.event("> [bold]Task completed![/bold]")
@@ -401,12 +403,14 @@ async def orchestrator_agent_node(
             # Return to user to give obtain more feedback & set status to active to allow agent to
             # execute its default behavior
             return {
-                **update_global_state(agent.id, {**state_update, "status": "active"}),
+                **update_global_state(
+                    orchestrator_agent.id, {**state_update, "status": "active"}
+                ),
                 "return_to_user": True,
             }
         io.event("> [bold]Moving to next task... [/bold]")
 
-        task = agent.get_current_task(state_update)
+        task = orchestrator_agent.get_current_task(state_update)
         # Delegating the task to the next agent
         await event_emitter.emit(
             "task_delegated",
@@ -430,8 +434,8 @@ async def orchestrator_agent_node(
                 ],
             },
             # Update orchestrator with validation response
-            f"{agent.id}_state": {
-                **global_updated[f"{agent.id}_state"],
+            f"{orchestrator_agent.id}_state": {
+                **global_updated[f"{orchestrator_agent.id}_state"],
                 "agent_messages": [],
             },
             # Resets global state agent deflections
@@ -456,7 +460,7 @@ async def orchestrator_agent_node(
         )
 
         return {
-            **update_global_state(agent.id, {**state, "status": "active"}),
+            **update_global_state(orchestrator_agent.id, {**state, "status": "active"}),
             "return_to_user": True,
         }
 
@@ -470,76 +474,75 @@ async def orchestrator_agent_node(
         target_agent,
         {
             "messages": messages
-            + [HumanMessage(content=agent.task_to_instruction(task, state))]
+            + [
+                HumanMessage(
+                    content=orchestrator_agent.task_to_instruction(task, state)
+                )
+            ]
         },
     )
     global_updated = {
         **global_updated,
         **update_global_state(
-            agent.id, {"agent_messages": validation_response["messages"]}
+            orchestrator_agent.id, {"agent_messages": validation_response["messages"]}
         ),
         "current_agent_deflections": global_updated["current_agent_deflections"] + 1,
     }
     return global_updated
 
 
-orchestrator_agent_node = functools.partial(
-    orchestrator_agent_node, agent=orchestrator_agent
-)
-domain_stakeholder_agent_node = functools.partial(
-    agent_node, agent=domain_stakeholder_agent
-)
-planning_agent_node = functools.partial(agent_node, agent=planning_agent)
-developer_agent_node = functools.partial(agent_node, agent=developer_agent)
-domain_expert_agent_node = functools.partial(agent_node, agent=domain_expert_agent)
+def build_workflow(agents: dict):
+    # Instance agents
+    orchestrator_agent = agents[OrchestratorAgent.id]
 
-# Create custom agent nodes
-custom_agent_nodes = {
-    agent.id: functools.partial(agent_node, agent=agent) for agent in custom_agents
-}
+    # Crating orchestrator agent
+    orchestrator_agent_node = functools.partial(
+        _orchestrator_agent_node, orchestrator_agent=orchestrator_agent
+    )
+    # Create vision + custom agent nodes
+    agent_nodes = {}
+    for agent_id, agent in agents.items():
+        if agent_id == orchestrator_agent.id:
+            continue
+        agent_nodes[agent_id] = functools.partial(_agent_node, agent=agent)
 
-# Create the graph
-workflow = StateGraph(OrchestrationState)
+    # Routers
+    orchestrator_router_node = functools.partial(
+        orchestrator_router, orchestrator_agent=orchestrator_agent
+    )
+    agent_router_node = functools.partial(
+        agent_router, orchestrator_agent=orchestrator_agent
+    )
 
-# Add nodes
-workflow.add_node("user_input", user_input)
-workflow.add_node(orchestrator_agent.id, orchestrator_agent_node)
-# workflow.add_node("state_preparation", orchestrator_agent.state_preparation_node)
-workflow.add_node("domain_stakeholder", domain_stakeholder_agent_node)
-workflow.add_node("planning", planning_agent_node)
-workflow.add_node("developer", developer_agent_node)
-workflow.add_node("domain_expert", domain_expert_agent_node)
+    # Create the graph
+    workflow = StateGraph(OrchestrationState)
 
-# Add custom agent nodes
-for agent_id, agent_node in custom_agent_nodes.items():
-    workflow.add_node(agent_id, agent_node)
+    # Add nodes
+    workflow.add_node("user_input", user_input)
+    workflow.add_node(orchestrator_agent.id, orchestrator_agent_node)
+    # workflow.add_node("state_preparation", orchestrator_agent.state_preparation_node)
 
-# Add edges
-workflow.add_edge(START, "user_input")
-workflow.add_conditional_edges("user_input", user_router)
-workflow.add_conditional_edges(orchestrator_agent.id, router)
-workflow.add_conditional_edges("domain_stakeholder", agent_router)
-workflow.add_conditional_edges("planning", agent_router)
-workflow.add_conditional_edges("developer", agent_router)
-workflow.add_conditional_edges("domain_expert", agent_router)
+    # Add custom agent nodes
+    for agent_id, agent_node in agent_nodes.items():
+        workflow.add_node(agent_id, agent_node)
 
-# Add edges for custom agents
-for agent_id in custom_agent_nodes:
-    workflow.add_conditional_edges(agent_id, agent_router)
+    # Add edges
+    workflow.add_edge(START, "user_input")
+    workflow.add_conditional_edges("user_input", user_router)
+    workflow.add_conditional_edges(orchestrator_agent.id, orchestrator_router_node)
 
-# Set the entrypoint
-# workflow.set_entry_point("user_input")
+    # Add edges for custom agents
+    for agent_id in agent_nodes:
+        workflow.add_conditional_edges(agent_id, agent_router_node)
 
-# Compile the workflow
-app = workflow.compile()
+    # Set the entrypoint
+    # workflow.set_entry_point("user_input")
+
+    # Compile the workflow
+    app = workflow.compile()
+    return app
+
 
 # Run the workflow
-
-
-async def run_workflow(state: OrchestrationState) -> None:
-    async for event in app.astream_events(
-        state, config={"recursion_limit": 100}, version="v1"
-    ):
-        kind = event["event"]
-        if kind == "on_chain_end":
-            pass
+async def run_workflow(app, state: OrchestrationState) -> None:
+    return await app.ainvoke(state, config={"recursion_limit": 100})

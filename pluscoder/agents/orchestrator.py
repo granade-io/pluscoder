@@ -12,6 +12,15 @@ from pluscoder.message_utils import HumanMessage
 from pluscoder.model import get_orchestrator_llm
 from pluscoder.type import AgentInstructions
 
+ORCHESTRATOR_REMINDER = """
+*Rules when generating Task List*:
+1. Each task must be an step of an step-by-step solution
+2. All editions related to the same file *must be handled by the same task*
+3. Task *must* be able to be executed sequentially and reference outcome of previous tasks.
+4. Tasks outcome must always be file updates/editions
+5. Specify in agent instructions the resources (links/images) the user gave (including 'img::' if present on images)
+"""
+
 
 class OrchestratorAgent(Agent):
     id = "orchestrator"
@@ -168,7 +177,7 @@ You *must follow* following rules when suggesting a task list:
         )
         super().__init__(
             system_message,
-            "Orchestrator Agent",
+            "Orchestrator",
             tools=tools,
             extraction_tools=extraction_tools,
             default_context_files=["PROJECT_OVERVIEW.md"],
@@ -189,7 +198,7 @@ You *must follow* following rules when suggesting a task list:
     def get_reminder_prefill(self, state: AgentState) -> str:
         # Default prompt
         if state["status"] == "active":
-            return combine_prompts(REMINDER_PREFILL_PROMP)
+            return combine_prompts(REMINDER_PREFILL_PROMP, ORCHESTRATOR_REMINDER)
         return ""
 
     def get_tool_choice(self, state: AgentState) -> str:

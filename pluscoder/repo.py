@@ -22,8 +22,8 @@ class Repository:
         self.repo = Repo(self.repository_path, search_parent_directories=True)
         self.io = io
 
-    def commit(self, message="Auto-commit"):
-        """Create a new commit from all changed files."""
+    def commit(self, message="Auto-commit", updated_files=None):
+        """Create a new commit from specified updated files."""
         if not config.allow_dirty_commits and self.repo.is_dirty():
             self.io.console.print(
                 "Warn: Repository is dirty and allow_dirty_commits is set to False. No new commit created.",
@@ -32,7 +32,14 @@ class Repository:
             return False
 
         try:
-            self.repo.git.add(A=True)  # Stage all changes
+            if updated_files:
+                # Stage only the specified files
+                for file in updated_files:
+                    self.repo.git.add(file)
+            else:
+                # If no specific files are provided, stage all changes
+                self.repo.git.add(A=True)
+
             # Get current git user
             config_reader = self.repo.config_reader()
             current_name = config_reader.get_value("user", "name", "Pluscoder")

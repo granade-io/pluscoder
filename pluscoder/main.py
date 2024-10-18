@@ -13,7 +13,7 @@ from pluscoder.model import get_inferred_provider
 from pluscoder.repo import Repository
 from pluscoder.setup import setup
 from pluscoder.type import AgentState, TokenUsage
-from pluscoder.workflow import agent_dict, run_workflow
+from pluscoder.workflow import build_agents, build_workflow, run_workflow
 
 
 def banner() -> None:
@@ -92,11 +92,9 @@ def display_initial_messages():
 
     # Get model and provider information
     main_provider = get_inferred_provider()
-    orchestrator_model = (
-        config.orchestrator_model if config.orchestrator_model else config.model
-    )
+    orchestrator_model = config.orchestrator_model or config.model
     orchestrator_provider = config.orchestrator_model_provider or main_provider
-    weak_model = config.weak_model if config.weak_model else config.model
+    weak_model = config.weak_model or config.model
     weak_provider = config.weak_model_provider or main_provider
 
     # Construct model information string
@@ -120,12 +118,34 @@ def display_initial_messages():
 
 
 # Run the workflow
-def choose_chat_agent_node():
-    """Allows the user to choose which agent to chat with."""
+def choose_chat_agent_node(agents: dict):
+    """Allows the user to choose which agent to chat with or uses the default agent if specified."""
+    if config.default_agent:
+        if config.default_agent.isdigit():
+            agent_index = int(config.default_agent)
+            agent = list(agents)[agent_index - 1]
+        else:
+            agent = config.default_agent
+        io.event(f"> Using default agent: [green]{agent}[/green]")
+        return agent
 
-    io.console.print("[bold green]Choose an agent to chat with:[/bold green]")
+    display_agent_list(agents)
 
-    for i, (_agent_id, agent) in enumerate(agent_dict.items(), 1):
+    choice = Prompt.ask(
+        "Select an agent",
+        choices=[str(i) for i in range(1, len(agents) + 1)],
+        default="1",
+    )
+
+    chosen_agent = list(agents)[int(choice) - 1]
+    io.event(f"> Starting chat with {chosen_agent} agent.")
+    return chosen_agent
+
+
+def display_agent_list(agents: dict):
+    """Display the list of available agents with their indices."""
+    io.console.print("\n[bold green]Available agents:[/bold green]")
+    for i, (_agent_id, agent) in enumerate(agents.items(), 1):
         agent_type = (
             "[cyan]Custom[/cyan]"
             if isinstance(agent, CustomAgent)
@@ -133,15 +153,15 @@ def choose_chat_agent_node():
         )
         io.console.print(f"{i}. {display_agent(agent, agent_type)}")
 
-    choice = Prompt.ask(
-        "Select an agent",
-        choices=[str(i) for i in range(1, len(agent_dict) + 1)],
-        default="1",
-    )
 
-    chosen_agent = list(agent_dict.keys())[int(choice) - 1]
-    io.event(f"> Starting chat with {chosen_agent} agent.")
-    return chosen_agent
+def explain_default_agent_usage():
+    """Explain how to use the --default_agent option."""
+    io.console.print(
+        "\n[bold]How to use --default_agent:[/bold]"
+        "\n1. Use the agent name: --default_agent=orchestrator"
+        "\n2. Use the agent index: --default_agent=1"
+        "\nExample: python -m pluscoder --default_agent=orchestrator"
+    )
 
 
 def main() -> None:
@@ -151,12 +171,6 @@ def main() -> None:
     try:
         if not setup():
             return
-
-        warnings = run_silent_checks()
-        for warning in warnings:
-            io.console.print(f"Warning: {warning}", style="bold dark_goldenrod")
-            if not io.confirm("Proceed anyways?"):
-                sys.exit(0)
 
         display_initial_messages()
 
@@ -172,32 +186,57 @@ def main() -> None:
         if config.show_config:
             show_config()
             return
+
+        # Check if the default_agent is valid
+        agent_dict = build_agents()
+        if config.default_agent and (
+            # Check if valid number
+            config.default_agent.isdigit()
+            and (
+                int(config.default_agent) < 1
+                or int(config.default_agent) > len(agent_dict)
+            )
+            # Check if valid name
+            or not config.default_agent.isdigit()
+            and config.default_agent not in agent_dict
+        ):
+            display_agent_list(agent_dict)
+            io.console.print(
+                f"Error: Invalid agent: {config.default_agent}", style="bold red"
+            )
+            sys.exit(1)
+
+        warnings = run_silent_checks()
+        for warning in warnings:
+            io.console.print(f"Warning: {warning}", style="bold dark_goldenrod")
+            if not io.confirm("Proceed anyways?"):
+                sys.exit(0)
     except Exception as err:
         io.event(f"An error occurred. {err}")
         return
     try:
+        chat_agent = choose_chat_agent_node(agent_dict)
+
         state = {
             "return_to_user": False,
             "messages": [],
             "context_files": [],
-            "orchestrator_state": AgentState.default(),
-            "domain_stakeholder_state": AgentState.default(),
-            "planning_state": AgentState.default(),
-            "developer_state": AgentState.default(),
-            "domain_expert_state": AgentState.default(),
             "accumulated_token_usage": TokenUsage.default(),
             "current_agent_deflections": 0,
             "max_agent_deflections": 3,
-            "chat_agent": choose_chat_agent_node(),
+            "chat_agent": chat_agent,
             "is_task_list_workflow": False,
         }
 
         # Add custom agent states
-        for agent_id, agent in agent_dict.items():
-            if isinstance(agent, CustomAgent):
-                state[f"{agent_id.lower()}_state"] = AgentState.default()
+        for agent_id in agent_dict:
+            state[f"{agent_id.lower()}_state"] = AgentState.default()
 
-        asyncio.run(run_workflow(state))
+        app = build_workflow(agent_dict)
+        asyncio.run(run_workflow(app, state))
+    except Exception as err:
+        io.event(f"An error occurred. {err} during workflow run.")
+        return
     except KeyboardInterrupt:
         io.event("\nProgram interrupted. Exiting gracefully...")
         return
