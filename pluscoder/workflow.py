@@ -155,12 +155,16 @@ def agent_router(
 ) -> str:
     """Decides where to go after an agent was called."""
 
-    if state["chat_agent"] != orchestrator_agent.id:
-        # When chatting an agent different from the orchestrator, go back to the user
-        return "user_input"
+    if state["chat_agent"] == orchestrator_agent.id:
+        # Always return to the orchestrator when called by the orchestrator
+        return orchestrator_agent.id
 
-    # Return to the orchestrator
-    return orchestrator_agent.id
+    if config.user_input:
+        # if called from bash input, exits graph
+        return END
+
+    # Otherwise return to the user
+    return "user_input"
 
 
 async def _agent_node(state: OrchestrationState, agent: Agent) -> OrchestrationState:
@@ -541,9 +545,4 @@ def build_workflow(agents: dict):
 
 # Run the workflow
 async def run_workflow(app, state: OrchestrationState) -> None:
-    async for event in app.astream_events(
-        state, config={"recursion_limit": 100}, version="v1"
-    ):
-        kind = event["event"]
-        if kind == "on_chain_end":
-            pass
+    return await app.ainvoke(state, config={"recursion_limit": 100})
