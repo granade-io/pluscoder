@@ -1,13 +1,11 @@
 from pluscoder import tools
 from pluscoder.agents.base import Agent
-from pluscoder.agents.prompts import (
-    BASE_PROMPT,
-    FILE_OPERATIONS_PROMPT,
-    OUTPUT_STRUCTURE_PROMPT_READ_ONLY,
-    OUTPUT_STRUCTURE_PROMPT_WRITE,
-    READONLY_MODE_PROMPT,
-    combine_prompts,
-)
+from pluscoder.agents.prompts import BASE_PROMPT
+from pluscoder.agents.prompts import FILE_OPERATIONS_PROMPT
+from pluscoder.agents.prompts import OUTPUT_STRUCTURE_PROMPT_READ_ONLY
+from pluscoder.agents.prompts import OUTPUT_STRUCTURE_PROMPT_WRITE
+from pluscoder.agents.prompts import READONLY_MODE_PROMPT
+from pluscoder.agents.prompts import combine_prompts
 from pluscoder.config import config
 
 
@@ -43,9 +41,7 @@ Guidelines:
         system_message = combine_prompts(
             BASE_PROMPT,
             self.developer_prompt,
-            OUTPUT_STRUCTURE_PROMPT_READ_ONLY
-            if config.read_only
-            else OUTPUT_STRUCTURE_PROMPT_WRITE,
+            OUTPUT_STRUCTURE_PROMPT_READ_ONLY if config.read_only else OUTPUT_STRUCTURE_PROMPT_WRITE,
             FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
         )
         super().__init__(
@@ -58,9 +54,7 @@ Guidelines:
 
 class DomainStakeholderAgent(Agent):
     id = "domain_stakeholder"
-    description = (
-        "Discuss project details, maintain project overview, roadmap, and brainstorm"
-    )
+    description = "Discuss project details, maintain project overview, roadmap, and brainstorm"
 
     domain_prompt = """
 *SPECIALIZATION INSTRUCTIONS*:
@@ -96,9 +90,7 @@ These are only example questions to help you understand the project vision and g
         system_message = combine_prompts(
             BASE_PROMPT,
             self.domain_prompt,
-            OUTPUT_STRUCTURE_PROMPT_READ_ONLY
-            if config.read_only
-            else OUTPUT_STRUCTURE_PROMPT_WRITE,
+            OUTPUT_STRUCTURE_PROMPT_READ_ONLY if config.read_only else OUTPUT_STRUCTURE_PROMPT_WRITE,
             FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
         )
         super().__init__(
@@ -152,9 +144,7 @@ THE PROPOSAL NEVER IS FULLY CORRECT, WAS MADE BY AN IA, FIND THOSE DETAILS TO IM
         system_message = combine_prompts(
             BASE_PROMPT,
             self.domain_prompt,
-            OUTPUT_STRUCTURE_PROMPT_READ_ONLY
-            if config.read_only
-            else OUTPUT_STRUCTURE_PROMPT_WRITE,
+            OUTPUT_STRUCTURE_PROMPT_READ_ONLY if config.read_only else OUTPUT_STRUCTURE_PROMPT_WRITE,
             FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
         )
         super().__init__(
@@ -212,9 +202,7 @@ When creating a plan, follow this structure:
         system_message = combine_prompts(
             BASE_PROMPT,
             self.planning_prompt,
-            OUTPUT_STRUCTURE_PROMPT_READ_ONLY
-            if config.read_only
-            else OUTPUT_STRUCTURE_PROMPT_WRITE,
+            OUTPUT_STRUCTURE_PROMPT_READ_ONLY if config.read_only else OUTPUT_STRUCTURE_PROMPT_WRITE,
             FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
         )
         super().__init__(

@@ -1,4 +1,5 @@
-from unittest.mock import mock_open, patch
+from unittest.mock import mock_open
+from unittest.mock import patch
 
 from pluscoder.fs import apply_block_update
 
@@ -31,9 +32,7 @@ x = 10
     mock_path.assert_called_once_with("test.py")
     mock_path.return_value.exists.assert_called_once()
     mock_path.return_value.read_text.assert_called_once()
-    mock_path.return_value.write_text.assert_called_once_with(
-        "print('Hello, World!')\nx = 10\n"
-    )
+    mock_path.return_value.write_text.assert_called_once_with("print('Hello, World!')\nx = 10\n")
 
 
 @patch("pluscoder.fs.io")
@@ -76,6 +75,4 @@ from dotenv import load_dotenv
     mock_path.assert_called_once_with("test.py")
     mock_path.return_value.exists.assert_called_once()
     mock_path.return_value.read_text.assert_not_called()
-    mock_path.return_value.write_text.assert_called_once_with(
-        "import os\nfrom dotenv import load_dotenv"
-    )
+    mock_path.return_value.write_text.assert_called_once_with("import os\nfrom dotenv import load_dotenv")

@@ -1,6 +1,9 @@
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
 
 from langchain.schema import AIMessage
 from langchain_core.callbacks import BaseCallbackHandler
@@ -25,22 +28,13 @@ class FileCallbackHandler(BaseCallbackHandler):
                 # check type str for content
                 # if isinstance(m.content, str):
                 if type(m.content) is str:
-                    chat_log += (
-                        "\n".join(f"{m.type}: {line}" for line in m.content.split("\n"))
-                        + "\n"
-                    )
+                    chat_log += "\n".join(f"{m.type}: {line}" for line in m.content.split("\n")) + "\n"
                 # check type list for content
                 # elif isinstance(m.content, list):
                 elif type(m.content) is list:
                     for item in m.content:
                         if isinstance(item, dict) and "text" in item:
-                            chat_log += (
-                                "\n".join(
-                                    f"{m.type}: {line}"
-                                    for line in item["text"].split("\n")
-                                )
-                                + "\n"
-                            )
+                            chat_log += "\n".join(f"{m.type}: {line}" for line in item["text"].split("\n")) + "\n"
                         else:
                             chat_log += f"{m.type}: {item!s}\n"
 
@@ -56,13 +50,7 @@ class FileCallbackHandler(BaseCallbackHandler):
         **kwargs: Any,
     ) -> None:
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        chat_log = (
-            "\n".join(
-                f"OUTPUT: {line}"
-                for line in response.generations[0][0].text.split("\n")
-            )
-            + "\n"
-        )
+        chat_log = "\n".join(f"OUTPUT: {line}" for line in response.generations[0][0].text.split("\n")) + "\n"
         log_entry = f"[{timestamp}] LLM OUTPUT:\n{chat_log}\n---\n\n"
 
         with Path(llm_log_file).open("a") as f:

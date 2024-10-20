@@ -1,15 +1,15 @@
+from unittest.mock import Mock
+from unittest.mock import patch
+
 import pytest
 import requests
-from unittest.mock import patch, Mock
 
-from pluscoder.tools import (
-    file_detection_with_confirmation,
-    move_files,
-    read_files,
-    update_file,
-    read_file_from_url,
-    convert_to_raw_url,
-)
+from pluscoder.tools import convert_to_raw_url
+from pluscoder.tools import file_detection_with_confirmation
+from pluscoder.tools import move_files
+from pluscoder.tools import read_file_from_url
+from pluscoder.tools import read_files
+from pluscoder.tools import update_file
 
 
 @pytest.fixture
@@ -77,7 +77,8 @@ New file content
     result = file_detection_with_confirmation.run(
         {"file_path": str(temp_file), "content": content, "confirmation": "n"}
     )
-    assert "Update for" in result and "was not confirmed" in result
+    assert "Update for" in result
+    assert "was not confirmed" in result
 
 
 def test_move_files_all_successful(tmp_path):
@@ -165,7 +166,7 @@ def test_convert_to_raw_url():
     assert convert_to_raw_url(other_url) == other_url
 
 
-@patch('requests.get')
+@patch("requests.get")
 def test_read_file_from_url(mock_get):
     # Mock the requests.get method
     mock_response = Mock()
@@ -185,7 +186,7 @@ def test_read_file_from_url(mock_get):
     mock_get.assert_called_with("https://raw.githubusercontent.com/user/repo/main/file.txt")
 
 
-@patch('requests.get')
+@patch("requests.get")
 def test_read_file_from_url_error(mock_get):
     # Mock the requests.get method to raise an exception
     mock_get.side_effect = requests.RequestException("Error")

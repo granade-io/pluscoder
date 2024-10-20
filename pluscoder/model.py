@@ -72,9 +72,7 @@ def get_llm():
 
 def get_orchestrator_llm():
     model = config.orchestrator_model if config.orchestrator_model else config.model
-    provider = (
-        config.orchestrator_model_provider or config.provider or get_inferred_provider()
-    )
+    provider = config.orchestrator_model_provider or config.provider or get_inferred_provider()
     return get_llm_base(model, provider)
 
 

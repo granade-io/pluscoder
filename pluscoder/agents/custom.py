@@ -1,15 +1,13 @@
 from pluscoder import tools
 from pluscoder.agents.base import Agent
-from pluscoder.agents.prompts import (
-    BASE_PROMPT,
-    FILE_OPERATIONS_PROMPT,
-    OUTPUT_STRUCTURE_PROMPT_READ_ONLY,
-    OUTPUT_STRUCTURE_PROMPT_WRITE,
-    READONLY_MODE_PROMPT,
-    REMINDER_PREFILL_FILE_OPERATIONS_PROMPT,
-    REMINDER_PREFILL_PROMP,
-    combine_prompts,
-)
+from pluscoder.agents.prompts import BASE_PROMPT
+from pluscoder.agents.prompts import FILE_OPERATIONS_PROMPT
+from pluscoder.agents.prompts import OUTPUT_STRUCTURE_PROMPT_READ_ONLY
+from pluscoder.agents.prompts import OUTPUT_STRUCTURE_PROMPT_WRITE
+from pluscoder.agents.prompts import READONLY_MODE_PROMPT
+from pluscoder.agents.prompts import REMINDER_PREFILL_FILE_OPERATIONS_PROMPT
+from pluscoder.agents.prompts import REMINDER_PREFILL_PROMP
+from pluscoder.agents.prompts import combine_prompts
 from pluscoder.config import config
 from pluscoder.type import AgentState
 
@@ -40,12 +38,8 @@ class CustomAgent(Agent):
         return combine_prompts(
             BASE_PROMPT,
             self.custom_prompt,
-            OUTPUT_STRUCTURE_PROMPT_READ_ONLY
-            if config.read_only
-            else OUTPUT_STRUCTURE_PROMPT_WRITE,
-            FILE_OPERATIONS_PROMPT
-            if not self.read_only and not config.read_only
-            else READONLY_MODE_PROMPT,
+            OUTPUT_STRUCTURE_PROMPT_READ_ONLY if config.read_only else OUTPUT_STRUCTURE_PROMPT_WRITE,
+            FILE_OPERATIONS_PROMPT if not self.read_only and not config.read_only else READONLY_MODE_PROMPT,
         )
 
     def process_agent_response(self, state, response):
@@ -56,7 +50,5 @@ class CustomAgent(Agent):
     def get_reminder_prefill(self, state: AgentState) -> str:
         return combine_prompts(
             REMINDER_PREFILL_PROMP,
-            REMINDER_PREFILL_FILE_OPERATIONS_PROMPT
-            if not config.read_only and not self.read_only
-            else "",
+            REMINDER_PREFILL_FILE_OPERATIONS_PROMPT if not config.read_only and not self.read_only else "",
         )

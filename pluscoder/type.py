@@ -1,5 +1,7 @@
 from operator import add
-from typing import Annotated, List, Literal
+from typing import Annotated
+from typing import List
+from typing import Literal
 
 from langchain_core.messages import AnyMessage
 from langchain_core.pydantic_v1 import BaseModel
@@ -108,9 +110,7 @@ class AgentInstructions(BaseModel):
         return next((task for task in self.task_list if not task.is_finished), None)
 
     def to_markdown(self) -> str:
-        markdown = (
-            f"# General Objective\n\n{self.general_objective}\n\n## Task List\n\n"
-        )
+        markdown = f"# General Objective\n\n{self.general_objective}\n\n## Task List\n\n"
         for i, task in enumerate(self.task_list, 1):
             status = "✅" if task.is_finished else "⏳"
             markdown += f"{i}. {status} **{task.objective}** (Agent: {task.agent})\n"

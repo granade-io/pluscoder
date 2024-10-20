@@ -53,18 +53,14 @@ def apply_block_update(file_path: str, block_content: str):
     path = Path(file_path)
 
     # Check if the block content matches the specific format using regex
-    block_pattern = re.compile(
-        r">>> FIND\n(.*?\n|\n{0})===\n(.*?)\n<<< REPLACE", re.DOTALL
-    )
+    block_pattern = re.compile(r">>> FIND\n(.*?\n|\n{0})===\n(.*?)\n<<< REPLACE", re.DOTALL)
     matches = list(block_pattern.finditer(block_content))
     original_content = ""
 
     if matches:
         # debug log
         io.log_to_debug_file(f"FOUND BLOCK FOR {file_path}\n")
-        io.log_to_debug_file(
-            f"{"<-- START OF WHOLE BLOCK -->"}\n{block_content}\n{"<-- END OF WHOLE BLOCK -->"}\n\n"
-        )
+        io.log_to_debug_file(f"{"<-- START OF WHOLE BLOCK -->"}\n{block_content}\n{"<-- END OF WHOLE BLOCK -->"}\n\n")
 
         # Read the current file content
         if path.exists():
@@ -77,9 +73,7 @@ def apply_block_update(file_path: str, block_content: str):
         for match in matches:
             # debug log
             io.log_to_debug_file(f"APPLYING BLOCK CHUNK TO {file_path}\n")
-            io.log_to_debug_file(
-                f"{"<-- START OF BLOCK CHUNK -->"}{block_content}\n{"<-- END OF BLOCK CHUNK -->"}\n\n"
-            )
+            io.log_to_debug_file(f"{"<-- START OF BLOCK CHUNK -->"}{block_content}\n{"<-- END OF BLOCK CHUNK -->"}\n\n")
 
             find_content = match.group(1).strip()
             replace_content = match.group(2).strip()
@@ -91,10 +85,8 @@ def apply_block_update(file_path: str, block_content: str):
 
             # Apply the replacement, make it fail raising an error if find_content is not found or trying to replace entire file
             if find_content not in current_content:
-                return MSG_FIND_NOT_FOUND.format(
-                    file_path=file_path, content=find_content
-                )
-            elif not find_content and current_content:
+                return MSG_FIND_NOT_FOUND.format(file_path=file_path, content=find_content)
+            if not find_content and current_content:
                 return MSG_WHOLE_FILE_REPLACEMENT.format(file_path=file_path)
 
             current_content = current_content.replace(find_content, replace_content)

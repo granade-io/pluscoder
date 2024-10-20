@@ -1,13 +1,12 @@
 from typing import List
 
 from pluscoder import tools
-from pluscoder.agents.base import Agent, AgentState
-from pluscoder.agents.prompts import (
-    BASE_PROMPT,
-    READONLY_MODE_PROMPT,
-    REMINDER_PREFILL_PROMP,
-    combine_prompts,
-)
+from pluscoder.agents.base import Agent
+from pluscoder.agents.base import AgentState
+from pluscoder.agents.prompts import BASE_PROMPT
+from pluscoder.agents.prompts import READONLY_MODE_PROMPT
+from pluscoder.agents.prompts import REMINDER_PREFILL_PROMP
+from pluscoder.agents.prompts import combine_prompts
 from pluscoder.message_utils import HumanMessage
 from pluscoder.model import get_orchestrator_llm
 from pluscoder.type import AgentInstructions
@@ -24,9 +23,7 @@ ORCHESTRATOR_REMINDER = """
 
 class OrchestratorAgent(Agent):
     id = "orchestrator"
-    description = (
-        "Break down the problem into a list of tasks and delegates it to other agents"
-    )
+    description = "Break down the problem into a list of tasks and delegates it to other agents"
 
     orchestrator_prompt = """
 *SPECIALIZATION INSTRUCTIONS*:
@@ -247,9 +244,7 @@ You *must follow* following rules when suggesting a task list:
             return None
 
         task_list = state["tool_data"][tools.delegate_tasks.name]["task_list"]
-        return next(
-            (task for task in task_list if not task.get("is_finished", False)), None
-        )
+        return next((task for task in task_list if not task.get("is_finished", False)), None)
 
     def get_completed_tasks(self, state: AgentState) -> List[dict]:
         """
@@ -283,11 +278,7 @@ You *must follow* following rules when suggesting a task list:
         Returns:
             List[dict]: The task list.
         """
-        if (
-            "tool_data" not in state
-            or not state["tool_data"]
-            or tools.delegate_tasks.name not in state["tool_data"]
-        ):
+        if "tool_data" not in state or not state["tool_data"] or tools.delegate_tasks.name not in state["tool_data"]:
             return []
 
         return state["tool_data"][tools.delegate_tasks.name]["task_list"]
@@ -320,9 +311,7 @@ You *must follow* following rules when suggesting a task list:
 
         return state["tool_data"][tools.is_task_completed.name]["completed"]
 
-    def mark_current_task_as_completed(
-        self, state: AgentState, response: str
-    ) -> AgentState:
+    def mark_current_task_as_completed(self, state: AgentState, response: str) -> AgentState:
         """
         Mark the current task as completed and return a new state.
         Adds the llm response to understand in which message the response was marked as completed.
@@ -351,20 +340,11 @@ You *must follow* following rules when suggesting a task list:
         general_objective = task_list_data["general_objective"]
 
         completed_tasks = self.get_completed_tasks(state)
-        completed_tasks_info = "\n".join(
-            [
-                f"- Completed: {t['objective']}\n  {t['details']}"
-                for t in completed_tasks
-            ]
-        )
+        completed_tasks_info = "\n".join([f"- Completed: {t['objective']}\n  {t['details']}" for t in completed_tasks])
 
         # Get any image for multi-modal llm
-        images = list(
-            filter(lambda res: res.startswith("img::"), task_list_data["resources"])
-        )
-        other_resources = list(
-            filter(lambda res: not res.startswith("img::"), task_list_data["resources"])
-        )
+        images = list(filter(lambda res: res.startswith("img::"), task_list_data["resources"]))
+        other_resources = list(filter(lambda res: not res.startswith("img::"), task_list_data["resources"]))
         images_instruction = ""
         resources_instruction = ""
 
@@ -373,9 +353,10 @@ You *must follow* following rules when suggesting a task list:
         if other_resources:
             resources_instruction += f"\n*Other resources:* {"".join(other_resources)}"
 
-        instruction = f"""You are requested to solve a specific task related to the objective: {general_objective}.
+        return f"""\
+You are requested to solve a specific task related to the objective: {general_objective}.
 
-        These tasks were already completed:
+These tasks were already completed:
 
 *Context (completed tasks):*
 {completed_tasks_info}
@@ -395,7 +376,6 @@ Expected Outcome: {task.get("outcome", "No specific outcome defined.")}
 
 Write you answer step by step, using a <thinking> block for analysis your throughts before giving a response to me using <output> and edit files using <source> blocks.
 """
-        return instruction
 
     def is_task_list_empty(self, state: AgentState):
         """

@@ -1,12 +1,19 @@
-import pytest
-from unittest.mock import patch, MagicMock
-from langchain_core.messages import AIMessage, HumanMessage
+from unittest.mock import MagicMock
+from unittest.mock import patch
 
-from pluscoder.agents.orchestrator import OrchestratorAgent
-from pluscoder.workflow import build_workflow, run_workflow
-from pluscoder.config import config
-from pluscoder.type import OrchestrationState, AgentState, TokenUsage
+import pytest
+from langchain_core.messages import AIMessage
+from langchain_core.messages import HumanMessage
+
 from pluscoder.agents.base import Agent
+from pluscoder.agents.orchestrator import OrchestratorAgent
+from pluscoder.config import config
+from pluscoder.type import AgentState
+from pluscoder.type import OrchestrationState
+from pluscoder.type import TokenUsage
+from pluscoder.workflow import build_workflow
+from pluscoder.workflow import run_workflow
+
 
 @pytest.fixture
 def agent():
@@ -19,6 +26,7 @@ def agent():
     agent.id = "developer"
     return agent
 
+
 @pytest.fixture
 def orchestrator_agent():
     return OrchestratorAgent(
@@ -28,10 +36,12 @@ def orchestrator_agent():
 
 
 @pytest.mark.asyncio
-@patch('pluscoder.model.get_llm')
-@patch('pluscoder.workflow.accumulate_token_usage')
-@patch.object(Agent, '_invoke_llm_chain')
-async def test_workflow_with_mocked_llm(mock_invoke_llm_chain, mock_accumulate_token_usage, mock_get_llm, orchestrator_agent, agent):
+@patch("pluscoder.model.get_llm")
+@patch("pluscoder.workflow.accumulate_token_usage")
+@patch.object(Agent, "_invoke_llm_chain")
+async def test_workflow_with_mocked_llm(
+    mock_invoke_llm_chain, mock_accumulate_token_usage, mock_get_llm, orchestrator_agent, agent
+):
     # Mock the LLM response
     mock_llm = MagicMock()
     mock_get_llm.return_value = mock_llm
@@ -52,7 +62,7 @@ async def test_workflow_with_mocked_llm(mock_invoke_llm_chain, mock_accumulate_t
             token_usage=TokenUsage(prompt_tokens=0, completion_tokens=0, total_tokens=0, total_cost=0.0),
             status="active",
             agent_messages=[],
-            tool_data={}
+            tool_data={},
         ),
         domain_stakeholder_state=AgentState.default(),
         planning_state=AgentState.default(),
@@ -60,7 +70,7 @@ async def test_workflow_with_mocked_llm(mock_invoke_llm_chain, mock_accumulate_t
         domain_expert_state=AgentState.default(),
         chat_agent="orchestrator",
         is_task_list_workflow=False,
-        accumulated_token_usage=TokenUsage(prompt_tokens=0, completion_tokens=0, total_tokens=0, total_cost=0.0)
+        accumulated_token_usage=TokenUsage(prompt_tokens=0, completion_tokens=0, total_tokens=0, total_cost=0.0),
     )
 
     # Set user input for testing

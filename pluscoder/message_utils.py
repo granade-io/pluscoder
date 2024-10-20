@@ -1,7 +1,10 @@
 import base64
 import os
 import re
-from typing import Any, Dict, List, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Union
 from urllib.parse import urlparse
 
 from langchain_core.messages import AnyMessage
@@ -12,7 +15,7 @@ def get_message_content_str(message: AnyMessage) -> str:
     if type(message.content) is str:
         return message.content
     # check type list for content
-    elif type(message.content) is list:
+    if type(message.content) is list:
         for item in message.content:
             if isinstance(item, dict) and "text" in item:
                 return item["text"]
@@ -34,8 +37,7 @@ def convert_image_paths_to_base64(input_text: str) -> Union[str, List[Dict[str, 
                     else "image/png"
                 )
                 return f"data:{mime_type};base64,{encoded_string}"
-            else:
-                return None
+            return None
         except Exception as e:
             print(f"Error converting image to base64: {e}")
             return None
@@ -57,16 +59,12 @@ def convert_image_paths_to_base64(input_text: str) -> Union[str, List[Dict[str, 
             image_path_or_url = matches[i][5:]  # Remove the 'img::' prefix
             if urlparse(image_path_or_url).scheme in ["http", "https"]:
                 result.append({"type": "text", "text": matches[i]})
-                result.append(
-                    {"type": "image_url", "image_url": {"url": image_path_or_url}}
-                )
+                result.append({"type": "image_url", "image_url": {"url": image_path_or_url}})
             else:
                 image_data = image_to_base64(image_path_or_url)
                 if image_data:
                     result.append({"type": "text", "text": matches[i]})
-                    result.append(
-                        {"type": "image_url", "image_url": {"url": image_data}}
-                    )
+                    result.append({"type": "image_url", "image_url": {"url": image_data}})
                 else:
                     # Image doesn't exist or couldn't be processed, keep the original text
                     result.append({"type": "text", "text": matches[i]})

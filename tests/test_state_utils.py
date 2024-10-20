@@ -1,10 +1,13 @@
+from typing import TYPE_CHECKING
 from unittest.mock import patch
 
-from pluscoder.state_utils import (
-    accumulate_token_usage,
-    sum_token_usage,
-)
-from pluscoder.type import AgentState, OrchestrationState, TokenUsage
+from pluscoder.state_utils import accumulate_token_usage
+from pluscoder.state_utils import sum_token_usage
+
+if TYPE_CHECKING:
+    from pluscoder.type import AgentState
+    from pluscoder.type import OrchestrationState
+    from pluscoder.type import TokenUsage
 
 
 @patch("pluscoder.state_utils.get_model_token_info")
@@ -51,7 +54,6 @@ def test_accumulate_token_usage(mock_get_model_token_info):
         }
     }
 
-
     result = accumulate_token_usage(global_state, agent_state)
 
     assert result == {
@@ -86,7 +88,6 @@ def test_accumulate_token_usage_empty_global_state(mock_get_model_token_info):
         }
     }
 
-
     result = accumulate_token_usage(global_state, agent_state)
 
     assert result == {
@@ -97,6 +98,7 @@ def test_accumulate_token_usage_empty_global_state(mock_get_model_token_info):
             "total_cost": 0.002,
         }
     }
+
 
 @patch("pluscoder.state_utils.get_model_token_info")
 def test_accumulate_token_usage_with_none_model_info(mock_get_model_token_info):
@@ -121,6 +123,7 @@ def test_accumulate_token_usage_with_none_model_info(mock_get_model_token_info):
             "total_cost": 0.002,
         }
     }
+
 
 @patch("pluscoder.state_utils.get_model_token_info")
 def test_accumulate_token_usage_with_model_info(mock_get_model_token_info):

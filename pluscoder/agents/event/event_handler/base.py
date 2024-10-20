@@ -42,7 +42,8 @@ class EventEmitter:
         if isinstance(handler, AgentEventBaseHandler):
             self.handlers.append(handler)
         else:
-            raise TypeError("Handler must be an instance of AgentEventBaseHandler")
+            msg = "Handler must be an instance of AgentEventBaseHandler"
+            raise TypeError(msg)
 
     def remove_handler(self, handler):
         if handler in self.handlers:
