@@ -205,6 +205,9 @@ class Settings(BaseSettings):
         True, description="Hide source blocks in LLM output"
     )
 
+    # Debug mode
+    debug: bool = Field(False, description="Enable debug mode")
+
     # Custom prompt commands
     custom_prompt_commands: List[Dict[str, Any]] = Field(
         default=[],
