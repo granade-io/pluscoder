@@ -47,12 +47,12 @@ allow_dirty_commits: true # Allow commits in a dirty repository
 #------------------------------------------------------------------------------
 # Test and Lint Settings
 #------------------------------------------------------------------------------
-run_tests_after_edit: false  # Run tests after file edits
-run_lint_after_edit: false   # Run linter after file edits
-test_command: pytest                # Command to run tests
-lint_command: ruff check .                # Command to run linter
+run_tests_after_edit: true  # Run tests after file edits
+run_lint_after_edit: true   # Run linter after file edits
+test_command: make test                # Command to run tests
+lint_command: make lint                # Command to run linter
 auto_run_linter_fix: true   # Auto-run linter fix before linting
-lint_fix_command: make format && python -m ruff check --fix .            # Command to run linter fix
+lint_fix_command: make format        # Command to run linter fix
 
 #------------------------------------------------------------------------------
 # Repomap Settings
