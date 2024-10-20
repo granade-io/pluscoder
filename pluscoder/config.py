@@ -206,7 +206,7 @@ class Settings(BaseSettings):
     )
 
     # Debug mode
-    debug: bool = Field(False, description="Enable debug mode")
+    debug: CliImplicitFlag[bool] = Field(False, description="Enable debug mode")
 
     # Custom prompt commands
     custom_prompt_commands: List[Dict[str, Any]] = Field(

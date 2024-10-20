@@ -285,8 +285,22 @@ class IO:
         )
 
     def log_to_debug_file(
-        self, message: Optional[str] = None, json_data: Optional[dict] = None
+        self,
+        message: Optional[str] = None,
+        json_data: Optional[dict] = None,
+        indent: int = 0,
     ) -> None:
+        """
+        Log a message or JSON data to the debug file with optional indentation.
+
+        Args:
+            message (Optional[str]): The message to log.
+            json_data (Optional[dict]): JSON data to log.
+            indent (int): Number of spaces to indent the logged content. Defaults to 0.
+
+        Raises:
+            ValueError: If neither message nor json_data is provided.
+        """
         if json_data is not None:
             try:
                 content = json.dumps(json_data, indent=2)
@@ -300,8 +314,14 @@ class IO:
         # Create the directory if it doesn't exist
         path = Path(self.DEBUG_FILE)
         path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Apply indentation
+        indented_content = "\n".join(
+            " " * indent + line for line in content.split("\n")
+        )
+
         with open(self.DEBUG_FILE, "a") as f:
-            f.write(f"{content}\n")
+            f.write(f"{indented_content}\n")
 
     def set_progress(self, progress: Progress | Live) -> None:
         self.progress = progress

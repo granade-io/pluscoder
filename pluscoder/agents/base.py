@@ -1,10 +1,11 @@
 import asyncio
 import re
+import traceback
 from time import sleep
 from typing import List, Literal
 
 from langchain_community.callbacks.manager import get_openai_callback
-from langchain_core.messages import AIMessage, merge_message_runs
+from langchain_core.messages import AIMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable, RunnableMap
 from langgraph.graph import StateGraph
@@ -142,9 +143,9 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
 
         assistant_prompt = RunnableMap(
             {
-                "messages": lambda x: merge_message_runs(
-                    state["messages"] + deflection_messages + reminder_messages
-                ),
+                "messages": lambda x: state["messages"]
+                + deflection_messages
+                + reminder_messages,
                 "files_content": lambda x: files_content,
                 "repomap": lambda x: self.get_repomap() if config.use_repomap else "",
             }
@@ -233,6 +234,9 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                     # Disable sysetem reminders when solving specific errors
                     self.disable_reminder = True
 
+                    io.log_to_debug_file("## AgentException Deflection")
+                    io.log_to_debug_file(e.message, indent=4)
+
                     # io.console.print(f"Error: {e!s}")
                     io.console.print(
                         "::re-thinking due an issue:: ", style="bold dark_goldenrod"
@@ -242,19 +246,22 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                         interaction_msgs.append(
                             HumanMessage(content=f"An error ocurrred: {e!s}")
                         )
-                except Exception as e:
+                except Exception:
                     # Handles unknown exceptions, maybe caused by llm api or wrong state
-                    io.console.log(f"An error occurred: {e!s}", style="bold red")
-                    io.log_to_debug_file("########### CALL AGENT ERROR ###########")
-                    io.log_to_debug_file(f"Error: {e!s}")
+                    error_traceback = traceback.format_exc()
+                    if config.debug:
+                        io.console.log(
+                            f"Traceback:\n{error_traceback}", style="bold red"
+                        )
+                    io.log_to_debug_file(f"\n\nTraceback:\n{error_traceback}", indent=4)
                     io.log_to_debug_file("State:")
-                    io.log_to_debug_file(message=str(state))
+                    io.log_to_debug_file(message=str(state), indent=4)
                     io.log_to_debug_file("Deflection messages:")
-                    io.log_to_debug_file(message=str(interaction_msgs))
+                    io.log_to_debug_file(message=str(interaction_msgs), indent=4)
                     sleep(1)  # Wait a bit, some api calls need time to recover
                     interaction_msgs.append(
                         HumanMessage(
-                            content="An error ocurrred. Please try exactly the same again"
+                            content="An error occurred. Please try exactly the same again"
                         )
                     )
                     if self.current_deflection <= self.max_deflections:
