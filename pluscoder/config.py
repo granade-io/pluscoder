@@ -145,6 +145,9 @@ class Settings(BaseSettings):
     hide_output_blocks: CliImplicitFlag[bool] = Field(False, description="Hide output blocks in LLM output")
     hide_source_blocks: CliImplicitFlag[bool] = Field(True, description="Hide source blocks in LLM output")
 
+    # Debug mode
+    debug: CliImplicitFlag[bool] = Field(False, description="Enable debug mode")
+
     # Custom prompt commands
     custom_prompt_commands: List[Dict[str, Any]] = Field(
         default=[],

@@ -273,7 +273,12 @@ class IO:
             return True
         return Confirm.ask(f"[green]{message}[/green]", console=self.console, default=True)
 
-    def log_to_debug_file(self, message: Optional[str] = None, json_data: Optional[dict] = None) -> None:
+    def log_to_debug_file(
+        self,
+        message: Optional[str] = None,
+        json_data: Optional[dict] = None,
+        indent: int = 0,
+    ) -> None:
         if json_data is not None:
             try:
                 content = json.dumps(json_data, indent=2)
@@ -288,8 +293,12 @@ class IO:
         # Create the directory if it doesn't exist
         path = Path(self.DEBUG_FILE)
         path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Apply indentation
+        indented_content = "\n".join(" " * indent + line for line in content.split("\n"))
+
         with open(self.DEBUG_FILE, "a") as f:
-            f.write(f"{content}\n")
+            f.write(f"{indented_content}\n")
 
     def set_progress(self, progress: Progress | Live) -> None:
         self.progress = progress
@@ -378,6 +387,14 @@ class IO:
 
     def stream(self, chunk: str):
         self.seen_nl = self.seen_nl or "\n<" in chunk
+
+        if isinstance(chunk, list) and len(chunk) >= 0:
+            chunk = "".join([c["text"] for c in chunk if c["type"] == "text"])
+        elif isinstance(chunk, str):
+            pass
+        else:
+            error = "Not chunk type"
+            raise ValueError(error)
 
         # Update filepath_buffer
         self.filepath_buffer += chunk

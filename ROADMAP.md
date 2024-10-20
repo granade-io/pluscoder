@@ -1,7 +1,12 @@
 # Prioritized Project Roadmap
 
-## Bugs:
-- Show warning and ask for confirmation then tests/linter are enabled when making request to agent which can due to unwanted errors
+## Features:
+- Alias --user_input --input
+- --llm_output_only to display only the output of llms as a clean output mode
+- --llm_output_file to write llm output to a file
+- GenAI commits messages and descriptions.
+- 
+
 - Allow custom prompt command to run in different agents from the current one
 
 ## High Priority Features

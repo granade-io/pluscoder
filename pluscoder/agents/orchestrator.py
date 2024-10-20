@@ -17,7 +17,7 @@ ORCHESTRATOR_REMINDER = """
 2. All editions related to the same file *must be handled by the same task*
 3. Task *must* be able to be executed sequentially and reference outcome of previous tasks.
 4. Tasks outcome must always be file updates/editions
-5. Especify in agent instructions the resources (links/images) the user gave (including 'img::' if present on images)
+5. Specify in agent instructions the resources (links/images) the user gave (including 'img::' if present on images)
 """
 
 

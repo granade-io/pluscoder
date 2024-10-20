@@ -171,7 +171,7 @@ FILE_OPERATIONS_PROMPT = """
 REMINDER_PREFILL_PROMP = """
 ----- SYSTEM REMINDER -----
 !!! THIS MESSAGE WAS NOT WRITTEN BY THE USER, IS A REMINDER TO YOURSELF AS AN AI ASSISTANT
-Respond to the user's requirement above. Consider when aswering:
+Respond to the user's requirement above. Consider when answering:
 - Base on your knowledge, read key files to fetch context about the user request. Read more important files that are *not* already read to understand context
 - Think step by step a solution then give an step by step answer using proper block structures.
 """

@@ -174,9 +174,9 @@ def test_build_assistant_prompt(mock_get_formatted_files_content, mock_generate_
 @patch("pluscoder.agents.base.file_callback")
 def test_call_agent(mock_file_callback, mock_io, mock_get_formatted_files_content, mock_get_llm, agent) -> None:
     # mock_generate_repomap.return_value = "My Repomap"
-    mock_get_llm.bind_tools.return_value.return_value = AIMessage(
-        content="AI response with file mention `some_file.txt`"
-    )
+    # mock_get_llm.bind_tools.return_value.return_value = AIMessage(
+    #     content="AI response with file mention `some_file.txt`"
+    # )
     # mock_get_formatted_files_content.return_value = "Mocked file content"
     state = AgentState(messages=[HumanMessage(content="Hello")], context_files=[])
 

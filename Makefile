@@ -103,7 +103,7 @@ lint: .ruff
 format: .ruff
 	@echo [$(DATETIME)] $@
 	@echo "[$(DATETIME)] Running ruff ..."
-	@ruff check . --fix --show-fixes --show-files # linter
+	@ruff check . --fix # linter
 	@ruff format . # formatter
 
 .PHONY: pre-commit-install  ## Install pre-commit hooks
