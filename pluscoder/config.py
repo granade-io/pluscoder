@@ -89,10 +89,10 @@ class Settings(BaseSettings):
     guidelines_file_path: str = Field("CODING_GUIDELINES.md", description="Path to the coding guidelines file")
 
     # Model and API settings
-    model: str = Field("anthropic.claude-3-5-sonnet-20240620-v1:0", description="LLM model to use")
+    model: Optional[str] = Field(None, description="LLM model to use")
     provider: Optional[str] = Field(
-        None,
-        description="Provider to use. Options: aws_bedrock, openai, litellm, anthropic",
+        "openai",
+        description="Provider to use. Options: bedrock, openai, anthropic",
     )
 
     orchestrator_model: Optional[str] = Field(None, description="LLM model to use for orchestrator")
@@ -115,8 +115,8 @@ class Settings(BaseSettings):
     aws_profile: str = Field("default", description="AWS profile name")
 
     # Git settings
-    auto_commits: bool = Field(True, description="Enable/disable automatic Git commits")
-    allow_dirty_commits: bool = Field(True, description="Allow commits in a dirty repository")
+    auto_commits: bool = Field(False, description="Enable/disable automatic Git commits")
+    allow_dirty_commits: bool = Field(False, description="Allow commits in a dirty repository")
 
     # Test and Lint settings
     run_tests_after_edit: bool = Field(False, description="Run tests after file edits")
