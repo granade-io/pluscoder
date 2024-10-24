@@ -9,8 +9,9 @@ from pluscoder import tools
 from pluscoder.config import Settings
 from pluscoder.config import config
 from pluscoder.io_utils import io
+from pluscoder.model import get_default_model_for_provider
+from pluscoder.model import get_model_token_info
 from pluscoder.repo import Repository
-from pluscoder.state_utils import get_model_token_info
 from pluscoder.type import AgentInstructions
 from pluscoder.type import AgentState
 from pluscoder.type import TokenUsage
@@ -53,6 +54,7 @@ CONFIG_TEMPLATE = """
 # provider: null                      # Provider (aws_bedrock, openai, litellm, anthropic, azure)
 # orchestrator_model_provider: null   # Provider for orchestrator model (default: same as provider)
 # weak_model_provider: null           # Provider for weak model (default: same as provider)
+# TODO: remove these keys
 # openai_api_key:                     # OpenAI API key
 # openai_api_base:                    # OpenAI API base URL
 # anthropic_api_key:                  # Anthropic API key
@@ -60,6 +62,7 @@ CONFIG_TEMPLATE = """
 #------------------------------------------------------------------------------
 # AWS Settings
 #------------------------------------------------------------------------------
+# TODO: remove these keys
 # aws_access_key_id:       # AWS Access Key ID
 # aws_secret_access_key:   # AWS Secret Access Key
 # aws_profile: default     # AWS profile name
@@ -175,11 +178,15 @@ def write_yaml(file_path, data):
 def prompt_for_config():
     example_config_text = load_example_config()
     descriptions = get_config_descriptions()
-    defaults = get_config_defaults()
+    current_config = get_config_defaults()
 
     for option in CONFIG_OPTIONS:
         description = descriptions[option]
-        default = defaults[option]
+        if option == "model":
+            default = get_default_model_for_provider(current_config.get("provider"))
+            current_config[option] = default
+        else:
+            default = current_config[option]
 
         prompt = f"{option} ({description})"
 
@@ -194,6 +201,7 @@ def prompt_for_config():
             value = Prompt.ask(prompt, default=str(default) if default is not None else "null")
 
         # Update the config text with the new value
+        current_config[option] = value
         example_config_text = re.sub(
             rf"^#?\s*{option}:.*$",
             f"{option}: {value}",

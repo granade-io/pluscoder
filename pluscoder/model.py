@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 from langchain_anthropic import ChatAnthropic
 from langchain_aws import ChatBedrock
 from langchain_community.chat_models import ChatLiteLLM
@@ -5,6 +7,102 @@ from langchain_openai import ChatOpenAI
 
 from pluscoder.config import config
 from pluscoder.io_utils import io
+
+
+def _get_model_cost() -> dict:
+    if hasattr(_get_model_cost, "model_cost"):
+        return _get_model_cost.model_cost
+
+    def get_from_litellm():
+        from litellm import model_cost
+
+        return model_cost
+
+    def get_from_json():
+        import json
+        import pkgutil
+
+        file = pkgutil.get_data("assets", "model_cost.json")
+        return json.loads(file)
+
+    def default():
+        return {}
+
+    for method in (get_from_litellm, get_from_json, default):
+        try:
+            model_cost = method()
+        except Exception:
+            # You might want to log the exception or handle it differently
+            continue
+        else:
+            _get_model_cost.model_cost = model_cost
+            return model_cost
+
+    # If all methods fail, raise an exception or return a default value
+    msg = "Unable to load model_cost from any source."
+    raise RuntimeError(msg)
+
+
+def _get_provider_model() -> dict:
+    if hasattr(_get_provider_model, "default_model"):
+        return _get_provider_model.default_model
+
+    def get_from_cost():
+        _model_cost = _get_model_cost()
+        return {
+            data.get("litellm_provider"): model for model, data in _model_cost.items() if data.get("mode") == "chat"
+        }
+
+    def get_from_json():
+        import json
+        import os
+        import pkgutil
+
+        file = pkgutil.get_data("assets", "model_default.json")
+        if file is not None:
+            return json.loads(file)
+
+        assets_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), "assets"))
+        file = os.path.join(assets_folder, "model_default.json")
+        with open(file, "r") as f:
+            return json.load(f)
+
+    def default():
+        return {
+            "bedrock": "anthropic.claude-3-5-sonnet-20240620-V1:0",
+            "openai": "gpt-4o",
+            "anthropic": "claude-3-5-sonnet-20240620",
+        }
+
+    for method in (get_from_json, get_from_cost, default):
+        try:
+            default_model = method()
+        except Exception:
+            # You might want to log the exception or handle it differently
+            continue
+        else:
+            _get_provider_model.default_model = default_model
+            return default_model
+
+    # If all methods fail, raise an exception or return a default value
+    msg = "Unable to load model_default from any source."
+    raise RuntimeError(msg)
+
+
+@lru_cache
+def get_model_token_info(model_name: str) -> dict:
+    model_cost = _get_model_cost()
+    if model_name in model_cost:
+        return model_cost[model_name]
+    if model_name.split("/")[-1] in model_cost:
+        return model_cost[model_name.split("/")[-1]]
+    return None
+
+
+@lru_cache
+def get_default_model_for_provider(provider_name: str) -> str | None:
+    default_models = _get_provider_model()
+    return default_models.get(provider_name, None)
 
 
 def get_llm_base(model_id, provider):

@@ -59,6 +59,9 @@ class AgentState(TypedDict, total=False):
         }
 
 
+# TODO: This should be config independent
+# Move {agent}_state to agent_states: [Dict[str, AgentState]]
+# Move config.custom_agents to agent_states: [Dict[str, AgentState]]
 OrchestrationState = TypedDict(
     "OrchestrationState",
     {

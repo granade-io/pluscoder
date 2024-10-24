@@ -103,7 +103,7 @@ def test_update_method_non_persisting():
 
         # Initial values
         assert config.streaming is True
-        assert config.model == "anthropic.claude-3-5-sonnet-20240620-v1:0"
+        assert config.model is None
 
         # Update without persisting
         config.update(streaming=False, model="new-model", persist=False)
@@ -121,4 +121,4 @@ def test_update_method_non_persisting():
         # Re-initialize to check if changes persist
         new_config = Settings(_env_file=None, ignore_yaml=True)
         assert new_config.streaming is True
-        assert new_config.model == "anthropic.claude-3-5-sonnet-20240620-v1:0"
+        assert new_config.model is None

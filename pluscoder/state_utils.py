@@ -1,51 +1,9 @@
 from pluscoder.agents.event.config import event_emitter
 from pluscoder.config import config
+from pluscoder.model import get_model_token_info
 from pluscoder.type import AgentState
 from pluscoder.type import OrchestrationState
 from pluscoder.type import TokenUsage
-
-
-def _get_model_cost() -> dict:
-    if hasattr(_get_model_cost, "model_cost"):
-        return _get_model_cost.model_cost
-
-    def get_from_litellm():
-        from litellm import model_cost
-
-        return model_cost
-
-    def get_from_json():
-        import json
-        import pkgutil
-
-        file = pkgutil.get_data("assets", "model_cost.json")
-        return json.loads(file)
-
-    def default():
-        return {}
-
-    for method in (get_from_litellm, get_from_json, default):
-        try:
-            model_cost = method()
-        except Exception:
-            # You might want to log the exception or handle it differently
-            continue
-        else:
-            _get_model_cost.model_cost = model_cost
-            return model_cost
-
-    # If all methods fail, raise an exception or return a default value
-    msg = "Unable to load model_cost from any source."
-    raise RuntimeError(msg)
-
-
-def get_model_token_info(model_name: str) -> dict:
-    model_cost = _get_model_cost()
-    if model_name in model_cost:
-        return model_cost[model_name]
-    if model_name.split("/")[-1] in model_cost:
-        return model_cost[model_name.split("/")[-1]]
-    return None
 
 
 def sum_token_usage(accumulated: TokenUsage, new: TokenUsage) -> TokenUsage:
