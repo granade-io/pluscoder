@@ -392,4 +392,11 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                 raise AgentException(error_message)
 
         if updated_files:
-            asyncio.run(event_emitter.emit("files_updated", updated_files=updated_files))
+            try:
+                # Try to get current event loop
+                loop = asyncio.get_running_loop()
+                # If exists, run in current loop
+                loop.create_task(event_emitter.emit("files_updated", updated_files=updated_files))  # noqa: RUF006
+            except RuntimeError:
+                # If no loop exists, create new one
+                asyncio.run(event_emitter.emit("files_updated", updated_files=updated_files))
