@@ -48,20 +48,19 @@ class CommandCompleter(Completer):
     def __init__(self, file_completer):
         super().__init__()
         self.file_completer = file_completer
-        self.commands = [
-            "/agent",
-            "/clear",
-            "/diff",
-            "/config",
-            "/help",
-            "/undo",
-            "/run",
-            "/init",
-            "/show_repo",
-            "/show_repomap",
-            "/show_config",
-            "/custom",
-        ]
+        self.commands = []
+
+    def register_command(self, command_name: str, command_description: str):
+        """Register a new command for autocompletion"""
+        if not command_name.startswith("/"):
+            command_name = f"/{command_name}"
+        if command_name not in self.commands:
+            self.commands.append(
+                {
+                    "name": command_name,
+                    "description": command_description,
+                }
+            )
 
     def get_completions(self, document, complete_event):
         text = document.text_before_cursor
@@ -70,8 +69,10 @@ class CommandCompleter(Completer):
             if len(words) == 1:
                 # Complete command names
                 for command in self.commands:
-                    if command.startswith(text):
-                        yield Completion(command, start_position=-len(text))
+                    if command["name"].startswith(text):
+                        yield Completion(
+                            command["name"], start_position=-len(text), display_meta=command["description"]
+                        )
             elif len(words) == 2 and words[0] == "/custom":
                 # Complete custom prompt names
                 prompt_name = words[1]
@@ -96,7 +97,7 @@ class CommandCompleter(Completer):
 class FileNameCompleter(Completer):
     def __init__(self):
         super().__init__()
-        self.repo = Repository(io=io)
+        self.repo = Repository()
 
     def get_completions(self, document, complete_event):
         text_before_cursor = document.text_before_cursor
@@ -201,6 +202,12 @@ class IO:
         self.current_filepath = ""  # New attribute to store the current filepath
         self.buffer_size = 20  # Buffer size to hold before display to look for blocks
         self.valid_blocks = {"thinking", "source"}
+        self.completer = CombinedCompleter()
+
+    def register_command(self, command_name: str, command_description: str):
+        """Register a new command for autocompletion"""
+        if self.completer.command_completer:
+            self.completer.command_completer.register_command(command_name, command_description)
 
     def _check_block_start(self, text):
         return re.match(r"^<(thinking|output|source)>", text.strip())  # Detectar inicio de bloque
@@ -255,7 +262,7 @@ class IO:
             if image_path:
                 event.current_buffer.insert_text("img::" + image_path)
 
-        completer = CombinedCompleter() if autocomplete else None
+        completer = self.completer if autocomplete else None
 
         session = PromptSession(key_bindings=kb, completer=completer, history=history)
 

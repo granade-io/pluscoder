@@ -32,6 +32,7 @@ class CommandRegistry:
                 return func(*args, **kwargs)
 
             self.commands[name] = wrapper
+            io.register_command(name, func.__doc__)
             return wrapper
 
         return decorator
