@@ -15,7 +15,8 @@ from langgraph.prebuilt import ToolNode
 
 from pluscoder.agents.event.config import event_emitter
 from pluscoder.agents.prompts import REMINDER_PREFILL_FILE_OPERATIONS_PROMPT
-from pluscoder.agents.prompts import REMINDER_PREFILL_PROMP
+from pluscoder.agents.prompts import REMINDER_PREFILL_PROMPT
+from pluscoder.agents.prompts import build_system_prompt
 from pluscoder.config import config
 from pluscoder.exceptions import AgentException
 from pluscoder.fs import apply_block_update
@@ -58,9 +59,14 @@ class Agent:
         self,
         system_message: str,
         name: str,
+        description: str = "",
+        reminder: str = "",
         tools=[],
         extraction_tools=[],
         default_context_files: List[str] = [],
+        read_only: bool = False,
+        override_system: bool = False,
+        repository_interaction: bool = True,
     ):
         self.name = name
         self.system_message = system_message
@@ -73,6 +79,11 @@ class Agent:
         self.repo = Repository(io=io)
         self.state = None
         self.disable_reminder = False
+        self.read_only = read_only
+        self.description = description
+        self.reminder = reminder
+        self.override_system = override_system
+        self.repository_interaction = repository_interaction
 
     def get_context_files(self, state):
         state_files = state.get("context_files") or []
@@ -112,13 +123,30 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         return self.repo.generate_repomap()
 
     def get_system_message(self, state: AgentState):
-        return self.system_message
+        return build_system_prompt(
+            self.system_message,
+            can_read_files=self.repository_interaction,
+            can_edit_files=not self.read_only and not config.read_only and self.repository_interaction,
+        )
 
     def get_reminder_prefill(self, state: AgentState) -> str:
-        prompt = REMINDER_PREFILL_PROMP
-        if not config.read_only:
+        prompt = REMINDER_PREFILL_PROMPT
+        if not config.read_only and not self.read_only and self.repository_interaction:
             prompt += REMINDER_PREFILL_FILE_OPERATIONS_PROMPT
         return prompt
+
+    def get_prompt_template_messages(self, state: AgentState):
+        templates_messages = [("system", self.get_system_message(state))]
+
+        if self.repository_interaction:
+            # Context files
+            templates_messages += [
+                ("user", self.get_files_context_prompt(state)),
+                AIMessage(content="ok"),
+            ]
+        return templates_messages + [
+            ("placeholder", "{messages}"),
+        ]
 
     def build_assistant_prompt(self, state: AgentState, deflection_messages: list):
         # last_message = state["messages"][-1]
@@ -145,15 +173,7 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                 "files_content": lambda x: files_content,
                 "repomap": lambda x: self.get_repomap() if config.use_repomap else "",
             }
-        ) | ChatPromptTemplate.from_messages(
-            [
-                ("system", self.get_system_message(state)),
-                # Context files
-                ("user", self.get_files_context_prompt(state)),
-                AIMessage(content="ok"),
-                ("placeholder", "{messages}"),
-            ]  # + user_message_list
-        )
+        ) | ChatPromptTemplate.from_messages(self.get_prompt_template_messages(state))
 
     def get_tool_choice(self, state: AgentState) -> str:
         """Chooses a the tool to use when calling the llm"""
@@ -346,7 +366,7 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         return state_updates
 
     def process_agent_response(self, state, response: AIMessage):
-        if config.read_only:
+        if config.read_only or self.read_only or not self.repository_interaction:
             # Ignore file editions when readonly
             return {}
 

@@ -3,9 +3,7 @@ from typing import List
 from pluscoder import tools
 from pluscoder.agents.base import Agent
 from pluscoder.agents.base import AgentState
-from pluscoder.agents.prompts import BASE_PROMPT
-from pluscoder.agents.prompts import READONLY_MODE_PROMPT
-from pluscoder.agents.prompts import REMINDER_PREFILL_PROMP
+from pluscoder.agents.prompts import REMINDER_PREFILL_PROMPT
 from pluscoder.agents.prompts import combine_prompts
 from pluscoder.message_utils import HumanMessage
 from pluscoder.model import get_orchestrator_llm
@@ -23,7 +21,6 @@ ORCHESTRATOR_REMINDER = """
 
 class OrchestratorAgent(Agent):
     id = "orchestrator"
-    description = "Break down the problem into a list of tasks and delegates it to other agents"
 
     orchestrator_prompt = """
 *SPECIALIZATION INSTRUCTIONS*:
@@ -167,14 +164,10 @@ You *must follow* following rules when suggesting a task list:
         tools=[tools.read_files],
         extraction_tools=[tools.delegate_tasks, tools.is_task_completed],
     ):
-        system_message = combine_prompts(
-            BASE_PROMPT,
-            self.orchestrator_prompt,
-            READONLY_MODE_PROMPT,
-        )
         super().__init__(
-            system_message,
+            self.orchestrator_prompt,
             "Orchestrator",
+            description="Break down the problem into a list of tasks and delegates it to other agents",
             tools=tools,
             extraction_tools=extraction_tools,
             default_context_files=["PROJECT_OVERVIEW.md"],
@@ -195,7 +188,7 @@ You *must follow* following rules when suggesting a task list:
     def get_reminder_prefill(self, state: AgentState) -> str:
         # Default prompt
         if state["status"] == "active":
-            return combine_prompts(REMINDER_PREFILL_PROMP, ORCHESTRATOR_REMINDER)
+            return combine_prompts(REMINDER_PREFILL_PROMPT, ORCHESTRATOR_REMINDER)
         return ""
 
     def get_tool_choice(self, state: AgentState) -> str:
@@ -374,7 +367,7 @@ Expected Outcome: {task.get("outcome", "No specific outcome defined.")}
 {images_instruction}
 {resources_instruction}
 
-Write you answer step by step, using a <thinking> block for analysis your throughts before giving a response to me using <output> and edit files using <source> blocks.
+Write you answer step by step, using a <thinking> block for analysis your thoughts before giving a response to me using <step> and edit files using <source> blocks.
 """
 
     def is_task_list_empty(self, state: AgentState):

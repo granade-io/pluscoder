@@ -248,27 +248,51 @@ def show_config(state: OrchestrationState = None):
 
 @command_registry.register("agent_create")
 def create_agent(state: OrchestrationState, *args):
-    """Create a new specialized AI Agent to chat with and persist it to the config"""
+    """Creates a persistent Agent to chat with."""
     from pluscoder.agents.utils import generate_agent
 
-    description = " ".join(args)
+    io.event("> Started new agent creation")
+
+    io.console.print(Rule("Agent Personalization"))
+    # Repository interaction
+    io.console.print(
+        "WARN: Disabling code-base interaction will cause the agent to know nothing about the repository or its files",
+        style="bold dark_goldenrod",
+    )
+    repository_interaction = bool(io.confirm("Enable code-base interaction for this agent?"))
+
+    # Read only config
+    read_only = not (repository_interaction and io.confirm("Allow this agent to edit files?"))
+
+    io.console.print("Describe the problem you want to solve or an agent to create")
+    io.console.print("Example: 'I need a ReactJs frontend with MaterialUI and Swagger APIs connections'")
+    io.console.print("Example: 'An Agent to refactor my Python code with Design Patterns'")
+    description = Prompt.ask("Describe your problem or agent")
 
     try:
-        new_agent = generate_agent(description)
-        io.console.print("\nAgent information:")
+        new_agent = generate_agent(description, repository_interaction)
+        io.console.print(Rule("Generated Agent"))
         io.console.print(f"[bold green]{new_agent["name"]}[/bold green]: {new_agent["description"]}\n")
-        if not io.confirm("Do you wan't to proceed with this agent?"):
-            io.event("> Agent was discarded. Run /agent_create again with better indications")
+        io.console.print(new_agent["prompt"], style="bold green")
+        io.console.print(Rule())
+        if not io.confirm("Do you to proceed with this agent?"):
+            io.event("\n> Agent was discarded. Run /agent_create again with better indications")
             return {}
 
-        # Read only config
-        if io.confirm("Allow this agent to edit files?"):
-            new_agent["read_only"] = False
-        else:
-            new_agent["read_only"] = True
+        # Extends agent with personalization values
+        new_agent["read_only"] = read_only
+        new_agent["repository_interaction"] = repository_interaction
+
+        # Naming
+        name = Prompt.ask(
+            "Name your agent (use it as [yellow]--default_agent <name>[/yellow])", default=new_agent["name"]
+        )
+
+        if name != new_agent["name"]:
+            new_agent["name"] = name.lower().replace(" ", "")
 
         # Adds agent to config
-        io.event("> Agent saved to .pluscoder-config.yml")
+        io.event(f"> Agent '{new_agent["name"]}' saved to .pluscoder-config.yml")
         append_custom_agent_to_config(new_agent)
 
         # Reloads config to apply changes

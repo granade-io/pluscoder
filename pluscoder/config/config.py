@@ -47,7 +47,7 @@ def validate_custom_agents(custom_agents: List[Dict[str, Any]]) -> List[Dict[str
             sys.exit(1)
 
         # Check for valid boolean flags
-        for flag in ["read_only"]:
+        for flag in ["read_only", "repository_interaction"]:
             if flag in agent and not isinstance(agent[flag], bool):
                 console.print(f"[bold red]Error:[/bold red] Custom agent '{agent['name']}': '{flag}' must be a boolean")
                 sys.exit(1)

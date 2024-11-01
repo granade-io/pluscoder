@@ -5,7 +5,7 @@ from pluscoder.io_utils import io
 from pluscoder.model import get_llm
 
 
-def generate_agent(description: str) -> dict:
+def generate_agent(description: str, repository_interaction: bool) -> dict:
     """Generate a specialized agent prompt based on a description.
 
     Args:
@@ -16,7 +16,11 @@ def generate_agent(description: str) -> dict:
     """
     prompt_template = """
 <instructions>
-Given the following prompt for an programming AI Agent that ahve access to a repository to assist and work with:
+"""
+
+    if repository_interaction:
+        prompt_template += """
+Given the following prompt for an programming AI Agent that have access to a repository to assist and work with:
 
     <prompt>
     *SPECIALIZATION INSTRUCTIONS*:
@@ -49,13 +53,27 @@ Please generate another equivalent prompt to describe the *BEST POSSIBLE AI AGEN
 1. Preserve same structure and key points structure of <prompt>
 2. Specify specialized knowledge and specific areas where the desired agent is an expert
 3. Keep key points related to the repository management (like read, review files and think step by step) to solve any related request related to the <description>
+"""
+    else:
+        prompt_template += """
+Given an agent description or problem to solve:
 
+<description>
+{description}
+</description>
+
+Generate a prompt to describe the *BEST POSSIBLE AI AGENT ASSISTANT* that can handle that request or matches that description:
+1. Specify specialized knowledge and specific areas where the described agent is an expert and its responsibilities to assist an user
+2. Start that prompt with "You are..."
+"""
+
+    prompt_template += """
 <output_format>
 Return the only well-formatted json without any tag. With this structure:
 - name: Mayus-Camelcase without any spaces, dashes or underscores. i.e: AgentName
 - description: An small sentence with agent description
 - prompt: <Generated prompt>
-- system_reminder: System reminder to tell the agent each time the user talk with them to reminds what's their specialized role and responsibilities
+- system_reminder: Paragraph with system reminder to tell the agent each time the user talk with them to reminds what's their specialized role and responsibilities
 
     <example_output>
     {{
@@ -65,7 +83,7 @@ Return the only well-formatted json without any tag. With this structure:
         "system_reminder": "Remember, your primary role is to create high-quality documentation in Python using Google Docstring standards, carefully reviewing code and adhering to the project’s guidelines to maintain clarity and consistency across the codebase."
     }}
     </example_output>
-</output>
+</output_format>
 <instructions>
 """
 

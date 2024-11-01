@@ -1,17 +1,9 @@
 from pluscoder import tools
 from pluscoder.agents.base import Agent
-from pluscoder.agents.prompts import BASE_PROMPT
-from pluscoder.agents.prompts import FILE_OPERATIONS_PROMPT
-from pluscoder.agents.prompts import OUTPUT_STRUCTURE_PROMPT_READ_ONLY
-from pluscoder.agents.prompts import OUTPUT_STRUCTURE_PROMPT_WRITE
-from pluscoder.agents.prompts import READONLY_MODE_PROMPT
-from pluscoder.agents.prompts import combine_prompts
-from pluscoder.config import config
 
 
 class DeveloperAgent(Agent):
     id = "developer"
-    description = "Implement code to solve complex software development requirements"
     developer_prompt = """
 *SPECIALIZATION INSTRUCTIONS*:
 Your role is to implement software development tasks based on detailed plans provided. You should write high-quality, maintainable code that adheres to the project's coding guidelines and integrates seamlessly with the existing codebase.
@@ -38,15 +30,10 @@ Guidelines:
         tools=[tools.read_files, tools.move_files, tools.read_file_from_url],
         default_context_files=["PROJECT_OVERVIEW.md", "CODING_GUIDELINES.md"],
     ):
-        system_message = combine_prompts(
-            BASE_PROMPT,
-            self.developer_prompt,
-            OUTPUT_STRUCTURE_PROMPT_READ_ONLY if config.read_only else OUTPUT_STRUCTURE_PROMPT_WRITE,
-            FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
-        )
         super().__init__(
-            system_message,
+            self.developer_prompt,
             "Developer",
+            description="Implement code to solve complex software development requirements",
             tools=tools,
             default_context_files=default_context_files,
         )
@@ -54,7 +41,6 @@ Guidelines:
 
 class DomainStakeholderAgent(Agent):
     id = "domain_stakeholder"
-    description = "Discuss project details, maintain project overview, roadmap, and brainstorm"
 
     domain_prompt = """
 *SPECIALIZATION INSTRUCTIONS*:
@@ -87,15 +73,10 @@ These are only example questions to help you understand the project vision and g
         tools=[tools.read_files, tools.move_files, tools.read_file_from_url],
         default_context_files=["PROJECT_OVERVIEW.md"],
     ):
-        system_message = combine_prompts(
-            BASE_PROMPT,
-            self.domain_prompt,
-            OUTPUT_STRUCTURE_PROMPT_READ_ONLY if config.read_only else OUTPUT_STRUCTURE_PROMPT_WRITE,
-            FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
-        )
         super().__init__(
-            system_message,
+            self.domain_prompt,
             "Domain Stakeholder",
+            description="Discuss project details, maintain project overview, roadmap, and brainstorm",
             tools=tools,
             default_context_files=default_context_files,
         )
@@ -103,7 +84,6 @@ These are only example questions to help you understand the project vision and g
 
 class DomainExpertAgent(Agent):
     id = "domain_expert"
-    description = "Validate tasks and ensure alignment with project vision"
     domain_prompt = """
 *SPECIALIZATION INSTRUCTIONS*:
 Your role is to validate the tasks of all other agents, check alignment with the project vision, and provide feedback for task revisions.
@@ -141,15 +121,10 @@ THE PROPOSAL NEVER IS FULLY CORRECT, WAS MADE BY AN IA, FIND THOSE DETAILS TO IM
         tools=[tools.read_files, tools.move_files, tools.read_file_from_url],
         default_context_files=["PROJECT_OVERVIEW.md", "CODING_GUIDELINES.md"],
     ):
-        system_message = combine_prompts(
-            BASE_PROMPT,
-            self.domain_prompt,
-            OUTPUT_STRUCTURE_PROMPT_READ_ONLY if config.read_only else OUTPUT_STRUCTURE_PROMPT_WRITE,
-            FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
-        )
         super().__init__(
-            system_message,
+            self.domain_prompt,
             "Domain Expert",
+            description="Validate tasks and ensure alignment with project vision",
             tools=tools,
             default_context_files=default_context_files,
         )
@@ -157,7 +132,6 @@ THE PROPOSAL NEVER IS FULLY CORRECT, WAS MADE BY AN IA, FIND THOSE DETAILS TO IM
 
 class PlanningAgent(Agent):
     id = "planning"
-    description = "Create detailed, actionable plans for software development tasks"
     planning_prompt = """
 *SPECIALIZATION INSTRUCTIONS*:
 Your role is to create detailed, actionable plans for software development tasks. You should break down high-level requirements into specific, implementable tasks at the class and method level. Your plans will be executed by AI developer agents, so be as clear and specific as possible.
@@ -199,15 +173,10 @@ When creating a plan, follow this structure:
         tools=[tools.read_files, tools.move_files, tools.read_file_from_url],
         default_context_files=["PROJECT_OVERVIEW.md", "CODING_GUIDELINES.md"],
     ):
-        system_message = combine_prompts(
-            BASE_PROMPT,
-            self.planning_prompt,
-            OUTPUT_STRUCTURE_PROMPT_READ_ONLY if config.read_only else OUTPUT_STRUCTURE_PROMPT_WRITE,
-            FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
-        )
         super().__init__(
-            system_message,
+            self.planning_prompt,
             "Planning",
+            description="Create detailed, actionable plans for software development tasks",
             tools=tools,
             default_context_files=default_context_files,
         )

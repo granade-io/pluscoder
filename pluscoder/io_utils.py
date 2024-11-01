@@ -5,11 +5,7 @@ import re
 import sys
 import tempfile
 from pathlib import Path
-from typing import Any
-from typing import Dict
-from typing import List
 from typing import Optional
-from typing import Union
 
 from PIL import ImageGrab
 from prompt_toolkit import PromptSession
@@ -210,7 +206,7 @@ class IO:
             self.completer.command_completer.register_command(command_name, command_description)
 
     def _check_block_start(self, text):
-        return re.match(r"^<(thinking|output|source)>", text.strip())  # Detectar inicio de bloque
+        return re.match(r"^<(thinking|step|source)>", text.strip())  # Detectar inicio de bloque
 
     def _check_block_end(self, text):
         return re.match(f"^</{self.block_type}>", text.strip())  # Detectar fin de bloque
@@ -230,7 +226,7 @@ class IO:
             self.console.print(f"Error handling clipboard image: {e}", style="bold red")
         return None
 
-    def input(self, string: str, autocomplete=True) -> Union[str, List[Dict[str, Any]]]:
+    def input(self, string: str, autocomplete=True) -> str:
         kb = KeyBindings()
 
         # Create the directory if it doesn't exist
@@ -340,7 +336,7 @@ class IO:
             self.progress.stream(chunk, style)
 
     def get_block_color(self) -> str:
-        return "light_salmon3" if self.block_type == "thinking" else "blue" if self.block_type == "output" else "blue"
+        return "light_salmon3" if self.block_type == "thinking" else "blue" if self.block_type == "step" else "blue"
 
     def start_block(self, block_type: str) -> None:
         # starts new block
@@ -378,7 +374,7 @@ class IO:
             config.hide_thinking_blocks
             and self.block_type == "thinking"
             or config.hide_output_blocks
-            and self.block_type == "output"
+            and self.block_type == "step"
             or config.hide_source_blocks
             and self.block_type == "source"
         ):
@@ -412,10 +408,10 @@ class IO:
 
         # Look for block start/end with capturing group for block type
         start_match = re.search(
-            r"\n<(thinking|output|source)>" if self.seen_nl else r"\n?<(thinking|output|source)>",
+            r"\n<(thinking|step|source)>" if self.seen_nl else r"\n?<(thinking|step|source)>",
             self.buffer,
         )
-        end_match = re.search(r"\n</(thinking|output|source)>", self.buffer)
+        end_match = re.search(r"\n</(thinking|step|source)>", self.buffer)
 
         if "<" in self.buffer:
             pass

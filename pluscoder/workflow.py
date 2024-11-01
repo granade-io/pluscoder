@@ -48,7 +48,9 @@ def build_agents() -> dict:
             name=agent_config["name"],
             prompt=agent_config["prompt"],
             description=agent_config["description"],
-            read_only=agent_config.get("read_only", True),
+            reminder=agent_config.get("reminder", ""),
+            read_only=agent_config.get("read_only", False),
+            override_system=agent_config.get("override_system", False),
         )
         custom_agents.append(custom_agent)
 
