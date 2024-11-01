@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import asyncio
 import sys
+import traceback
 
 from rich.prompt import Prompt
 
@@ -201,6 +202,8 @@ def main() -> None:
             if not io.confirm("Proceed anyways?"):
                 sys.exit(0)
     except Exception as err:
+        if config.debug:
+            io.console.print(traceback.format_exc(), style="bold red")
         io.event(f"An error occurred. {err}")
         return
     try:
@@ -224,6 +227,8 @@ def main() -> None:
         app = build_workflow(agent_dict)
         asyncio.run(run_workflow(app, state))
     except Exception as err:
+        if config.debug:
+            io.console.print(traceback.format_exc(), style="bold red")
         io.event(f"An error occurred. {err} during workflow run.")
         return
     except KeyboardInterrupt:

@@ -2,12 +2,14 @@ import os
 import pprint
 import re
 import subprocess
+import traceback
 from typing import List
 from typing import Optional
 
 from git import Actor
 from git import GitCommandError
 from git import Repo
+from git.exc import HookExecutionError
 
 from pluscoder.config import config
 from pluscoder.exceptions import NotGitRepositoryException
@@ -57,6 +59,12 @@ class Repository:
         except GitCommandError as e:
             self.io.console.print(f"Error creating commit: {e}", style="bold red")
             return False
+        except HookExecutionError:
+            if config.debug:
+                self.io.console.print(traceback.format_exc())
+            self.io.console.print("WARN: Pre-commit hook didn't pass", style="bold dark_goldenrod")
+            # Return true event when the commit failed
+            return True
 
     def undo(self):
         """Revert the last commit if made by pluscoder, without preserving changes."""
