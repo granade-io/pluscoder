@@ -2,7 +2,21 @@ import os
 import sys
 from unittest.mock import patch
 
+import pytest
+
 from pluscoder.config import Settings
+
+
+@pytest.fixture
+def clear_env(monkeypatch):
+    # Backup the original environment
+    original_env = os.environ.copy()
+    # Clear all environment variables
+    monkeypatch.setattr(os, "environ", {})
+
+    # Restore the environment after the test
+    yield
+    os.environ.update(original_env)
 
 
 def test_config_default_values():
@@ -85,7 +99,7 @@ def test_config_precedence():
             assert config.log_filename == "env.log"
 
 
-def test_config_precedence_empty_configs():
+def test_config_precedence_empty_configs(clear_env):
     # Test default values when neither env vars nor command-line args are provided
     with patch.dict(os.environ, {}, clear=True):
         with patch.object(sys, "argv", ["config.py"]):
@@ -97,7 +111,7 @@ def test_config_precedence_empty_configs():
             assert config.log_filename == "pluscoder.log"
 
 
-def test_update_method_non_persisting():
+def test_update_method_non_persisting(clear_env):
     with patch.object(sys, "argv", ["config.py"]):
         config = Settings(_env_file=None, ignore_yaml=True)
 
