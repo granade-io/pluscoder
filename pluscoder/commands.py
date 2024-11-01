@@ -13,6 +13,7 @@ from rich.table import Table
 from rich.tree import Tree
 
 from pluscoder.config import config
+from pluscoder.config.utils import append_custom_agent_to_config
 from pluscoder.display_utils import display_agent
 from pluscoder.io_utils import io
 from pluscoder.message_utils import HumanMessage
@@ -56,7 +57,7 @@ def _clear(state: OrchestrationState):
 
 @command_registry.register("clear")
 def clear(state: OrchestrationState):
-    """Reset entire chat history"""
+    """Clear the entire chat history"""
 
     cleared_state = _clear(state)
     io.event("Chat history cleared.")
@@ -113,26 +114,30 @@ def undo(state: OrchestrationState):
 
 
 @command_registry.register("agent")
-def agent(state: OrchestrationState):
-    """Start a conversation with a new agent from scratch"""
+def select_agent(state: OrchestrationState, *args):
+    """Start a new conversation with another agent"""
     from pluscoder.agents.custom import CustomAgent
     from pluscoder.workflow import build_agents
 
     agent_dict = build_agents()
+    chosen_agent = " ".join(args).strip()
 
-    io.console.print("[bold green]Choose an agent to chat with:[/bold green]")
+    if chosen_agent not in agent_dict:
+        # chose an agent interactively
+        io.console.print("[bold green]Choose an agent to chat with:[/bold green]")
 
-    for i, (_agent_id, agent) in enumerate(agent_dict.items(), 1):
-        agent_type = "[cyan]Custom[/cyan]" if isinstance(agent, CustomAgent) else "[yellow]Predefined[/yellow]"
-        io.console.print(f"{i}. {display_agent(agent, agent_type)}")
+        for i, (_agent_id, agent) in enumerate(agent_dict.items(), 1):
+            agent_type = "[cyan]Custom[/cyan]" if isinstance(agent, CustomAgent) else "[yellow]Predefined[/yellow]"
+            io.console.print(f"{i}. {display_agent(agent, agent_type)}")
 
-    choice = Prompt.ask(
-        "Select an agent",
-        choices=[str(i) for i in range(1, len(agent_dict) + 1)],
-        default="1",
-    )
+        choice = Prompt.ask(
+            "Select an agent",
+            choices=[str(i) for i in range(1, len(agent_dict) + 1)],
+            default="1",
+        )
 
-    chosen_agent = list(agent_dict.keys())[int(choice) - 1]
+        chosen_agent = list(agent_dict.keys())[int(choice) - 1]
+
     io.event(f"> Starting chat with {chosen_agent} agent. Chat history was cleared.")
 
     state["chat_agent"] = chosen_agent
@@ -157,7 +162,7 @@ def help_command(state: OrchestrationState):
 
 @command_registry.register("run")
 def run_command(state: OrchestrationState, *args) -> OrchestrationState:
-    """Execute a system command and capture its output"""
+    """Execute a system command and displays its output"""
     command = " ".join(args)
     try:
         result = subprocess.run(
@@ -184,7 +189,7 @@ def run_command(state: OrchestrationState, *args) -> OrchestrationState:
 
 @command_registry.register("init")
 def _init(state: OrchestrationState):
-    """Force repository initialization"""
+    """Start repository initialization to improve repository understanding"""
     io.console.print(
         "Initialization will analyze the repository to create/update `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md` files."
     )
@@ -200,7 +205,7 @@ def _init(state: OrchestrationState):
 
 @command_registry.register("show_repo")
 def show_repo(state: OrchestrationState = None):
-    """Display information about the repository"""
+    """Display repository files tree in the context"""
     repo = Repository(io=io)
     tracked_files = repo.get_tracked_files()
 
@@ -227,7 +232,7 @@ def show_repomap(state: OrchestrationState = None):
 
 @command_registry.register("show_config")
 def show_config(state: OrchestrationState = None):
-    """Display the current configuration"""
+    """Display Pluscoder configuration"""
     table = Table(title="Current Configuration")
     table.add_column("Setting", style="cyan")
     table.add_column("Value", style="magenta")
@@ -238,6 +243,43 @@ def show_config(state: OrchestrationState = None):
         table.add_row(key, str(value))
 
     io.console.print(table)
+    return state
+
+
+@command_registry.register("agent_create")
+def create_agent(state: OrchestrationState, *args):
+    """Create a new specialized AI Agent to chat with and persist it to the config"""
+    from pluscoder.agents.utils import generate_agent
+
+    description = " ".join(args)
+
+    try:
+        new_agent = generate_agent(description)
+        io.console.print("\nAgent information:")
+        io.console.print(f"[bold green]{new_agent["name"]}[/bold green]: {new_agent["description"]}\n")
+        if not io.confirm("Do you wan't to proceed with this agent?"):
+            io.event("> Agent was discarded. Run /agent_create again with better indications")
+            return {}
+
+        # Read only config
+        if io.confirm("Allow this agent to edit files?"):
+            new_agent["read_only"] = False
+        else:
+            new_agent["read_only"] = True
+
+        # Adds agent to config
+        io.event("> Agent saved to .pluscoder-config.yml")
+        append_custom_agent_to_config(new_agent)
+
+        # Reloads config to apply changes
+        config.__init__(**{})
+
+        # Adds new agent state to global state
+        state[new_agent["name"].lower() + "_state"] = AgentState.default()
+        return select_agent(state, new_agent["name"].lower())
+    except Exception:
+        io.console.print("Error generating agent: Please run command again", style="bold red")
+
     return state
 
 
