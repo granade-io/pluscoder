@@ -267,7 +267,7 @@ def create_agent(state: OrchestrationState, *args):
     io.console.print("Describe the problem you want to solve or an agent to create")
     io.console.print("Example: 'I need a ReactJs frontend with MaterialUI and Swagger APIs connections'")
     io.console.print("Example: 'An Agent to refactor my Python code with Design Patterns'")
-    description = Prompt.ask("Describe your problem or agent")
+    description = io.input("Describe your problem or agent:\n")
 
     try:
         new_agent = generate_agent(description, repository_interaction)

@@ -51,6 +51,7 @@ def build_agents() -> dict:
             reminder=agent_config.get("reminder", ""),
             read_only=agent_config.get("read_only", False),
             override_system=agent_config.get("override_system", False),
+            repository_interaction=agent_config.get("repository_interaction", True),
         )
         custom_agents.append(custom_agent)
 
