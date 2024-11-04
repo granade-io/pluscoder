@@ -4,11 +4,16 @@ import re
 from typing import Any
 from typing import Dict
 from typing import List
+from typing import Optional
+from typing import Sequence
 from typing import Union
 from urllib.parse import urlparse
 
 from langchain_core.messages import AnyMessage
+from langchain_core.messages import BaseMessage
 from langchain_core.messages import HumanMessage as LangChainHumanMessage
+from langchain_core.messages import RemoveMessage
+from langchain_core.messages import convert_to_messages
 
 
 def get_message_content_str(message: AnyMessage) -> str:
@@ -77,3 +82,23 @@ class HumanMessage(LangChainHumanMessage):
         if isinstance(content, str):
             content = convert_image_paths_to_base64(content)
         super().__init__(content=content, **kwargs)
+
+
+def filter_messages(messages: List[BaseMessage], *, include_tags: Optional[Sequence[str]] = None) -> List[BaseMessage]:
+    messages = convert_to_messages(messages)
+    filtered: List[BaseMessage] = []
+    for msg in messages:
+        if include_tags and any(tag in include_tags for tag in msg.tags):
+            filtered.append(msg)  # noqa: PERF401
+
+    return filtered
+
+
+def delete_messages(messages: List[BaseMessage], include_tags: Optional[Sequence[str]] = None) -> List[BaseMessage]:
+    messages = convert_to_messages(messages)
+    messages_to_delete: List[BaseMessage] = []
+    for msg in messages:
+        if include_tags and any(tag in include_tags for tag in msg.tags):
+            messages_to_delete.append(RemoveMessage(id=msg.id))  # noqa: PERF401
+
+    return messages_to_delete

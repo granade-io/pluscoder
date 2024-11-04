@@ -210,6 +210,8 @@ def main() -> None:
         chat_agent = choose_chat_agent_node(agent_dict)
 
         state = {
+            "current_iterations": 0,
+            "max_iterations": 100,
             "return_to_user": False,
             "messages": [],
             "context_files": [],

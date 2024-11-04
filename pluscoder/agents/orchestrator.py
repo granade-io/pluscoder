@@ -2,12 +2,12 @@ from typing import List
 
 from pluscoder import tools
 from pluscoder.agents.base import Agent
-from pluscoder.agents.base import AgentState
 from pluscoder.agents.prompts import REMINDER_PREFILL_PROMPT
 from pluscoder.agents.prompts import combine_prompts
 from pluscoder.message_utils import HumanMessage
 from pluscoder.model import get_orchestrator_llm
 from pluscoder.type import AgentInstructions
+from pluscoder.type import AgentState
 
 ORCHESTRATOR_REMINDER = """
 *Rules when generating Task List*:
@@ -380,7 +380,12 @@ Write you answer step by step, using a <thinking> block for analysis your though
         Returns:
             bool: True if the task list is empty, False otherwise.
         """
-        if "tool_data" not in state or not state["tool_data"]:
+        if (
+            "tool_data" not in state
+            or not state["tool_data"]
+            or tools.delegate_tasks.name not in state["tool_data"]
+            or not state["tool_data"][tools.delegate_tasks.name]
+        ):
             return True
 
         task_list = state["tool_data"][tools.delegate_tasks.name]["task_list"]

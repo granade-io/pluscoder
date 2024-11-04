@@ -13,7 +13,6 @@ from pluscoder.model import get_default_model_for_provider
 from pluscoder.model import get_model_token_info
 from pluscoder.repo import Repository
 from pluscoder.type import AgentInstructions
-from pluscoder.type import AgentState
 from pluscoder.type import TokenUsage
 
 # TODO: Move this?
@@ -352,26 +351,25 @@ def initialize_repository():
     config.use_repomap = False
     config.auto_commits = False
 
-    orchestrator_state = AgentState.default()
-    orchestrator_state["tool_data"][tools.delegate_tasks.name] = AgentInstructions(
+    tool_data = {}
+    tool_data[tools.delegate_tasks.name] = AgentInstructions(
         general_objective="Number test sequence",
         task_list=TASK_LIST,
         resources=[],
     ).dict()
 
     initial_state = {
+        "max_iterations": 1,
+        "current_iterations": 0,
+        "messages": [],
+        "tool_data": tool_data,
         "return_to_user": False,
-        "orchestrator_state": orchestrator_state,
         "accumulated_token_usage": TokenUsage.default(),
         "chat_agent": "orchestrator",
         "is_task_list_workflow": True,
         "max_agent_deflections": 2,
         "current_agent_deflections": 0,
     }
-    for agent_id in agents:
-        if agent_id == "orchestrator":
-            continue
-        initial_state[f"{agent_id.lower()}_state"] = AgentState.default()
 
     asyncio.run(run_workflow(app, initial_state))
 
@@ -404,7 +402,7 @@ def setup() -> bool:
     # TODO: Get repository path from config
     repo = Repository(io=io)
 
-    if not Path(CONFIG_FILE).exists() or not config.initialized and config.init:
+    if (not Path(CONFIG_FILE).exists() or not config.initialized) and config.init:
         io.console.print(
             "Welcome to Pluscoder! Let's customize your project configuration.",
             style="bold green",

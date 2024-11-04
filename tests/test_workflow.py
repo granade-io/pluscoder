@@ -3,12 +3,14 @@ from unittest.mock import patch
 
 import pytest
 from langchain_core.messages import AIMessage
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import ToolMessage
+from langgraph.prebuilt import ToolNode
 
+from pluscoder import tools
 from pluscoder.agents.base import Agent
 from pluscoder.agents.orchestrator import OrchestratorAgent
 from pluscoder.config import config
-from pluscoder.type import AgentState
+from pluscoder.message_utils import HumanMessage
 from pluscoder.type import OrchestrationState
 from pluscoder.type import TokenUsage
 from pluscoder.workflow import build_workflow
@@ -31,7 +33,7 @@ def agent():
 def orchestrator_agent():
     return OrchestratorAgent(
         tools=[],
-        extraction_tools=[],
+        extraction_tools=[tools.delegate_tasks, tools.is_task_completed],
     )
 
 
@@ -54,21 +56,12 @@ async def test_workflow_with_mocked_llm(
 
     # Set up the initial state
     initial_state = OrchestrationState(
+        max_iterations=1,
+        current_iterations=0,
         return_to_user=False,
         messages=[],
         context_files=[],
-        orchestrator_state=AgentState(
-            messages=[HumanMessage(content="Test input")],
-            token_usage=TokenUsage(prompt_tokens=0, completion_tokens=0, total_tokens=0, total_cost=0.0),
-            status="active",
-            agent_messages=[],
-            tool_data={},
-        ),
-        domain_stakeholder_state=AgentState.default(),
-        planning_state=AgentState.default(),
-        developer_state=AgentState.default(),
-        domain_expert_state=AgentState.default(),
-        chat_agent="orchestrator",
+        chat_agent="developer",
         is_task_list_workflow=False,
         accumulated_token_usage=TokenUsage(prompt_tokens=0, completion_tokens=0, total_tokens=0, total_cost=0.0),
     )
@@ -86,5 +79,500 @@ async def test_workflow_with_mocked_llm(
     assert mock_invoke_llm_chain.called
 
     # Check if the orchestrator state has been updated with the mocked AIMessage
-    assert any(isinstance(msg, AIMessage) for msg in state["orchestrator_state"]["messages"])
-    assert "Mocked LLM response" in state["orchestrator_state"]["messages"][-1].content
+    assert len(state["messages"]) == 2
+    assert isinstance(state["messages"][0], HumanMessage)
+    assert isinstance(state["messages"][1], AIMessage)
+    assert "Test input" in state["messages"][0].content
+    assert "Mocked LLM response" in state["messages"][-1].content
+    assert agent.id in state["messages"][0].tags
+    assert agent.id in state["messages"][1].tags
+
+
+@pytest.mark.asyncio
+@patch.object(ToolNode, "invoke")
+@patch("pluscoder.model.get_llm")
+@patch("pluscoder.workflow.accumulate_token_usage")
+@patch.object(Agent, "_invoke_llm_chain")
+async def test_workflow_with_mocked_llm_with_tool(
+    mock_invoke_llm_chain, mock_accumulate_token_usage, mock_get_llm, mock_tool_node_invoke, orchestrator_agent, agent
+):
+    # Mock the LLM response
+    mock_llm = MagicMock()
+    mock_get_llm.return_value = mock_llm
+
+    # Mock _invoke_llm_chain to return a mocked AIMessage
+    ai_message = AIMessage(content="Mocked LLM response")
+    ai_message.tool_calls = [{"name": "test_tool"}]
+    ai_message_2 = AIMessage(content="2nd Mocked LLM response")
+    mock_invoke_llm_chain.side_effect = [ai_message, ai_message_2]
+
+    # Mock accumulate_token_usage to return the state unchanged
+    mock_accumulate_token_usage.side_effect = lambda state, _: state
+
+    # Tool node mock
+    mock_tool_node_invoke.return_value = {
+        "messages": [ai_message, ToolMessage(content="Tool message content", tool_call_id="id")]
+    }
+
+    # Set up the initial state
+    initial_state = OrchestrationState(
+        max_iterations=1,
+        current_iterations=0,
+        return_to_user=False,
+        messages=[],
+        context_files=[],
+        chat_agent="developer",
+        is_task_list_workflow=False,
+        accumulated_token_usage=TokenUsage(prompt_tokens=0, completion_tokens=0, total_tokens=0, total_cost=0.0),
+    )
+
+    # Set user input for testing
+    config.user_input = "Test input"
+
+    # Build workflow
+    app = build_workflow({"orchestrator": orchestrator_agent, "developer": agent})
+
+    # Run the workflow
+    state = await run_workflow(app, initial_state)
+
+    # Check if _invoke_llm_chain was called
+    assert mock_invoke_llm_chain.called_twice
+
+    # Check if the orchestrator state has been updated with the mocked AIMessage
+    assert len(state["messages"]) == 4
+    assert isinstance(state["messages"][1], AIMessage)
+    assert isinstance(state["messages"][2], ToolMessage)
+    assert isinstance(state["messages"][3], AIMessage)
+    assert "Mocked LLM response" in state["messages"][1].content
+    assert "2nd Mocked LLM response" in state["messages"][3].content
+
+    assert agent.id in state["messages"][0].tags
+    assert agent.id in state["messages"][2].tags
+    assert agent.id in state["messages"][1].tags
+
+
+@pytest.mark.asyncio
+@patch.object(ToolNode, "invoke")
+@patch("pluscoder.workflow.io.input")
+@patch("pluscoder.model.get_llm")
+@patch("pluscoder.workflow.accumulate_token_usage")
+@patch.object(Agent, "_invoke_llm_chain")
+async def test_orchestrator_basic(
+    mock_invoke_llm_chain,
+    mock_accumulate_token_usage,
+    mock_get_llm,
+    mock_io,
+    mock_tool_node_invoke,
+    orchestrator_agent,
+    agent,
+):
+    # Mock the LLM response
+    mock_llm = MagicMock()
+    mock_get_llm.return_value = mock_llm
+
+    mock_io.side_effect = ["some user input"]
+    # mock_io.return_value = "some user input"
+
+    # Mock _invoke_llm_chain to return a mocked AIMessage
+    ai_message = AIMessage(content="Mocked LLM response")
+    mock_invoke_llm_chain.side_effect = [ai_message]
+
+    # Mock accumulate_token_usage to return the state unchanged
+    mock_accumulate_token_usage.side_effect = lambda state, _: state
+
+    # Set up the initial state
+    initial_state = OrchestrationState(
+        max_iterations=1,
+        current_iterations=0,
+        return_to_user=False,
+        messages=[],
+        context_files=[],
+        chat_agent="orchestrator",
+        is_task_list_workflow=False,
+        accumulated_token_usage=TokenUsage(prompt_tokens=0, completion_tokens=0, total_tokens=0, total_cost=0.0),
+        status="active",
+    )
+
+    # Set user input for testing
+    config.user_input = None
+
+    # Build workflow
+    app = build_workflow({"orchestrator": orchestrator_agent, "developer": agent})
+
+    # Run the workflow
+    state = await run_workflow(app, initial_state)
+
+    # Check if _invoke_llm_chain was called
+    assert mock_invoke_llm_chain.called_twice
+
+    # Check if the orchestrator state has been updated with the mocked AIMessage
+    assert len(state["messages"]) == 2
+    assert isinstance(state["messages"][0], HumanMessage)
+    assert isinstance(state["messages"][1], AIMessage)
+
+    assert orchestrator_agent.id in state["messages"][0].tags
+    assert orchestrator_agent.id in state["messages"][1].tags
+
+
+@pytest.mark.asyncio
+# @patch.object(ToolNode, 'invoke')
+@patch("pluscoder.workflow.io.confirm")
+@patch("pluscoder.workflow.io.input")
+@patch("pluscoder.model.get_llm")
+@patch("pluscoder.workflow.accumulate_token_usage")
+@patch.object(Agent, "_invoke_llm_chain")
+async def test_orchestrator_task_list_run(
+    mock_invoke_llm_chain,
+    mock_accumulate_token_usage,
+    mock_get_llm,
+    mock_io,
+    mock_io_confirm,
+    orchestrator_agent,
+    agent,
+):
+    # Mock the LLM response
+    mock_llm = MagicMock()
+    mock_get_llm.return_value = mock_llm
+
+    mock_io.side_effect = ["some user input"]
+    # mock_io.return_value = "some user input"
+
+    # Mock confirm
+    mock_io_confirm.return_value = True
+
+    # Mock _invoke_llm_chain to return a mocked AIMessage
+    ai_message = AIMessage(content="Mocked LLM response")
+    ai_message.tool_calls = [
+        {
+            "name": tools.delegate_tasks.name,
+            "id": "delegation_1",
+            "args": {
+                "general_objective": "Objective",
+                "task_list": [
+                    {"is_finished": False, "objective": "Task 1", "details": "Details 1", "agent": "developer"},
+                    {"is_finished": False, "objective": "CTask 2", "details": "Details 2", "agent": "developer"},
+                ],
+                "resources": [],
+            },
+        }
+    ]
+
+    # Developer response
+    ai_message_dev = AIMessage(content="Developer response")
+
+    # Orch validation response
+    ai_message_orc = AIMessage(content="Orch validation")
+    ai_message_orc.tool_calls = [
+        {
+            "name": tools.is_task_completed.name,
+            "id": "task_completed_1",
+            "args": {"completed": True, "feedback": "some feedback"},
+        }
+    ]
+
+    # Developer response
+    ai_message_dev2 = AIMessage(content="Developer response")
+
+    # Orch validation response
+    ai_message_orc2 = AIMessage(content="Orch validation")
+    ai_message_orc2.tool_calls = [
+        {
+            "name": tools.is_task_completed.name,
+            "id": "task_completed_1",
+            "args": {"completed": True, "feedback": "some feedback"},
+        }
+    ]
+
+    # Orch Summarization Response
+    ai_message_orc3 = AIMessage(content="Summary")
+
+    mock_invoke_llm_chain.side_effect = [
+        ai_message,
+        ai_message_dev,
+        ai_message_orc,
+        ai_message_dev2,
+        ai_message_orc2,
+        ai_message_orc3,
+    ]
+
+    # Mock accumulate_token_usage to return the state unchanged
+    mock_accumulate_token_usage.side_effect = lambda state, _: state
+
+    # Set up the initial state
+    initial_state = OrchestrationState(
+        max_iterations=1,
+        current_iterations=0,
+        return_to_user=False,
+        messages=[],
+        context_files=[],
+        chat_agent="orchestrator",
+        is_task_list_workflow=False,
+        accumulated_token_usage=TokenUsage(prompt_tokens=0, completion_tokens=0, total_tokens=0, total_cost=0.0),
+        status="active",
+    )
+
+    # Set user input for testing
+    config.user_input = None
+
+    # Build workflow
+    app = build_workflow({"orchestrator": orchestrator_agent, "developer": agent})
+
+    # Run the workflow
+    state = await run_workflow(app, initial_state)
+
+    # Check if _invoke_llm_chain was called
+    assert mock_invoke_llm_chain.call_count == 6
+
+    # Check if llm input messages are correct
+    # First call must be only with one message made by the user
+    assert len(mock_invoke_llm_chain.call_args_list[0][0][0]["messages"]) == 1
+    assert isinstance(mock_invoke_llm_chain.call_args_list[0][0][0]["messages"][0], HumanMessage)
+    assert "orchestrator" in mock_invoke_llm_chain.call_args_list[0][0][0]["messages"][0].tags
+
+    # Second call must be developer agent with its task to solve
+    assert len(mock_invoke_llm_chain.call_args_list[1][0][0]["messages"]) == 1
+    assert isinstance(mock_invoke_llm_chain.call_args_list[1][0][0]["messages"][0], HumanMessage)
+    assert "developer" in mock_invoke_llm_chain.call_args_list[1][0][0]["messages"][0].tags
+
+    # Third call must be orchestrator for validating developer answer
+    assert len(mock_invoke_llm_chain.call_args_list[2][0][0]["messages"]) == 1
+    assert isinstance(mock_invoke_llm_chain.call_args_list[2][0][0]["messages"][0], HumanMessage)
+    assert "orchestrator-developer" in mock_invoke_llm_chain.call_args_list[2][0][0]["messages"][0].tags
+
+    # Fourth call must be developer agent with its second task to solve
+    assert len(mock_invoke_llm_chain.call_args_list[3][0][0]["messages"]) == 1
+    assert isinstance(mock_invoke_llm_chain.call_args_list[3][0][0]["messages"][0], HumanMessage)
+    assert "developer" in mock_invoke_llm_chain.call_args_list[3][0][0]["messages"][0].tags
+
+    # fifth call must be orchestrator for validating developer answer
+    assert len(mock_invoke_llm_chain.call_args_list[4][0][0]["messages"]) == 1
+    assert isinstance(mock_invoke_llm_chain.call_args_list[4][0][0]["messages"][0], HumanMessage)
+    assert "orchestrator-developer" in mock_invoke_llm_chain.call_args_list[4][0][0]["messages"][0].tags
+
+    # sixth call must be orchestrator for summarizing
+    assert len(mock_invoke_llm_chain.call_args_list[5][0][0]["messages"]) == 1
+    assert isinstance(mock_invoke_llm_chain.call_args_list[5][0][0]["messages"][0], HumanMessage)
+    assert "orchestrator-orchestrator" in mock_invoke_llm_chain.call_args_list[5][0][0]["messages"][0].tags
+
+    # Check if the orchestrator state has been updated with the mocked AIMessage
+    assert len(state["messages"]) == 4
+    assert isinstance(state["messages"][0], HumanMessage)
+    assert isinstance(state["messages"][1], AIMessage)
+    assert isinstance(state["messages"][2], ToolMessage)
+    assert isinstance(state["messages"][3], AIMessage)
+
+    assert orchestrator_agent.id in state["messages"][0].tags
+    assert orchestrator_agent.id in state["messages"][1].tags
+    assert orchestrator_agent.id in state["messages"][2].tags
+    assert orchestrator_agent.id in state["messages"][3].tags
+
+    assert tools.delegate_tasks.name not in state["tool_data"]
+
+
+@pytest.mark.asyncio
+# @patch.object(ToolNode, 'invoke')
+@patch("pluscoder.workflow.io.confirm")
+@patch("pluscoder.workflow.io.input")
+@patch("pluscoder.model.get_llm")
+@patch("pluscoder.workflow.accumulate_token_usage")
+@patch.object(Agent, "_invoke_llm_chain")
+async def test_orchestrator_task_list_cancel(
+    mock_invoke_llm_chain,
+    mock_accumulate_token_usage,
+    mock_get_llm,
+    mock_io,
+    mock_io_confirm,
+    orchestrator_agent,
+    agent,
+):
+    # Mock the LLM response
+    mock_llm = MagicMock()
+    mock_get_llm.return_value = mock_llm
+
+    mock_io.side_effect = ["some user input"]
+    # mock_io.return_value = "some user input"
+
+    # Mock confirm
+    mock_io_confirm.return_value = False
+
+    # Mock _invoke_llm_chain to return a mocked AIMessage
+    ai_message = AIMessage(content="Mocked LLM response")
+    ai_message.tool_calls = [
+        {
+            "name": tools.delegate_tasks.name,
+            "id": "delegation_1",
+            "args": {
+                "general_objective": "Objective",
+                "task_list": [
+                    {"is_finished": False, "objective": "Task 1", "details": "Details 1", "agent": "developer"},
+                    {"is_finished": False, "objective": "CTask 2", "details": "Details 2", "agent": "developer"},
+                ],
+                "resources": [],
+            },
+        }
+    ]
+
+    mock_invoke_llm_chain.side_effect = [ai_message]
+
+    # Mock accumulate_token_usage to return the state unchanged
+    mock_accumulate_token_usage.side_effect = lambda state, _: state
+
+    # Set up the initial state
+    initial_state = OrchestrationState(
+        max_iterations=1,
+        current_iterations=0,
+        return_to_user=False,
+        messages=[],
+        context_files=[],
+        chat_agent="orchestrator",
+        is_task_list_workflow=False,
+        accumulated_token_usage=TokenUsage(prompt_tokens=0, completion_tokens=0, total_tokens=0, total_cost=0.0),
+        status="active",
+    )
+
+    # Set user input for testing
+    config.user_input = None
+
+    # Build workflow
+    app = build_workflow({"orchestrator": orchestrator_agent, "developer": agent})
+
+    # Run the workflow
+    state = await run_workflow(app, initial_state)
+
+    # Check if _invoke_llm_chain was called
+    assert mock_invoke_llm_chain.call_count == 1
+
+    # Check if llm input messages are correct
+    # First call must be only with one message made by the user
+    assert len(mock_invoke_llm_chain.call_args_list[0][0][0]["messages"]) == 1
+    assert isinstance(mock_invoke_llm_chain.call_args_list[0][0][0]["messages"][0], HumanMessage)
+    assert "orchestrator" in mock_invoke_llm_chain.call_args_list[0][0][0]["messages"][0].tags
+
+    # Check if the orchestrator state has been updated with the mocked AIMessage
+    assert len(state["messages"]) == 3
+    assert isinstance(state["messages"][0], HumanMessage)
+    assert isinstance(state["messages"][1], AIMessage)
+    assert isinstance(state["messages"][2], ToolMessage)
+
+    assert orchestrator_agent.id in state["messages"][0].tags
+    assert orchestrator_agent.id in state["messages"][1].tags
+    assert orchestrator_agent.id in state["messages"][2].tags
+
+    assert state["tool_data"][tools.delegate_tasks.name] is None
+
+
+@pytest.mark.asyncio
+# @patch.object(ToolNode, 'invoke')
+@patch("pluscoder.workflow.io.confirm")
+@patch("pluscoder.workflow.io.input")
+@patch("pluscoder.model.get_llm")
+@patch("pluscoder.workflow.accumulate_token_usage")
+@patch.object(Agent, "_invoke_llm_chain")
+async def test_orchestrator_task_list_partial_run(
+    mock_invoke_llm_chain,
+    mock_accumulate_token_usage,
+    mock_get_llm,
+    mock_io,
+    mock_io_confirm,
+    orchestrator_agent,
+    agent,
+):
+    # Mock the LLM response
+    mock_llm = MagicMock()
+    mock_get_llm.return_value = mock_llm
+
+    mock_io.side_effect = ["some user input"]
+    # mock_io.return_value = "some user input"
+
+    # Mock confirm
+    mock_io_confirm.side_effect = [True, False]
+
+    # Mock _invoke_llm_chain to return a mocked AIMessage
+    ai_message = AIMessage(content="Mocked LLM response")
+    ai_message.tool_calls = [
+        {
+            "name": tools.delegate_tasks.name,
+            "id": "delegation_1",
+            "args": {
+                "general_objective": "Objective",
+                "task_list": [
+                    {"is_finished": False, "objective": "Task 1", "details": "Details 1", "agent": "developer"},
+                    {"is_finished": False, "objective": "CTask 2", "details": "Details 2", "agent": "developer"},
+                ],
+                "resources": [],
+            },
+        }
+    ]
+
+    # Developer response
+    ai_message_dev = AIMessage(content="Developer response")
+
+    # Orch validation response
+    ai_message_orc = AIMessage(content="Orch validation")
+    ai_message_orc.tool_calls = [
+        {
+            "name": tools.is_task_completed.name,
+            "id": "task_completed_1",
+            "args": {"completed": True, "feedback": "some feedback"},
+        }
+    ]
+
+    mock_invoke_llm_chain.side_effect = [ai_message, ai_message_dev, ai_message_orc]
+
+    # Mock accumulate_token_usage to return the state unchanged
+    mock_accumulate_token_usage.side_effect = lambda state, _: state
+
+    # Set up the initial state
+    initial_state = OrchestrationState(
+        max_iterations=1,
+        current_iterations=0,
+        return_to_user=False,
+        messages=[],
+        context_files=[],
+        chat_agent="orchestrator",
+        is_task_list_workflow=False,
+        accumulated_token_usage=TokenUsage(prompt_tokens=0, completion_tokens=0, total_tokens=0, total_cost=0.0),
+        status="active",
+    )
+
+    # Set user input for testing
+    config.user_input = None
+
+    # Build workflow
+    app = build_workflow({"orchestrator": orchestrator_agent, "developer": agent})
+
+    # Run the workflow
+    state = await run_workflow(app, initial_state)
+
+    # Check if _invoke_llm_chain was called
+    assert mock_invoke_llm_chain.call_count == 3
+
+    # Check if llm input messages are correct
+    # First call must be only with one message made by the user
+    assert len(mock_invoke_llm_chain.call_args_list[0][0][0]["messages"]) == 1
+    assert isinstance(mock_invoke_llm_chain.call_args_list[0][0][0]["messages"][0], HumanMessage)
+    assert "orchestrator" in mock_invoke_llm_chain.call_args_list[0][0][0]["messages"][0].tags
+
+    # Second call must be developer agent with its task to solve
+    assert len(mock_invoke_llm_chain.call_args_list[1][0][0]["messages"]) == 1
+    assert isinstance(mock_invoke_llm_chain.call_args_list[1][0][0]["messages"][0], HumanMessage)
+    assert "developer" in mock_invoke_llm_chain.call_args_list[1][0][0]["messages"][0].tags
+
+    # Third call must be orchestrator for validating developer answer
+    assert len(mock_invoke_llm_chain.call_args_list[2][0][0]["messages"]) == 1
+    assert isinstance(mock_invoke_llm_chain.call_args_list[2][0][0]["messages"][0], HumanMessage)
+    assert "orchestrator-developer" in mock_invoke_llm_chain.call_args_list[2][0][0]["messages"][0].tags
+
+    # Check if the orchestrator state has been updated with the mocked AIMessage
+    assert len(state["messages"]) == 4
+    assert isinstance(state["messages"][0], HumanMessage)
+    assert isinstance(state["messages"][1], AIMessage)
+    assert isinstance(state["messages"][2], ToolMessage)
+    assert isinstance(state["messages"][3], AIMessage)
+
+    assert orchestrator_agent.id in state["messages"][0].tags
+    assert orchestrator_agent.id in state["messages"][1].tags
+    assert orchestrator_agent.id in state["messages"][2].tags
+    assert orchestrator_agent.id in state["messages"][3].tags
+
+    assert tools.delegate_tasks.name not in state["tool_data"]
