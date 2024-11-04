@@ -404,7 +404,7 @@ def setup() -> bool:
     # TODO: Get repository path from config
     repo = Repository(io=io)
 
-    if not Path(CONFIG_FILE).exists() or not config.initialized and config.init:
+    if (not Path(CONFIG_FILE).exists() or not config.initialized) and config.init:
         io.console.print(
             "Welcome to Pluscoder! Let's customize your project configuration.",
             style="bold green",
