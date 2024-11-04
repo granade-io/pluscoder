@@ -132,7 +132,7 @@ class Repository:
 
         # Ask y/n to create the files if missing
         if missing_files:
-            if input("To proceed, create the missing files? (y/n):").lower().strip() == "y":
+            if self.io.confirm("To proceed, create the missing files?"):
                 self.create_default_files()
 
                 # allow to continue using pluscoder
