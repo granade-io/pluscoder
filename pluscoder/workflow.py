@@ -181,8 +181,9 @@ async def _agent_node(state: OrchestrationState, agent: Agent) -> OrchestrationS
     # Execute the agent's graph node and get a its modified state
     messages = filter_messages(state["messages"], include_tags=[agent.id])
     updated_state = await agent.graph_node({**state, "messages": messages})
+
     # Update token usage
-    # state = accumulate_token_usage(state, updated_state)
+    state = accumulate_token_usage(state, updated_state)
 
     # orchestrated agent doesn't need to update its state, is was already updated by the internal graph execution
     return {"messages": updated_state["messages"], "accumulated_token_usage": state["accumulated_token_usage"]}
@@ -213,7 +214,15 @@ async def _orchestrator_agent_node(
 
             # User message received
             messages = filter_messages(state["messages"], include_tags=[orchestrator_agent.id])
-            return await orchestrator_agent.graph_node({**state, "messages": messages})
+            response = await orchestrator_agent.graph_node({**state, "messages": messages})
+
+            # Accumulate tokens usage
+            global_state = accumulate_token_usage(global_state, response)
+
+            return {
+                **response,
+                "accumulated_token_usage": global_state["accumulated_token_usage"],
+            }
 
         # Active tasks to delegate to other agents
         # Assume all agent messages are from orchestrator itself

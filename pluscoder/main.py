@@ -219,6 +219,7 @@ def main() -> None:
             "max_agent_deflections": 3,
             "chat_agent": chat_agent,
             "is_task_list_workflow": False,
+            "status": "active",
         }
 
         app = build_workflow(agent_dict)
