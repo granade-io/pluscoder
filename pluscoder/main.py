@@ -15,7 +15,6 @@ from pluscoder.io_utils import io
 from pluscoder.model import get_inferred_provider
 from pluscoder.repo import Repository
 from pluscoder.setup import setup
-from pluscoder.type import AgentState
 from pluscoder.type import TokenUsage
 from pluscoder.workflow import build_agents
 from pluscoder.workflow import build_workflow
@@ -221,10 +220,6 @@ def main() -> None:
             "chat_agent": chat_agent,
             "is_task_list_workflow": False,
         }
-
-        # Add custom agent states
-        for agent_id in agent_dict:
-            state[f"{agent_id.lower()}_state"] = AgentState.default()
 
         app = build_workflow(agent_dict)
         asyncio.run(run_workflow(app, state))

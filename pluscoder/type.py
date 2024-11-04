@@ -50,14 +50,14 @@ class AgentState(TypedDict, total=False):
 
 
 # TODO: This should be config independent
-# Move {agent}_state to agent_states: [Dict[str, AgentState]]
-# Move config.custom_agents to agent_states: [Dict[str, AgentState]]
 OrchestrationState = TypedDict(
     "OrchestrationState",
     {
         "max_iterations": int,
         "current_iterations": int,
         "accumulated_token_usage": TokenUsage,
+        # Token usage data
+        "token_usage": TokenUsage,
         # Data extracted using extraction tools
         "tool_data": dict,
         # Status of the agent in a conversation

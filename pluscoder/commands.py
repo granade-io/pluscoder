@@ -17,8 +17,8 @@ from pluscoder.config.utils import append_custom_agent_to_config
 from pluscoder.display_utils import display_agent
 from pluscoder.io_utils import io
 from pluscoder.message_utils import HumanMessage
+from pluscoder.message_utils import delete_messages
 from pluscoder.repo import Repository
-from pluscoder.type import AgentState
 from pluscoder.type import OrchestrationState
 
 
@@ -47,12 +47,7 @@ command_registry = CommandRegistry()
 
 def _clear(state: OrchestrationState):
     """Clear entire chat history"""
-    # Filters values from dict where key ends with "_state"
-    for key in state:
-        if key.endswith("_state"):
-            # Reset AgentState to default values
-            state[key] = AgentState.default()
-    return state
+    return {**state, "messages": delete_messages(state["messages"], include_tags=[state["chat_agent"]])}
 
 
 @command_registry.register("clear")
@@ -60,8 +55,7 @@ def clear(state: OrchestrationState):
     """Clear the entire chat history"""
 
     cleared_state = _clear(state)
-    io.event("Chat history cleared.")
-    io.event(Rule())
+    io.event(Rule("Chat history cleared."))
     return cleared_state
 
 
@@ -100,15 +94,14 @@ def undo(state: OrchestrationState):
     repo = Repository(io=io)
     if repo.undo():
         # Filters values from dict where key ends with "_state"
-        for key in state:
-            if not key.endswith("_state") or len(state[key]["messages"]) < 1:
-                # Skip non-message-containing keys
-                continue
+        last_message = state["messages"][-1]
 
-            # Remove last message from chat history
-            state[key]["messages"] = state[key]["messages"][:-1]
-        io.event("Last commit reverted and last message removed from chat history.")
-        return state
+        if not last_message:
+            io.event("> Last commit reverted. No chat messages to remove.")
+            return state
+
+        io.event("> Last commit reverted and last message removed from chat history.")
+        return {"messages": delete_messages(state["messages"], include_ids=[last_message.id])}
     io.console.print("Failed to revert last commit.", style="bold red")
     return state
 
@@ -140,10 +133,8 @@ def select_agent(state: OrchestrationState, *args):
 
     io.event(f"> Starting chat with {chosen_agent} agent. Chat history was cleared.")
 
-    state["chat_agent"] = chosen_agent
-
     # Clear chats to start new conversations
-    return _clear(state)
+    return {**_clear(state), "chat_agent": chosen_agent}
 
 
 @command_registry.register("help")
@@ -298,8 +289,6 @@ def create_agent(state: OrchestrationState, *args):
         # Reloads config to apply changes
         config.__init__(**{})
 
-        # Adds new agent state to global state
-        state[new_agent["name"].lower() + "_state"] = AgentState.default()
         return select_agent(state, new_agent["name"].lower())
     except Exception:
         io.console.print("Error generating agent: Please run command again", style="bold red")
@@ -326,17 +315,15 @@ def custom_command(state: OrchestrationState, prompt_name: str = "", *args):
     user_input = " ".join(args)
     combined_prompt = f"{custom_prompt['prompt']} {user_input}"
 
-    # Add the combined prompt as a HumanMessage to the current agent's message history
     current_agent = state.get("chat_agent", "orchestrator")
-    agent_state = state.get(f"{current_agent}_state", AgentState.default())
-    agent_state["messages"].append(HumanMessage(content=combined_prompt))
-    state[f"{current_agent}_state"] = agent_state
-
-    # Do not return to the user to execute agent with the added human message
-    state["return_to_user"] = False
 
     io.console.print(f"Custom prompt '{prompt_name}' executed and added to {current_agent}'s message history.")
-    return state
+    return {
+        # Add the combined prompt as a HumanMessage to the current agent's message history
+        "messages": [HumanMessage(content=combined_prompt, tags=[state["chat_agent"]])],
+        # Do not return to the user to execute agent with the added human message
+        "return_to_user": False,
+    }
 
 
 def is_command(command: Union[str, dict]) -> bool:

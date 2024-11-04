@@ -27,7 +27,6 @@ from pluscoder.message_utils import delete_messages
 from pluscoder.message_utils import filter_messages
 from pluscoder.message_utils import get_message_content_str
 from pluscoder.state_utils import accumulate_token_usage
-from pluscoder.type import AgentState
 from pluscoder.type import OrchestrationState
 
 set_debug(False)
@@ -69,10 +68,6 @@ def build_agents() -> dict:
 
     # Create a dictionary mapping agent names to their instances
     return {agent.id: agent for agent in available_agents}
-
-
-def get_chat_agent_state(state: OrchestrationState) -> AgentState:
-    return state[state.chat_agent + "_state"]
 
 
 def user_input(state: OrchestrationState):
@@ -139,8 +134,6 @@ def orchestrator_router(state: OrchestrationState, orchestrator_agent: Orchestra
     # Returns to the user when user requested by confirmation input
     if state["return_to_user"]:
         return "user_input"
-
-    # orch_state = state[orchestrator_agent.id + "_state"]
 
     task = orchestrator_agent.get_current_task(state)
 
