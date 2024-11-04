@@ -1,7 +1,9 @@
 from operator import add
 from typing import Annotated
+from typing import Dict
 from typing import List
 from typing import Literal
+from typing import Optional
 
 from langchain_core.messages import AnyMessage
 from langchain_core.pydantic_v1 import BaseModel
@@ -49,10 +51,24 @@ class AgentState(TypedDict, total=False):
         }
 
 
+class AgentConfig(BaseModel):
+    id: str
+    name: str
+    description: str
+    prompt: str
+    reminder: Optional[str]
+    tools: List[str]
+    default_context_files: List[str]
+    read_only: bool = False
+    override_system: Optional[str]
+    repository_interaction: bool = True
+
+
 # TODO: This should be config independent
 OrchestrationState = TypedDict(
     "OrchestrationState",
     {
+        "agents_configs": Dict[str, AgentConfig],
         "max_iterations": int,
         "current_iterations": int,
         "accumulated_token_usage": TokenUsage,
