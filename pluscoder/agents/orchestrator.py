@@ -6,6 +6,7 @@ from pluscoder.agents.prompts import REMINDER_PREFILL_PROMPT
 from pluscoder.agents.prompts import combine_prompts
 from pluscoder.message_utils import HumanMessage
 from pluscoder.model import get_orchestrator_llm
+from pluscoder.type import AgentConfig
 from pluscoder.type import AgentInstructions
 from pluscoder.type import AgentState
 
@@ -24,7 +25,7 @@ Remember your role is to understand user requirements to generate/plan a proper 
 class OrchestratorAgent(Agent):
     id = "orchestrator"
 
-    orchestrator_prompt = """
+    specialization_prompt = """
 *SPECIALIZATION INSTRUCTIONS*:
 You are the Orchestrator Agent, your role is to understand user requirements to generate/plan a proper list of task to solve those requirements with the help of specialized Pluscoder AI Agents.
 
@@ -177,16 +178,12 @@ You are the Orchestrator Agent, your role is to understand user requirements to 
 
     def __init__(
         self,
-        tools=[tools.read_files],
+        agent_config: AgentConfig,
         extraction_tools=[tools.delegate_tasks, tools.is_task_completed],
     ):
         super().__init__(
-            self.orchestrator_prompt,
-            "Orchestrator",
-            description="Break down the problem into a list of tasks and delegates it to other agents",
-            tools=tools,
+            agent_config,
             extraction_tools=extraction_tools,
-            default_context_files=["PROJECT_OVERVIEW.md"],
         )
 
     def get_system_message(self, state: AgentState) -> str:
@@ -216,7 +213,8 @@ You are the Orchestrator Agent, your role is to understand user requirements to 
     def get_agent_model(self):
         return get_orchestrator_llm()
 
-    def is_agent_response(self, state: AgentState) -> bool:
+    @classmethod
+    def is_agent_response(cls, state: AgentState) -> bool:
         """
         Verify if the last message in the state is from an agent.
 
@@ -233,7 +231,8 @@ You are the Orchestrator Agent, your role is to understand user requirements to 
         # Assuming agent messages are not instances of HumanMessage
         return not isinstance(last_message, HumanMessage)
 
-    def get_current_task(self, state: AgentState):
+    @classmethod
+    def get_current_task(cls, state: AgentState):
         """
         Get the first task that is not finished from the state.
 
@@ -255,7 +254,8 @@ You are the Orchestrator Agent, your role is to understand user requirements to 
         task_list = state["tool_data"][tools.delegate_tasks.name]["task_list"]
         return next((task for task in task_list if not task.get("is_finished", False)), None)
 
-    def get_completed_tasks(self, state: AgentState) -> List[dict]:
+    @classmethod
+    def get_completed_tasks(cls, state: AgentState) -> List[dict]:
         """
         Get the list of completed tasks from the state.
 
@@ -277,7 +277,8 @@ You are the Orchestrator Agent, your role is to understand user requirements to 
         task_list = state["tool_data"][tools.delegate_tasks.name]["task_list"]
         return [task for task in task_list if task.get("is_finished", False)]
 
-    def get_task_list(self, state: AgentState) -> List[dict]:
+    @classmethod
+    def get_task_list(cls, state: AgentState) -> List[dict]:
         """
         Get the task list from the state.
 
@@ -292,17 +293,20 @@ You are the Orchestrator Agent, your role is to understand user requirements to 
 
         return state["tool_data"][tools.delegate_tasks.name]["task_list"]
 
-    def remove_task_list_data(self, state: AgentState) -> AgentState:
+    @classmethod
+    def remove_task_list_data(cls, state: AgentState) -> AgentState:
         """Remove the task list data from the state."""
         return {
             **state,
             "tool_data": {**state["tool_data"], tools.delegate_tasks.name: None},
         }
 
-    def get_agent_instructions(self, state: AgentState) -> AgentInstructions:
+    @classmethod
+    def get_agent_instructions(cls, state: AgentState) -> AgentInstructions:
         return AgentInstructions(**state["tool_data"][tools.delegate_tasks.name])
 
-    def validate_current_task_completed(self, state: AgentState) -> bool:
+    @classmethod
+    def validate_current_task_completed(cls, state: AgentState) -> bool:
         """
         Check if the current task is completed based on the state last tool used.
 
@@ -320,7 +324,8 @@ You are the Orchestrator Agent, your role is to understand user requirements to 
 
         return state["tool_data"][tools.is_task_completed.name]["completed"]
 
-    def mark_current_task_as_completed(self, state: AgentState, response: str) -> AgentState:
+    @classmethod
+    def mark_current_task_as_completed(cls, state: AgentState, response: str) -> AgentState:
         """
         Mark the current task as completed and return a new state.
         Adds the llm response to understand in which message the response was marked as completed.
@@ -344,11 +349,12 @@ You are the Orchestrator Agent, your role is to understand user requirements to 
 
         return {**state, "tool_data": tool_data}
 
-    def task_to_instruction(self, task: dict, state: AgentState) -> str:
+    @classmethod
+    def task_to_instruction(cls, task: dict, state: AgentState) -> str:
         task_list_data = state["tool_data"][tools.delegate_tasks.name]
         general_objective = task_list_data["general_objective"]
 
-        completed_tasks = self.get_completed_tasks(state)
+        completed_tasks = OrchestratorAgent.get_completed_tasks(state)
         completed_tasks_info = "\n".join([f"- Completed: {t['objective']}\n  {t['details']}" for t in completed_tasks])
 
         # Get any image for multi-modal llm
@@ -386,7 +392,8 @@ Expected Outcome: {task.get("outcome", "No specific outcome defined.")}
 Write you answer step by step, using a <thinking> block for analysis your thoughts before giving a response to me using <step> and edit files using <source> blocks.
 """
 
-    def is_task_list_empty(self, state: AgentState):
+    @classmethod
+    def is_task_list_empty(cls, state: AgentState):
         """
         Check if the task list is empty in the state.
 
@@ -407,7 +414,8 @@ Write you answer step by step, using a <thinking> block for analysis your though
         task_list = state["tool_data"][tools.delegate_tasks.name]["task_list"]
         return not task_list
 
-    def is_task_list_complete(self, state: AgentState):
+    @classmethod
+    def is_task_list_complete(cls, state: AgentState):
         """
         Check if the task list is complete in the state.
 
@@ -421,7 +429,8 @@ Write you answer step by step, using a <thinking> block for analysis your though
         task_list = state["tool_data"][tools.delegate_tasks.name]["task_list"]
         return all(task.get("is_finished", False) for task in task_list)
 
-    def was_task_validation_tool_used(self, state: AgentState) -> bool:
+    @classmethod
+    def was_task_validation_tool_used(cls, state: AgentState) -> bool:
         """
         Check if the validation tool was used in the last message.
 

@@ -70,14 +70,14 @@ Generate a prompt to describe the *BEST POSSIBLE AI AGENT ASSISTANT* that can ha
     prompt_template += """
 <output_format>
 Return the only well-formatted json without any tag. With this structure:
-- name: Mayus-Camelcase without any spaces, dashes or underscores. i.e: AgentName
+- name: Mayus-Camelcase without any spaces, dashes or underscores. Max 2 words. i.e: AgentName, Css6, Security, AuthExpert, DjangoBackend
 - description: An small sentence with agent description
 - prompt: <Generated prompt>
 - system_reminder: Paragraph with system reminder to tell the agent each time the user talk with them to reminds what's their specialized role and responsibilities
 
     <example_output>
     {{
-        "name": "DocumentationExpert",
+        "name": "DocExpert",
         "description": "An AI agent specialized in creating comprehensive code documentation in Python following Google Docstring standards.",
         "prompt": <prompt>
         "system_reminder": "Remember, your primary role is to create high-quality documentation in Python using Google Docstring standards, carefully reviewing code and adhering to the project’s guidelines to maintain clarity and consistency across the codebase."

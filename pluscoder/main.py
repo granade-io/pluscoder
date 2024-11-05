@@ -5,7 +5,6 @@ import traceback
 
 from rich.prompt import Prompt
 
-from pluscoder.agents.custom import CustomAgent
 from pluscoder.commands import show_config
 from pluscoder.commands import show_repo
 from pluscoder.commands import show_repomap
@@ -144,7 +143,7 @@ def display_agent_list(agents: dict):
     """Display the list of available agents with their indices."""
     io.console.print("\n[bold green]Available agents:[/bold green]")
     for i, (_agent_id, agent) in enumerate(agents.items(), 1):
-        agent_type = "[cyan]Custom[/cyan]" if isinstance(agent, CustomAgent) else "[yellow]Predefined[/yellow]"
+        agent_type = "[cyan]Custom[/cyan]" if agent.is_custom else "[yellow]Predefined[/yellow]"
         io.console.print(f"{i}. {display_agent(agent, agent_type)}")
 
 
@@ -209,6 +208,8 @@ def main() -> None:
         chat_agent = choose_chat_agent_node(agent_dict)
 
         state = {
+            "agents_configs": agent_dict,
+            "chat_agent": agent_dict[chat_agent],
             "current_iterations": 0,
             "max_iterations": 100,
             "return_to_user": False,
@@ -217,7 +218,6 @@ def main() -> None:
             "accumulated_token_usage": TokenUsage.default(),
             "current_agent_deflections": 0,
             "max_agent_deflections": 3,
-            "chat_agent": chat_agent,
             "is_task_list_workflow": False,
             "status": "active",
         }

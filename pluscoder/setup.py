@@ -340,8 +340,8 @@ def initialize_repository():
     from pluscoder.workflow import run_workflow
 
     io.event("> Starting repository initialization...")
-    agents = build_agents()
-    app = build_workflow(agents)
+    agents_configs = build_agents()
+    app = build_workflow(agents_configs)
 
     # Setup config to automatize agents calls
     auto_confirm = config.auto_confirm
@@ -359,13 +359,14 @@ def initialize_repository():
     ).dict()
 
     initial_state = {
+        "agents_configs": agents_configs,
+        "chat_agent": agents_configs["orchestrator"],
         "max_iterations": 1,
         "current_iterations": 0,
         "messages": [],
         "tool_data": tool_data,
         "return_to_user": False,
         "accumulated_token_usage": TokenUsage.default(),
-        "chat_agent": "orchestrator",
         "is_task_list_workflow": True,
         "max_agent_deflections": 2,
         "current_agent_deflections": 0,

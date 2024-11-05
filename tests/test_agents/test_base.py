@@ -10,6 +10,7 @@ from pluscoder.agents.base import parse_mentioned_files
 from pluscoder.exceptions import AgentException
 from pluscoder.message_utils import HumanMessage
 from pluscoder.repo import Repository
+from pluscoder.type import AgentConfig
 from pluscoder.type import OrchestrationState
 
 
@@ -128,14 +129,18 @@ def mock_llm():
 
 @pytest.fixture
 def agent():
-    agent = Agent(
-        system_message="You are a helpful assistant.",
-        name="TestAgent",
-        tools=[],
-        default_context_files=["test_file.txt"],
+    return Agent(
+        agent_config=AgentConfig(
+            prompt="You are a helpful assistant.",
+            name="TestAgent",
+            id="test_agent",
+            description="Description",
+            reminder="",
+            tools=[],
+            default_context_files=["test_file.txt"],
+            repository_interaction=True,
+        )
     )
-    agent.id = "test_agent"
-    return agent
 
 
 def test_agent_initialization(agent):
@@ -143,7 +148,6 @@ def test_agent_initialization(agent):
     assert agent.system_message == "You are a helpful assistant."
     assert agent.tools == []
     assert agent.default_context_files == ["test_file.txt"]
-    assert agent.max_deflections == 3
 
 
 # TODO: Comented, context files will be removed in the future

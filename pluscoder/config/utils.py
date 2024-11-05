@@ -56,6 +56,8 @@ def format_agent_dict(agent: Dict[str, Union[str, bool]], indent: int = 2) -> Li
         if key != "name":  # Skip name as it's already added
             if isinstance(value, bool):
                 lines.append(f"{base_indent}  {key}: {str(value).lower()}\n")
+            elif isinstance(value, list):
+                lines.append(f"{base_indent}  {key}: {value}\n")
             else:
                 # check if multiline value
                 if "\n" in value:
@@ -173,6 +175,10 @@ def append_custom_agent_to_config(new_agent: Dict[str, Union[str, bool]]) -> Non
 
     # Format and insert the new agent
     new_agent_lines = format_agent_dict(new_agent)
+
+    # If inserting outside the file, add a new line
+    if insert_index == len(lines):
+        new_agent_lines = ["\n"] + new_agent_lines
     lines[insert_index:insert_index] = new_agent_lines
 
     # Write back to file

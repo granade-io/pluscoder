@@ -11,6 +11,7 @@ from pluscoder.agents.base import Agent
 from pluscoder.agents.orchestrator import OrchestratorAgent
 from pluscoder.config import config
 from pluscoder.message_utils import HumanMessage
+from pluscoder.type import AgentConfig
 from pluscoder.type import OrchestrationState
 from pluscoder.type import TokenUsage
 from pluscoder.workflow import build_workflow
@@ -18,21 +19,51 @@ from pluscoder.workflow import run_workflow
 
 
 @pytest.fixture
-def agent():
-    agent = Agent(
-        system_message="You are a helpful assistant.",
-        name="TestAgent",
-        tools=[],
-        default_context_files=["test_file.txt"],
-    )
-    agent.id = "developer"
-    return agent
+def mock_agents_config():
+    return {
+        "orchestrator": AgentConfig(
+            id=OrchestratorAgent.id,
+            name="Orchestrator",
+            description="Orchestrate and manage other agents",
+            prompt=OrchestratorAgent.specialization_prompt,
+            reminder="",
+            tools=[],
+            default_context_files=[],
+            repository_interaction=True,
+        ),
+        "developer": AgentConfig(
+            id="developer",
+            name="Developer",
+            description="Test developer",
+            prompt="Test prompt",
+            reminder="",
+            tools=[],
+            default_context_files=[],
+            repository_interaction=True,
+        ),
+    }
 
 
 @pytest.fixture
-def orchestrator_agent():
+def agent():
+    return Agent(
+        AgentConfig(
+            prompt="You are a helpful assistant.",
+            name="TestAgent",
+            id="developer",
+            description="Description",
+            reminder="",
+            tools=[],
+            default_context_files=["test_file.txt"],
+            repository_interaction=True,
+        )
+    )
+
+
+@pytest.fixture
+def orchestrator_agent(mock_agents_config):
     return OrchestratorAgent(
-        tools=[],
+        mock_agents_config["orchestrator"],
         extraction_tools=[tools.delegate_tasks, tools.is_task_completed],
     )
 
@@ -42,7 +73,7 @@ def orchestrator_agent():
 @patch("pluscoder.workflow.accumulate_token_usage")
 @patch.object(Agent, "_invoke_llm_chain")
 async def test_workflow_with_mocked_llm(
-    mock_invoke_llm_chain, mock_accumulate_token_usage, mock_get_llm, orchestrator_agent, agent
+    mock_invoke_llm_chain, mock_accumulate_token_usage, mock_get_llm, orchestrator_agent, agent, mock_agents_config
 ):
     # Mock the LLM response
     mock_llm = MagicMock()
@@ -61,16 +92,17 @@ async def test_workflow_with_mocked_llm(
         return_to_user=False,
         messages=[],
         context_files=[],
-        chat_agent="developer",
+        chat_agent=mock_agents_config["developer"],
         is_task_list_workflow=False,
         accumulated_token_usage=TokenUsage(prompt_tokens=0, completion_tokens=0, total_tokens=0, total_cost=0.0),
+        agents_configs=mock_agents_config,
     )
 
     # Set user input for testing
     config.user_input = "Test input"
 
     # Build workflow
-    app = build_workflow({"orchestrator": orchestrator_agent, "developer": agent})
+    app = build_workflow({"orchestrator": mock_agents_config["orchestrator"], "developer": agent})
 
     # Run the workflow
     state = await run_workflow(app, initial_state)
@@ -94,7 +126,13 @@ async def test_workflow_with_mocked_llm(
 @patch("pluscoder.workflow.accumulate_token_usage")
 @patch.object(Agent, "_invoke_llm_chain")
 async def test_workflow_with_mocked_llm_with_tool(
-    mock_invoke_llm_chain, mock_accumulate_token_usage, mock_get_llm, mock_tool_node_invoke, orchestrator_agent, agent
+    mock_invoke_llm_chain,
+    mock_accumulate_token_usage,
+    mock_get_llm,
+    mock_tool_node_invoke,
+    orchestrator_agent,
+    agent,
+    mock_agents_config,
 ):
     # Mock the LLM response
     mock_llm = MagicMock()
@@ -121,16 +159,19 @@ async def test_workflow_with_mocked_llm_with_tool(
         return_to_user=False,
         messages=[],
         context_files=[],
-        chat_agent="developer",
+        chat_agent=mock_agents_config["developer"],
         is_task_list_workflow=False,
         accumulated_token_usage=TokenUsage(prompt_tokens=0, completion_tokens=0, total_tokens=0, total_cost=0.0),
+        agents_configs=mock_agents_config,
     )
 
     # Set user input for testing
     config.user_input = "Test input"
 
     # Build workflow
-    app = build_workflow({"orchestrator": orchestrator_agent, "developer": agent})
+    app = build_workflow(
+        {"orchestrator": mock_agents_config["orchestrator"], "developer": mock_agents_config["developer"]}
+    )
 
     # Run the workflow
     state = await run_workflow(app, initial_state)
@@ -165,6 +206,7 @@ async def test_orchestrator_basic(
     mock_tool_node_invoke,
     orchestrator_agent,
     agent,
+    mock_agents_config,
 ):
     # Mock the LLM response
     mock_llm = MagicMock()
@@ -187,17 +229,20 @@ async def test_orchestrator_basic(
         return_to_user=False,
         messages=[],
         context_files=[],
-        chat_agent="orchestrator",
+        chat_agent=mock_agents_config["orchestrator"],
         is_task_list_workflow=False,
         accumulated_token_usage=TokenUsage(prompt_tokens=0, completion_tokens=0, total_tokens=0, total_cost=0.0),
         status="active",
+        agents_configs=mock_agents_config,
     )
 
     # Set user input for testing
     config.user_input = None
 
     # Build workflow
-    app = build_workflow({"orchestrator": orchestrator_agent, "developer": agent})
+    app = build_workflow(
+        {"orchestrator": mock_agents_config["orchestrator"], "developer": mock_agents_config["developer"]}
+    )
 
     # Run the workflow
     state = await run_workflow(app, initial_state)
@@ -229,6 +274,7 @@ async def test_orchestrator_task_list_run(
     mock_io_confirm,
     orchestrator_agent,
     agent,
+    mock_agents_config,
 ):
     # Mock the LLM response
     mock_llm = MagicMock()
@@ -305,17 +351,20 @@ async def test_orchestrator_task_list_run(
         return_to_user=False,
         messages=[],
         context_files=[],
-        chat_agent="orchestrator",
+        chat_agent=mock_agents_config["orchestrator"],
         is_task_list_workflow=False,
         accumulated_token_usage=TokenUsage(prompt_tokens=0, completion_tokens=0, total_tokens=0, total_cost=0.0),
         status="active",
+        agents_configs=mock_agents_config,
     )
 
     # Set user input for testing
     config.user_input = None
 
     # Build workflow
-    app = build_workflow({"orchestrator": orchestrator_agent, "developer": agent})
+    app = build_workflow(
+        {"orchestrator": mock_agents_config["orchestrator"], "developer": mock_agents_config["developer"]}
+    )
 
     # Run the workflow
     state = await run_workflow(app, initial_state)
@@ -384,6 +433,7 @@ async def test_orchestrator_task_list_cancel(
     mock_io_confirm,
     orchestrator_agent,
     agent,
+    mock_agents_config,
 ):
     # Mock the LLM response
     mock_llm = MagicMock()
@@ -424,17 +474,20 @@ async def test_orchestrator_task_list_cancel(
         return_to_user=False,
         messages=[],
         context_files=[],
-        chat_agent="orchestrator",
+        chat_agent=mock_agents_config["orchestrator"],
         is_task_list_workflow=False,
         accumulated_token_usage=TokenUsage(prompt_tokens=0, completion_tokens=0, total_tokens=0, total_cost=0.0),
         status="active",
+        agents_configs=mock_agents_config,
     )
 
     # Set user input for testing
     config.user_input = None
 
     # Build workflow
-    app = build_workflow({"orchestrator": orchestrator_agent, "developer": agent})
+    app = build_workflow(
+        {"orchestrator": mock_agents_config["orchestrator"], "developer": mock_agents_config["developer"]}
+    )
 
     # Run the workflow
     state = await run_workflow(app, initial_state)
@@ -476,6 +529,7 @@ async def test_orchestrator_task_list_partial_run(
     mock_io_confirm,
     orchestrator_agent,
     agent,
+    mock_agents_config,
 ):
     # Mock the LLM response
     mock_llm = MagicMock()
@@ -529,17 +583,20 @@ async def test_orchestrator_task_list_partial_run(
         return_to_user=False,
         messages=[],
         context_files=[],
-        chat_agent="orchestrator",
+        chat_agent=mock_agents_config["orchestrator"],
         is_task_list_workflow=False,
         accumulated_token_usage=TokenUsage(prompt_tokens=0, completion_tokens=0, total_tokens=0, total_cost=0.0),
         status="active",
+        agents_configs=mock_agents_config,
     )
 
     # Set user input for testing
     config.user_input = None
 
     # Build workflow
-    app = build_workflow({"orchestrator": orchestrator_agent, "developer": agent})
+    app = build_workflow(
+        {"orchestrator": mock_agents_config["orchestrator"], "developer": mock_agents_config["developer"]}
+    )
 
     # Run the workflow
     state = await run_workflow(app, initial_state)

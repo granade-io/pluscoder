@@ -27,6 +27,19 @@ def sample_yaml_content():
 
 
 @pytest.fixture
+def sample_yaml_content_no_end_newline():
+    return [
+        "# Some comments\n",
+        "model: gpt-4\n",
+        "\n",
+        "custom_agents:\n",
+        "  - name: test_agent\n",
+        "    description: test description\n",
+        "    enabled: true",
+    ]
+
+
+@pytest.fixture
 def empty_yaml_content():
     return ["# Some comments\n", "model: gpt-4\n", "custom_agents: []\n", "other_key: value\n"]
 
@@ -63,12 +76,15 @@ def test_format_agent_dict():
     assert result == expected
 
 
-def test_find_insertion_point(sample_yaml_content, empty_yaml_content):
+def test_find_insertion_point(sample_yaml_content, empty_yaml_content, sample_yaml_content_no_end_newline):
     # Test with existing agents
     assert find_insertion_point(sample_yaml_content, 3) == 7
 
     # Test with empty agents section
     assert find_insertion_point(empty_yaml_content, 2) == 3
+
+    # Test with no newline
+    assert find_insertion_point(sample_yaml_content_no_end_newline, 3) == 7
 
 
 def test_create_custom_agents_section():
@@ -131,6 +147,34 @@ def test_append_custom_agent_to_empty_config(mock_file, mock_read, empty_yaml_co
 
     # Verify content
     assert "custom_agents: []" not in written_content
+    assert "new_agent" in written_content
+    assert "new description" in written_content
+    assert "enabled: true" in written_content
+
+
+@patch("pluscoder.config.utils.read_yaml_file")
+@patch("builtins.open", new_callable=mock_open)
+def test_append_custom_agent_to_no_newline_config(mock_file, mock_read, sample_yaml_content_no_end_newline):
+    mock_read.return_value = sample_yaml_content_no_end_newline
+
+    new_agent = {"name": "new_agent", "description": "new description", "enabled": True}
+
+    append_custom_agent_to_config(new_agent)
+
+    # Verify file was written
+    mock_file.assert_called_once_with(".pluscoder-config.yml", "w")
+    handle = mock_file()
+
+    # Capture writelines calls
+    calls = handle.writelines.call_args_list
+    if not calls:
+        calls = [call[0] for call in handle.write.call_args_list]
+
+    # Convert all writes to a single string for easier assertion
+    written_content = "".join(str(arg) for call in calls for arg in call[0])
+    print(written_content)
+
+    # Verify content
     assert "new_agent" in written_content
     assert "new description" in written_content
     assert "enabled: true" in written_content

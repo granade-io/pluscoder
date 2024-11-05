@@ -2,6 +2,7 @@ import asyncio
 import re
 import traceback
 from time import sleep
+from typing import Callable
 from typing import List
 from typing import Literal
 
@@ -13,6 +14,7 @@ from langchain_core.runnables import RunnableMap
 from langgraph.graph import StateGraph
 from langgraph.prebuilt import ToolNode
 
+from pluscoder import tools
 from pluscoder.agents.event.config import event_emitter
 from pluscoder.agents.prompts import REMINDER_PREFILL_FILE_OPERATIONS_PROMPT
 from pluscoder.agents.prompts import REMINDER_PREFILL_PROMPT
@@ -27,6 +29,7 @@ from pluscoder.message_utils import HumanMessage
 from pluscoder.message_utils import get_message_content_str
 from pluscoder.model import get_llm
 from pluscoder.repo import Repository
+from pluscoder.type import AgentConfig
 from pluscoder.type import OrchestrationState
 
 
@@ -55,40 +58,27 @@ def parse_mentioned_files(text):
 class Agent:
     state_schema = OrchestrationState
 
-    def __init__(
-        self,
-        system_message: str,
-        name: str,
-        description: str = "",
-        reminder: str = "",
-        tools=[],
-        extraction_tools=[],
-        default_context_files: List[str] = [],
-        read_only: bool = False,
-        override_system: bool = False,
-        repository_interaction: bool = True,
-    ):
-        self.name = name
-        self.system_message = system_message
-        self.tools = tools
+    def __init__(self, agent_config: AgentConfig, extraction_tools: list[Callable] = []):
+        self.id = agent_config.id
+        self.name = agent_config.name
+        self.system_message = agent_config.prompt
+        self.tools = [getattr(tools, tool, None) for tool in agent_config.tools if getattr(tools, tool, None)]
         self.extraction_tools = extraction_tools
-        self.default_context_files = default_context_files
+        self.default_context_files = agent_config.default_context_files
         self.graph = self.get_graph()
         self.max_deflections = 3
         self.current_deflection = 0
         self.repo = Repository(io=io)
         self.state = None
         self.disable_reminder = False
-        self.read_only = read_only
-        self.description = description
-        self.reminder = reminder
-        self.override_system = override_system
-        self.repository_interaction = repository_interaction
+        self.read_only = agent_config.read_only
+        self.description = agent_config.description
+        self.reminder = agent_config.reminder
+        self.repository_interaction = agent_config.repository_interaction
 
     def get_context_files(self, state):
         state_files = state.get("context_files") or []
         files = [*self.default_context_files, *state_files]
-        # files = [*self.default_context_files]
 
         # remove duplicates
         return list(set(files))
@@ -133,6 +123,8 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         prompt = REMINDER_PREFILL_PROMPT
         if not config.read_only and not self.read_only and self.repository_interaction:
             prompt += REMINDER_PREFILL_FILE_OPERATIONS_PROMPT
+        if self.reminder:
+            prompt += self.reminder
         return prompt
 
     def get_prompt_template_messages(self, state: OrchestrationState):

@@ -4,12 +4,24 @@ from langchain_core.messages import AIMessage
 from pluscoder import tools
 from pluscoder.agents.orchestrator import OrchestratorAgent
 from pluscoder.message_utils import HumanMessage
+from pluscoder.type import AgentConfig
 from pluscoder.type import OrchestrationState
 
 
 @pytest.fixture
 def orchestrator_agent():
-    return OrchestratorAgent()  # We don't need a real LLM for these tests
+    return OrchestratorAgent(
+        AgentConfig(
+            id=OrchestratorAgent.id,
+            name="Orchestrator",
+            description="Orchestrate and manage other agents",
+            prompt=OrchestratorAgent.specialization_prompt,
+            reminder="",
+            tools=[],
+            default_context_files=[],
+            repository_interaction=True,
+        )
+    )  # We don't need a real LLM for these tests
 
 
 def test_is_agent_response_empty_state(orchestrator_agent):

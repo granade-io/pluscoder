@@ -60,15 +60,20 @@ class AgentConfig(BaseModel):
     tools: List[str]
     default_context_files: List[str]
     read_only: bool = False
-    override_system: Optional[str]
     repository_interaction: bool = True
+    is_custom: bool = False
 
 
 # TODO: This should be config independent
 OrchestrationState = TypedDict(
     "OrchestrationState",
     {
+        # id of the current conversation
+        "chat_id": str,
+        # Available agents
         "agents_configs": Dict[str, AgentConfig],
+        # agent of the current conversation
+        "chat_agent": AgentConfig,
         "max_iterations": int,
         "current_iterations": int,
         "accumulated_token_usage": TokenUsage,
@@ -81,7 +86,6 @@ OrchestrationState = TypedDict(
         #   delegating: Agent is communicating with another agent to complete and validate the active task.
         "status": Literal["active", "delegating", "summarizing"],
         "return_to_user": bool,
-        "chat_agent": str,
         # Tell is the workflow is being run from task list to avoid user interactions
         "is_task_list_workflow": bool,
         # Max times to additionally delegate same task to an agent to complete it properly
