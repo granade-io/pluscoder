@@ -1,4 +1,5 @@
 import subprocess
+import traceback
 from functools import wraps
 from typing import Callable
 from typing import Dict
@@ -12,12 +13,15 @@ from rich.syntax import Syntax
 from rich.table import Table
 from rich.tree import Tree
 
+from pluscoder import tools
 from pluscoder.config import config
+from pluscoder.config.utils import append_custom_agent_to_config
 from pluscoder.display_utils import display_agent
 from pluscoder.io_utils import io
 from pluscoder.message_utils import HumanMessage
+from pluscoder.message_utils import delete_messages
 from pluscoder.repo import Repository
-from pluscoder.type import AgentState
+from pluscoder.type import AgentConfig
 from pluscoder.type import OrchestrationState
 
 
@@ -46,21 +50,15 @@ command_registry = CommandRegistry()
 
 def _clear(state: OrchestrationState):
     """Clear entire chat history"""
-    # Filters values from dict where key ends with "_state"
-    for key in state:
-        if key.endswith("_state"):
-            # Reset AgentState to default values
-            state[key] = AgentState.default()
-    return state
+    return {**state, "messages": delete_messages(state["messages"], include_tags=[state["chat_agent"].id])}
 
 
 @command_registry.register("clear")
 def clear(state: OrchestrationState):
-    """Reset entire chat history"""
+    """Clear the entire chat history"""
 
     cleared_state = _clear(state)
-    io.event("Chat history cleared.")
-    io.event(Rule())
+    io.event(Rule("Chat history cleared."))
     return cleared_state
 
 
@@ -99,46 +97,46 @@ def undo(state: OrchestrationState):
     repo = Repository(io=io)
     if repo.undo():
         # Filters values from dict where key ends with "_state"
-        for key in state:
-            if not key.endswith("_state") or len(state[key]["messages"]) < 1:
-                # Skip non-message-containing keys
-                continue
+        last_message = state["messages"][-1]
 
-            # Remove last message from chat history
-            state[key]["messages"] = state[key]["messages"][:-1]
-        io.event("Last commit reverted and last message removed from chat history.")
-        return state
+        if not last_message:
+            io.event("> Last commit reverted. No chat messages to remove.")
+            return state
+
+        io.event("> Last commit reverted and last message removed from chat history.")
+        return {"messages": delete_messages(state["messages"], include_ids=[last_message.id])}
     io.console.print("Failed to revert last commit.", style="bold red")
     return state
 
 
 @command_registry.register("agent")
-def agent(state: OrchestrationState):
-    """Start a conversation with a new agent from scratch"""
-    from pluscoder.agents.custom import CustomAgent
+def select_agent(state: OrchestrationState, *args):
+    """Start a new conversation with another agent"""
     from pluscoder.workflow import build_agents
 
     agent_dict = build_agents()
+    chosen_agent = " ".join(args).strip()
 
-    io.console.print("[bold green]Choose an agent to chat with:[/bold green]")
+    if chosen_agent not in agent_dict:
+        # chose an agent interactively
+        io.console.print("[bold green]Choose an agent to chat with:[/bold green]")
 
-    for i, (_agent_id, agent) in enumerate(agent_dict.items(), 1):
-        agent_type = "[cyan]Custom[/cyan]" if isinstance(agent, CustomAgent) else "[yellow]Predefined[/yellow]"
-        io.console.print(f"{i}. {display_agent(agent, agent_type)}")
+        for i, (_agent_id, agent) in enumerate(agent_dict.items(), 1):
+            agent_type = "[cyan]Custom[/cyan]" if agent.is_custom else "[yellow]Predefined[/yellow]"
+            io.console.print(f"{i}. {display_agent(agent, agent_type)}")
 
-    choice = Prompt.ask(
-        "Select an agent",
-        choices=[str(i) for i in range(1, len(agent_dict) + 1)],
-        default="1",
-    )
+        choice = Prompt.ask(
+            "Select an agent",
+            choices=[str(i) for i in range(1, len(agent_dict) + 1)],
+            default="1",
+        )
 
-    chosen_agent = list(agent_dict.keys())[int(choice) - 1]
+        chosen_agent = list(agent_dict.keys())[int(choice) - 1]
+
     io.event(f"> Starting chat with {chosen_agent} agent. Chat history was cleared.")
 
-    state["chat_agent"] = chosen_agent
-
     # Clear chats to start new conversations
-    return _clear(state)
+    return {**_clear(state), "chat_agent": agent_dict[chosen_agent]}
 
 
 @command_registry.register("help")
@@ -157,7 +155,7 @@ def help_command(state: OrchestrationState):
 
 @command_registry.register("run")
 def run_command(state: OrchestrationState, *args) -> OrchestrationState:
-    """Execute a system command and capture its output"""
+    """Execute a system command and displays its output"""
     command = " ".join(args)
     try:
         result = subprocess.run(
@@ -184,7 +182,7 @@ def run_command(state: OrchestrationState, *args) -> OrchestrationState:
 
 @command_registry.register("init")
 def _init(state: OrchestrationState):
-    """Force repository initialization"""
+    """Start repository initialization to improve repository understanding"""
     io.console.print(
         "Initialization will analyze the repository to create/update `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md` files."
     )
@@ -200,7 +198,7 @@ def _init(state: OrchestrationState):
 
 @command_registry.register("show_repo")
 def show_repo(state: OrchestrationState = None):
-    """Display information about the repository"""
+    """Display repository files tree in the context"""
     repo = Repository(io=io)
     tracked_files = repo.get_tracked_files()
 
@@ -227,7 +225,7 @@ def show_repomap(state: OrchestrationState = None):
 
 @command_registry.register("show_config")
 def show_config(state: OrchestrationState = None):
-    """Display the current configuration"""
+    """Display Pluscoder configuration"""
     table = Table(title="Current Configuration")
     table.add_column("Setting", style="cyan")
     table.add_column("Value", style="magenta")
@@ -238,6 +236,85 @@ def show_config(state: OrchestrationState = None):
         table.add_row(key, str(value))
 
     io.console.print(table)
+    return state
+
+
+@command_registry.register("agent_create")
+def create_agent(state: OrchestrationState, *args):
+    """Creates a persistent specialized Agent to chat with."""
+    from pluscoder.agents.utils import generate_agent
+
+    io.event("> Started new agent creation")
+
+    io.console.print(Rule("Agent Personalization"))
+    # Repository interaction
+    io.console.print(
+        "WARN: Disabling code-base interaction will cause the agent to know nothing about the repository or its files",
+        style="bold dark_goldenrod",
+    )
+    repository_interaction = bool(io.confirm("Enable code-base interaction for this agent?"))
+
+    # Read only config
+    read_only = not (repository_interaction and io.confirm("Allow this agent to edit files?"))
+
+    io.console.print("Describe the problem you want to solve or an agent to create")
+    io.console.print("Example: 'I need a ReactJs frontend with MaterialUI and Swagger APIs connections'")
+    io.console.print("Example: 'An Agent to refactor my Python code with Design Patterns'")
+    description = io.input("Describe your problem or agent:\n")
+
+    try:
+        new_agent = generate_agent(description, repository_interaction)
+        io.console.print(Rule("Generated Agent"))
+        io.console.print(f"[bold green]{new_agent["name"]}[/bold green]: {new_agent["description"]}\n")
+        io.console.print(new_agent["prompt"], style="bold green")
+        io.console.print(Rule())
+        if not io.confirm("Do you to proceed with this agent?"):
+            io.event("\n> Agent was discarded. Run /agent_create again with better indications")
+            return {}
+
+        # Extends agent with personalization values
+        new_agent["read_only"] = read_only
+        new_agent["repository_interaction"] = repository_interaction
+        new_agent["default_context_files"] = []
+
+        # Naming
+        name = Prompt.ask(
+            "Name your agent (use it as [yellow]--default_agent <name>[/yellow])", default=new_agent["name"]
+        )
+
+        if name != new_agent["name"]:
+            new_agent["name"] = name.lower().replace(" ", "")
+
+        # Adds agent to config
+        io.event(f"> Agent '{new_agent["name"]}' saved to .pluscoder-config.yml")
+        append_custom_agent_to_config(new_agent)
+
+        # Reloads config to apply changes
+        config.__init__(**{})
+
+        # New agent config
+        new_agent_id = new_agent["name"].lower().replace(" ", "")
+        new_agent_config = AgentConfig(
+            is_custom=True,
+            id=new_agent_id,
+            name=new_agent["name"],
+            description=new_agent["description"],
+            prompt=new_agent["prompt"],
+            reminder=new_agent.get("reminder", ""),
+            tools=[tool.name for tool in tools.base_tools],
+            default_context_files=["PROJECT_OVERVIEW.md", "CODING_GUIDELINES.md"],
+            read_only=new_agent["read_only"],
+            repository_interaction=new_agent["repository_interaction"],
+        )
+
+        return select_agent(
+            {**state, "agents_configs": {**state["agents_configs"], new_agent_id: new_agent_config}}, new_agent["name"]
+        )
+    except Exception:
+        if config.debug:
+            io.console.print(traceback.format_exc(), style="bold red")
+        io.console.print("Error generating agent: Please run command again", style="bold red")
+
     return state
 
 
@@ -260,17 +337,15 @@ def custom_command(state: OrchestrationState, prompt_name: str = "", *args):
     user_input = " ".join(args)
     combined_prompt = f"{custom_prompt['prompt']} {user_input}"
 
-    # Add the combined prompt as a HumanMessage to the current agent's message history
-    current_agent = state.get("chat_agent", "orchestrator")
-    agent_state = state.get(f"{current_agent}_state", AgentState.default())
-    agent_state["messages"].append(HumanMessage(content=combined_prompt))
-    state[f"{current_agent}_state"] = agent_state
+    current_agent = state["chat_agent"]
 
-    # Do not return to the user to execute agent with the added human message
-    state["return_to_user"] = False
-
-    io.console.print(f"Custom prompt '{prompt_name}' executed and added to {current_agent}'s message history.")
-    return state
+    io.console.print(f"Custom prompt '{prompt_name}' executed and added to {current_agent.name}'s message history.")
+    return {
+        # Add the combined prompt as a HumanMessage to the current agent's message history
+        "messages": [HumanMessage(content=combined_prompt, tags=[state["chat_agent"].id])],
+        # Do not return to the user to execute agent with the added human message
+        "return_to_user": False,
+    }
 
 
 def is_command(command: Union[str, dict]) -> bool:

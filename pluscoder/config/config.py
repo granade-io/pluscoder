@@ -47,10 +47,24 @@ def validate_custom_agents(custom_agents: List[Dict[str, Any]]) -> List[Dict[str
             sys.exit(1)
 
         # Check for valid boolean flags
-        for flag in ["read_only"]:
+        for flag in ["read_only", "repository_interaction"]:
             if flag in agent and not isinstance(agent[flag], bool):
                 console.print(f"[bold red]Error:[/bold red] Custom agent '{agent['name']}': '{flag}' must be a boolean")
                 sys.exit(1)
+
+        # Validate other fields
+        if "default_context_files" in agent:
+            if not isinstance(agent["default_context_files"], list):
+                console.print(
+                    f"[bold red]Error:[/bold red] Custom agent '{agent['name']}': 'default_context_files' must be a list of repository files"
+                )
+                sys.exit(1)
+            for file in agent["default_context_files"]:
+                if not isinstance(file, str):
+                    console.print(
+                        f"[bold red]Error:[/bold red] Custom agent '{agent['name']}' has an invalid file name in 'default_context_files'"
+                    )
+                    sys.exit(1)
 
     return custom_agents
 
@@ -92,7 +106,7 @@ class Settings(BaseSettings):
     model: Optional[str] = Field(None, description="LLM model to use")
     provider: Optional[str] = Field(
         "openai",
-        description="Provider to use. Options: bedrock, openai, anthropic",
+        description="Provider to use. Options: bedrock, openai, anthropic, litellm, null",
     )
 
     orchestrator_model: Optional[str] = Field(None, description="LLM model to use for orchestrator")

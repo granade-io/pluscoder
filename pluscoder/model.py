@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import LiteralString
 
 from langchain_anthropic import ChatAnthropic
 from langchain_aws import ChatBedrock
@@ -6,7 +7,6 @@ from langchain_community.chat_models import ChatLiteLLM
 from langchain_openai import ChatOpenAI
 
 from pluscoder.config import config
-from pluscoder.io_utils import io
 
 
 def _get_model_cost() -> dict:
@@ -105,28 +105,22 @@ def get_default_model_for_provider(provider_name: str) -> str | None:
     return default_models.get(provider_name, None)
 
 
-def get_llm_base(model_id, provider):
+def get_model_validation_message(provider) -> None | LiteralString:
     # Check AWS Bedrock
     if provider == "aws_bedrock" and not config.aws_access_key_id:
-        io.console.print(
-            "AWS Bedrock provider defined but AWS access key ID is not configured or empty.",
-            style="bold red",
-        )
+        return "AWS Bedrock provider defined but AWS access key ID is not configured or empty."
 
     # Check Anthropic
     if provider == "anthropic" and not config.anthropic_api_key:
-        io.console.print(
-            "Anthropic provider defined but Anthropic API key is not configured or empty.",
-            style="bold red",
-        )
+        return "Anthropic provider defined but Anthropic API key is not configured or empty."
 
     # Check OpenAI
     if provider == "openai" and not config.openai_api_key:
-        io.console.print(
-            "OpenAI provider defined but OpenAI API key is not configured or empty.",
-            style="bold red",
-        )
+        return "OpenAI provider defined but OpenAI API key is not configured or empty."
+    return None
 
+
+def get_llm_base(model_id, provider):
     # Uses aws bedrock if available
     if config.aws_access_key_id and provider == "aws_bedrock":
         return ChatBedrock(

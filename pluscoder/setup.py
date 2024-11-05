@@ -10,10 +10,11 @@ from pluscoder.config import Settings
 from pluscoder.config import config
 from pluscoder.io_utils import io
 from pluscoder.model import get_default_model_for_provider
+from pluscoder.model import get_inferred_provider
 from pluscoder.model import get_model_token_info
+from pluscoder.model import get_model_validation_message
 from pluscoder.repo import Repository
 from pluscoder.type import AgentInstructions
-from pluscoder.type import AgentState
 from pluscoder.type import TokenUsage
 
 # TODO: Move this?
@@ -182,8 +183,10 @@ def prompt_for_config():
 
     for option in CONFIG_OPTIONS:
         description = descriptions[option]
-        if option == "model":
-            default = get_default_model_for_provider(current_config.get("provider"))
+        if option == "provider" and not config.provider:
+            default = get_inferred_provider()
+        elif option == "model":
+            default = config.model or get_default_model_for_provider(current_config.get("provider"))
             current_config[option] = default
         else:
             default = current_config[option]
@@ -208,6 +211,13 @@ def prompt_for_config():
             example_config_text,
             flags=re.MULTILINE,
         )
+
+    if not current_config["provider"]:
+        io.event(f"> Inferred provider is '{get_inferred_provider()}'")
+
+    error_msg = get_model_validation_message(current_config["provider"])
+    if error_msg:
+        io.console.print(error_msg, style="bold red")
 
     return example_config_text
 
@@ -341,8 +351,8 @@ def initialize_repository():
     from pluscoder.workflow import run_workflow
 
     io.event("> Starting repository initialization...")
-    agents = build_agents()
-    app = build_workflow(agents)
+    agents_configs = build_agents()
+    app = build_workflow(agents_configs)
 
     # Setup config to automatize agents calls
     auto_confirm = config.auto_confirm
@@ -352,26 +362,28 @@ def initialize_repository():
     config.use_repomap = False
     config.auto_commits = False
 
-    orchestrator_state = AgentState.default()
-    orchestrator_state["tool_data"][tools.delegate_tasks.name] = AgentInstructions(
+    tool_data = {}
+    tool_data[tools.delegate_tasks.name] = AgentInstructions(
         general_objective="Number test sequence",
         task_list=TASK_LIST,
         resources=[],
     ).dict()
 
     initial_state = {
+        "agents_configs": agents_configs,
+        "chat_agent": agents_configs["orchestrator"],
+        "status": "active",
+        "max_iterations": 1,
+        "current_iterations": 0,
+        "messages": [],
+        "tool_data": tool_data,
         "return_to_user": False,
-        "orchestrator_state": orchestrator_state,
         "accumulated_token_usage": TokenUsage.default(),
-        "chat_agent": "orchestrator",
+        "token_usage": None,
         "is_task_list_workflow": True,
         "max_agent_deflections": 2,
         "current_agent_deflections": 0,
     }
-    for agent_id in agents:
-        if agent_id == "orchestrator":
-            continue
-        initial_state[f"{agent_id.lower()}_state"] = AgentState.default()
 
     asyncio.run(run_workflow(app, initial_state))
 

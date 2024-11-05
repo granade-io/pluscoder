@@ -62,7 +62,8 @@ def test_accumulate_token_usage(mock_get_model_token_info):
             "completion_tokens": 150,
             "total_tokens": 450,
             "total_cost": 0.003,
-        }
+        },
+        "token_usage": None,
     }
 
 
@@ -96,7 +97,8 @@ def test_accumulate_token_usage_empty_global_state(mock_get_model_token_info):
             "completion_tokens": 100,
             "total_tokens": 300,
             "total_cost": 0.002,
-        }
+        },
+        "token_usage": None,
     }
 
 
@@ -121,7 +123,8 @@ def test_accumulate_token_usage_with_none_model_info(mock_get_model_token_info):
             "completion_tokens": 100,
             "total_tokens": 300,
             "total_cost": 0.002,
-        }
+        },
+        "token_usage": None,
     }
 
 
@@ -149,5 +152,6 @@ def test_accumulate_token_usage_with_model_info(mock_get_model_token_info):
             "completion_tokens": 100,
             "total_tokens": 300,
             "total_cost": expected_cost,
-        }
+        },
+        "token_usage": None,
     }

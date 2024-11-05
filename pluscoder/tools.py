@@ -211,3 +211,6 @@ def is_task_completed(
     Extract a boolean indicating whether specified task was completed successfully or not
     """
     return {"completed": completed, "feedback": feedback}
+
+
+base_tools = [read_files, move_files, read_file_from_url]

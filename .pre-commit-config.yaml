@@ -26,12 +26,6 @@ repos:
           # - --enforce-all
         exclude: '.*\.(csv|txt)'
 
-      - id: end-of-file-fixer
-        name: "  [fix]: fix missing newline at end of file"
-        exclude: '.*\.(txt|csv|json)'
-        # only include python files
-        # files: \.py$
-
       - id: mixed-line-ending
         name: "  [fix]: mixed line endings"
         args:

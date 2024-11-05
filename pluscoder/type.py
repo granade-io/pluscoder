@@ -1,14 +1,15 @@
 from operator import add
 from typing import Annotated
+from typing import Dict
 from typing import List
 from typing import Literal
+from typing import Optional
 
 from langchain_core.messages import AnyMessage
+from langchain_core.messages import BaseMessage
 from langchain_core.pydantic_v1 import BaseModel
 from langgraph.graph import add_messages
 from typing_extensions import TypedDict
-
-from pluscoder.config import config
 
 
 class TokenUsage(TypedDict):
@@ -40,14 +41,6 @@ class AgentState(TypedDict, total=False):
     # List of messages of this agent with other agent (support only one agent at a time)
     agent_messages: List[AnyMessage]
 
-    # Data extracted using extraction tools
-    tool_data: dict
-
-    # Status of the agent in a conversation
-    #   active: Agent is in a active state available for or having a conversation with the caller (no tasks assigned)
-    #   delegating: Agent is communicating with another agent to complete and validate the active task.
-    status: Literal["active", "delegating", "summarizing"]
-
     # static function with default AgentState values
     @classmethod
     def default(cls):
@@ -59,32 +52,49 @@ class AgentState(TypedDict, total=False):
         }
 
 
+class AgentConfig(BaseModel):
+    id: str
+    name: str
+    description: str
+    prompt: str
+    reminder: Optional[str]
+    tools: List[str]
+    default_context_files: List[str]
+    read_only: bool = False
+    repository_interaction: bool = True
+    is_custom: bool = False
+
+
 # TODO: This should be config independent
-# Move {agent}_state to agent_states: [Dict[str, AgentState]]
-# Move config.custom_agents to agent_states: [Dict[str, AgentState]]
 OrchestrationState = TypedDict(
     "OrchestrationState",
     {
+        # id of the current conversation
+        "chat_id": str,
+        # Available agents
+        "agents_configs": Dict[str, AgentConfig],
+        # agent of the current conversation
+        "chat_agent": AgentConfig,
+        "max_iterations": int,
+        "current_iterations": int,
         "accumulated_token_usage": TokenUsage,
-        "orchestrator_state": AgentState,
-        "domain_stakeholder_state": AgentState,
-        "planning_state": AgentState,
-        "developer_state": AgentState,
-        "domain_expert_state": AgentState,
+        # Token usage data
+        "token_usage": Optional[TokenUsage],
+        # Data extracted using extraction tools
+        "tool_data": dict,
+        # Status of the agent in a conversation
+        #   active: Agent is in a active state available for or having a conversation with the caller (no tasks assigned)
+        #   delegating: Agent is communicating with another agent to complete and validate the active task.
+        "status": Literal["active", "delegating", "summarizing"],
         "return_to_user": bool,
-        "chat_agent": str,
-        "custom_agent_state": AgentState,
         # Tell is the workflow is being run from task list to avoid user interactions
         "is_task_list_workflow": bool,
         # Max times to additionally delegate same task to an agent to complete it properly
         "max_agent_deflections": int,
         # Current agent deflections count
         "current_agent_deflections": int,
-        # Custom agent states
-        **{
-            f"{agent["name"].lower()}_state": AgentState  # noqa: F821  # NOTE: undefined name 'name'
-            for agent in config.custom_agents
-        },
+        # List of messages of this agent with the caller
+        "messages": Annotated[List[BaseMessage], add_messages],
     },
 )
 
