@@ -10,7 +10,9 @@ from pluscoder.config import Settings
 from pluscoder.config import config
 from pluscoder.io_utils import io
 from pluscoder.model import get_default_model_for_provider
+from pluscoder.model import get_inferred_provider
 from pluscoder.model import get_model_token_info
+from pluscoder.model import get_model_validation_message
 from pluscoder.repo import Repository
 from pluscoder.type import AgentInstructions
 from pluscoder.type import TokenUsage
@@ -181,8 +183,10 @@ def prompt_for_config():
 
     for option in CONFIG_OPTIONS:
         description = descriptions[option]
-        if option == "model":
-            default = get_default_model_for_provider(current_config.get("provider"))
+        if option == "provider" and not config.provider:
+            default = get_inferred_provider()
+        elif option == "model":
+            default = config.model or get_default_model_for_provider(current_config.get("provider"))
             current_config[option] = default
         else:
             default = current_config[option]
@@ -207,6 +211,13 @@ def prompt_for_config():
             example_config_text,
             flags=re.MULTILINE,
         )
+
+    if not current_config["provider"]:
+        io.event(f"> Inferred provider is '{get_inferred_provider()}'")
+
+    error_msg = get_model_validation_message(current_config["provider"])
+    if error_msg:
+        io.console.print(error_msg, style="bold red")
 
     return example_config_text
 
@@ -361,12 +372,14 @@ def initialize_repository():
     initial_state = {
         "agents_configs": agents_configs,
         "chat_agent": agents_configs["orchestrator"],
+        "status": "active",
         "max_iterations": 1,
         "current_iterations": 0,
         "messages": [],
         "tool_data": tool_data,
         "return_to_user": False,
         "accumulated_token_usage": TokenUsage.default(),
+        "token_usage": None,
         "is_task_list_workflow": True,
         "max_agent_deflections": 2,
         "current_agent_deflections": 0,

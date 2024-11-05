@@ -84,12 +84,24 @@ class HumanMessage(LangChainHumanMessage):
         super().__init__(content=content, **kwargs)
 
 
-def filter_messages(messages: List[BaseMessage], *, include_tags: Optional[Sequence[str]] = None) -> List[BaseMessage]:
+def filter_messages(
+    messages: List[BaseMessage],
+    *,
+    include_types: Optional[Sequence[str]] = None,
+    include_tags: Optional[Sequence[str]] = None,
+    include_no_tags: Optional[bool] = None,
+) -> List[BaseMessage]:
     messages = convert_to_messages(messages)
     filtered: List[BaseMessage] = []
     for msg in messages:
         if include_tags and any(tag in include_tags for tag in msg.tags):
-            filtered.append(msg)  # noqa: PERF401
+            filtered.append(msg)
+
+        if include_no_tags and not msg.tags:
+            filtered.append(msg)
+
+        if include_types and msg.type in include_types:
+            filtered.append(msg)
 
     return filtered
 
@@ -108,3 +120,25 @@ def delete_messages(
             messages_to_delete.append(RemoveMessage(id=msg.id))
 
     return messages_to_delete
+
+
+def tag_messages(messages: List[BaseMessage], tags: List[str], exclude_tagged: bool = False) -> List[BaseMessage]:
+    """
+    Add tags to all messages in the list. Optionally exclude messages that are already tagged.
+
+    :param messages: List of messages to tag.
+    :param tags: List of tags to add.
+    :param exclude_tagged: If True, do not add tags to messages that already have tags.
+    :return: List of messages with added tags.
+    """
+    tagged_messages = []
+    for msg in messages:
+        if exclude_tagged and hasattr(msg, "tags") and msg.tags:
+            tagged_messages.append(msg)
+        elif hasattr(msg, "tags"):
+            msg.tags.extend(t for t in tags if t not in msg.tags)
+            tagged_messages.append(msg)
+        else:
+            msg.tags = [t for t in tags]
+            tagged_messages.append(msg)
+    return tagged_messages

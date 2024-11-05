@@ -7,6 +7,9 @@ from pluscoder.type import TokenUsage
 
 
 def sum_token_usage(accumulated: TokenUsage, new: TokenUsage) -> TokenUsage:
+    if not new:
+        return accumulated
+
     model_info = get_model_token_info(config.model)
     if not model_info:
         # Accumulates normally using cost returned by llm what can be 0 most of the time due small charges
@@ -35,7 +38,7 @@ def accumulate_token_usage(
     global_state: OrchestrationState,
     _state: AgentState,
 ) -> OrchestrationState:
-    if "token_usage" not in _state:
+    if "token_usage" not in _state or not _state["token_usage"]:
         return global_state
 
     # Update token usage
@@ -52,6 +55,7 @@ def accumulate_token_usage(
         _state["token_usage"],
     )
     global_state["accumulated_token_usage"] = accumulated_token_usage
+    global_state["token_usage"] = None
 
     event_emitter.emit_sync("cost_update", token_usage=accumulated_token_usage)
 

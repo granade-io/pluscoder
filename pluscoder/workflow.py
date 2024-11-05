@@ -452,15 +452,14 @@ async def _orchestrator_agent_node(
             "task_delegated",
             agent_instructions=OrchestratorAgent.get_agent_instructions(state_update),
         )
-        global_updated = accumulate_token_usage(global_state, state_update)
 
         # Next target agent
         next_target_agent = task["agent"]
         return {
-            **global_updated,
+            **global_state,
             # Adds message to new agent
             "messages": [
-                *delete_messages(global_updated["messages"], include_tags=[target_agent]),
+                *delete_messages(global_state["messages"], include_tags=[target_agent]),
                 HumanMessage(content=OrchestratorAgent.task_to_instruction(task, state), tags=[next_target_agent]),
             ],
             # Resets global state agent deflections

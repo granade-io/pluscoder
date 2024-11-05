@@ -26,7 +26,9 @@ from pluscoder.fs import get_formatted_files_content
 from pluscoder.io_utils import io
 from pluscoder.logs import file_callback
 from pluscoder.message_utils import HumanMessage
+from pluscoder.message_utils import filter_messages
 from pluscoder.message_utils import get_message_content_str
+from pluscoder.message_utils import tag_messages
 from pluscoder.model import get_llm
 from pluscoder.repo import Repository
 from pluscoder.type import AgentConfig
@@ -294,10 +296,10 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         messages = state["messages"]
 
         # Mark tool message for filtering
-        state["messages"][-1].tags = [self.id]
-        last_message = messages[
-            -2
-        ]  # Last message that contains ToolMessage with executed tool data. We need to extract tool args from AIMessage at index -2
+        messages = tag_messages(messages, tags=[self.id], exclude_tagged=True)
+
+        last_message = filter_messages(messages, include_types=["ai"])[-1]
+        # Last message that contains ToolMessage with executed tool data. We need to extract tool args from AIMessage at index -2
         tool_data = {}
 
         for tool_call in last_message.tool_calls:

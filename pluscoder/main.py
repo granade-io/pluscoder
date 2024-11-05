@@ -12,6 +12,7 @@ from pluscoder.config import config
 from pluscoder.display_utils import display_agent
 from pluscoder.io_utils import io
 from pluscoder.model import get_inferred_provider
+from pluscoder.model import get_model_validation_message
 from pluscoder.repo import Repository
 from pluscoder.setup import setup
 from pluscoder.type import TokenUsage
@@ -110,6 +111,11 @@ def display_initial_messages():
 
     io.event(f"> Using models: {model_info} with {provider_info}")
 
+    # Model validation
+    error_msg = get_model_validation_message(main_provider)
+    if error_msg:
+        io.console.print(error_msg, style="bold red")
+
     if config.read_only:
         io.event("> Running on 'read-only' mode")
 
@@ -162,11 +168,6 @@ def main() -> None:
     Main entry point for the Pluscoder application.
     """
     try:
-        if not setup():
-            return
-
-        display_initial_messages()
-
         # Check for new command-line arguments
         if config.show_repo:
             show_repo()
@@ -179,6 +180,11 @@ def main() -> None:
         if config.show_config:
             show_config()
             return
+
+        if not setup():
+            return
+
+        display_initial_messages()
 
         # Check if the default_agent is valid
         agent_dict = build_agents()
@@ -216,6 +222,7 @@ def main() -> None:
             "messages": [],
             "context_files": [],
             "accumulated_token_usage": TokenUsage.default(),
+            "token_usage": None,
             "current_agent_deflections": 0,
             "max_agent_deflections": 3,
             "is_task_list_workflow": False,

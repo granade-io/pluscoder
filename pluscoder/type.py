@@ -6,6 +6,7 @@ from typing import Literal
 from typing import Optional
 
 from langchain_core.messages import AnyMessage
+from langchain_core.messages import BaseMessage
 from langchain_core.pydantic_v1 import BaseModel
 from langgraph.graph import add_messages
 from typing_extensions import TypedDict
@@ -78,7 +79,7 @@ OrchestrationState = TypedDict(
         "current_iterations": int,
         "accumulated_token_usage": TokenUsage,
         # Token usage data
-        "token_usage": TokenUsage,
+        "token_usage": Optional[TokenUsage],
         # Data extracted using extraction tools
         "tool_data": dict,
         # Status of the agent in a conversation
@@ -93,7 +94,7 @@ OrchestrationState = TypedDict(
         # Current agent deflections count
         "current_agent_deflections": int,
         # List of messages of this agent with the caller
-        "messages": Annotated[List[AnyMessage], add_messages],
+        "messages": Annotated[List[BaseMessage], add_messages],
     },
 )
 
