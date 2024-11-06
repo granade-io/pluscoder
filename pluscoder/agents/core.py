@@ -1,20 +1,8 @@
-from pluscoder import tools
-from pluscoder.agents.base import Agent
-from pluscoder.agents.prompts import (
-    BASE_PROMPT,
-    FILE_OPERATIONS_PROMPT,
-    OUTPUT_STRUCTURE_PROMPT_READ_ONLY,
-    OUTPUT_STRUCTURE_PROMPT_WRITE,
-    READONLY_MODE_PROMPT,
-    combine_prompts,
-)
-from pluscoder.config import config
-
-
-class DeveloperAgent(Agent):
+class DeveloperAgent:
     id = "developer"
+    name = "Developer"
     description = "Implement code to solve complex software development requirements"
-    developer_prompt = """
+    specialization_prompt = """
 *SPECIALIZATION INSTRUCTIONS*:
 Your role is to implement software development tasks based on detailed plans provided. You should write high-quality, maintainable code that adheres to the project's coding guidelines and integrates seamlessly with the existing codebase.
 
@@ -35,34 +23,12 @@ Guidelines:
 3. If you encounter any ambiguities or potential issues with the task description, ask for clarification before proceeding.
 """
 
-    def __init__(
-        self,
-        tools=[tools.read_files, tools.move_files, tools.read_file_from_url],
-        default_context_files=["PROJECT_OVERVIEW.md", "CODING_GUIDELINES.md"],
-    ):
-        system_message = combine_prompts(
-            BASE_PROMPT,
-            self.developer_prompt,
-            OUTPUT_STRUCTURE_PROMPT_READ_ONLY
-            if config.read_only
-            else OUTPUT_STRUCTURE_PROMPT_WRITE,
-            FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
-        )
-        super().__init__(
-            system_message,
-            "Developer",
-            tools=tools,
-            default_context_files=default_context_files,
-        )
 
-
-class DomainStakeholderAgent(Agent):
+class DomainStakeholderAgent:
     id = "domain_stakeholder"
-    description = (
-        "Discuss project details, maintain project overview, roadmap, and brainstorm"
-    )
-
-    domain_prompt = """
+    name = "Domain Stakeholder"
+    description = "Discuss project details, maintain project overview, roadmap, and brainstorm"
+    specialization_prompt = """
 *SPECIALIZATION INSTRUCTIONS*:
 Your role is to discuss project details with the user, do planning, roadmap generation, brainstorming, design, etc.
 
@@ -88,31 +54,12 @@ These are only example questions to help you understand the project vision and g
 *Always* suggest the user how to proceed based on their requirement. You are in charge to lead the discussion and support.
 """
 
-    def __init__(
-        self,
-        tools=[tools.read_files, tools.move_files, tools.read_file_from_url],
-        default_context_files=["PROJECT_OVERVIEW.md"],
-    ):
-        system_message = combine_prompts(
-            BASE_PROMPT,
-            self.domain_prompt,
-            OUTPUT_STRUCTURE_PROMPT_READ_ONLY
-            if config.read_only
-            else OUTPUT_STRUCTURE_PROMPT_WRITE,
-            FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
-        )
-        super().__init__(
-            system_message,
-            "Domain Stakeholder",
-            tools=tools,
-            default_context_files=default_context_files,
-        )
 
-
-class DomainExpertAgent(Agent):
+class DomainExpertAgent:
     id = "domain_expert"
+    name = "Domain Expert"
     description = "Validate tasks and ensure alignment with project vision"
-    domain_prompt = """
+    specialization_prompt = """
 *SPECIALIZATION INSTRUCTIONS*:
 Your role is to validate the tasks of all other agents, check alignment with the project vision, and provide feedback for task revisions.
 
@@ -144,31 +91,12 @@ Always refer to the `PROJECT_OVERVIEW.md` file for the most up-to-date project v
 THE PROPOSAL NEVER IS FULLY CORRECT, WAS MADE BY AN IA, FIND THOSE DETAILS TO IMPROVE IT. TAKE A DETAILED LOOK TO PROJECT FILES TO DETECT THOSE .
 """
 
-    def __init__(
-        self,
-        tools=[tools.read_files, tools.move_files, tools.read_file_from_url],
-        default_context_files=["PROJECT_OVERVIEW.md", "CODING_GUIDELINES.md"],
-    ):
-        system_message = combine_prompts(
-            BASE_PROMPT,
-            self.domain_prompt,
-            OUTPUT_STRUCTURE_PROMPT_READ_ONLY
-            if config.read_only
-            else OUTPUT_STRUCTURE_PROMPT_WRITE,
-            FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
-        )
-        super().__init__(
-            system_message,
-            "Domain Expert",
-            tools=tools,
-            default_context_files=default_context_files,
-        )
 
-
-class PlanningAgent(Agent):
+class PlanningAgent:
     id = "planning"
+    name = "Planning"
     description = "Create detailed, actionable plans for software development tasks"
-    planning_prompt = """
+    specialization_prompt = """
 *SPECIALIZATION INSTRUCTIONS*:
 Your role is to create detailed, actionable plans for software development tasks. You should break down high-level requirements into specific, implementable tasks at the class and method level. Your plans will be executed by AI developer agents, so be as clear and specific as possible.
 
@@ -203,23 +131,3 @@ When creating a plan, follow this structure:
 2. *DO NOT* propose a plan without reading all necessary project files first
 3. your plans should be detailed enough for implementation by AI agents or junior developers who have read the project overview and coding guidelines.
 """
-
-    def __init__(
-        self,
-        tools=[tools.read_files, tools.move_files, tools.read_file_from_url],
-        default_context_files=["PROJECT_OVERVIEW.md", "CODING_GUIDELINES.md"],
-    ):
-        system_message = combine_prompts(
-            BASE_PROMPT,
-            self.planning_prompt,
-            OUTPUT_STRUCTURE_PROMPT_READ_ONLY
-            if config.read_only
-            else OUTPUT_STRUCTURE_PROMPT_WRITE,
-            FILE_OPERATIONS_PROMPT if not config.read_only else READONLY_MODE_PROMPT,
-        )
-        super().__init__(
-            system_message,
-            "Planning",
-            tools=tools,
-            default_context_files=default_context_files,
-        )

@@ -1,15 +1,19 @@
 import re
 import sys
-from typing import Any, Dict, List, Optional, Tuple, Type
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Type
 
-from pydantic import Field, field_validator
-from pydantic_settings import (
-    BaseSettings,
-    CliImplicitFlag,
-    PydanticBaseSettingsSource,
-    SettingsConfigDict,
-    YamlConfigSettingsSource,
-)
+from pydantic import Field
+from pydantic import field_validator
+from pydantic_settings import BaseSettings
+from pydantic_settings import CliImplicitFlag
+from pydantic_settings import PydanticBaseSettingsSource
+from pydantic_settings import SettingsConfigDict
+from pydantic_settings import YamlConfigSettingsSource
 from rich.console import Console
 
 
@@ -19,48 +23,48 @@ def validate_custom_agents(custom_agents: List[Dict[str, Any]]) -> List[Dict[str
     for agent in custom_agents:
         # Check for required fields
         if "name" not in agent:
-            console.print(
-                "[bold red]Error:[/bold red] Custom agent must have a 'name' field"
-            )
+            console.print("[bold red]Error:[/bold red] Custom agent must have a 'name' field")
             sys.exit(1)
         if "prompt" not in agent:
-            console.print(
-                f"[bold red]Error:[/bold red] Custom agent '{agent['name']}' must have a 'prompt' field"
-            )
+            console.print(f"[bold red]Error:[/bold red] Custom agent '{agent['name']}' must have a 'prompt' field")
             sys.exit(1)
         if "description" not in agent:
-            console.print(
-                f"[bold red]Error:[/bold red] Custom agent '{agent['name']}' must have a 'description' field"
-            )
+            console.print(f"[bold red]Error:[/bold red] Custom agent '{agent['name']}' must have a 'description' field")
             sys.exit(1)
 
         # Check for unique names
         if agent["name"] in names:
-            console.print(
-                f"[bold red]Error:[/bold red] Duplicate custom agent name: '{agent['name']}'"
-            )
+            console.print(f"[bold red]Error:[/bold red] Duplicate custom agent name: '{agent['name']}'")
             sys.exit(1)
         names.add(agent["name"])
 
         # Check for non-empty prompt and description
         if not agent["prompt"].strip():
-            console.print(
-                f"[bold red]Error:[/bold red] Custom agent '{agent['name']}' has an empty prompt"
-            )
+            console.print(f"[bold red]Error:[/bold red] Custom agent '{agent['name']}' has an empty prompt")
             sys.exit(1)
         if not agent["description"].strip():
-            console.print(
-                f"[bold red]Error:[/bold red] Custom agent '{agent['name']}' has an empty description"
-            )
+            console.print(f"[bold red]Error:[/bold red] Custom agent '{agent['name']}' has an empty description")
             sys.exit(1)
 
         # Check for valid boolean flags
-        for flag in ["read_only"]:
+        for flag in ["read_only", "repository_interaction"]:
             if flag in agent and not isinstance(agent[flag], bool):
+                console.print(f"[bold red]Error:[/bold red] Custom agent '{agent['name']}': '{flag}' must be a boolean")
+                sys.exit(1)
+
+        # Validate other fields
+        if "default_context_files" in agent:
+            if not isinstance(agent["default_context_files"], list):
                 console.print(
-                    f"[bold red]Error:[/bold red] Custom agent '{agent['name']}': '{flag}' must be a boolean"
+                    f"[bold red]Error:[/bold red] Custom agent '{agent['name']}': 'default_context_files' must be a list of repository files"
                 )
                 sys.exit(1)
+            for file in agent["default_context_files"]:
+                if not isinstance(file, str):
+                    console.print(
+                        f"[bold red]Error:[/bold red] Custom agent '{agent['name']}' has an invalid file name in 'default_context_files'"
+                    )
+                    sys.exit(1)
 
     return custom_agents
 
@@ -79,63 +83,37 @@ class Settings(BaseSettings):
     default_agent: Optional[str] = Field(None, description="Default agent to use")
 
     @field_validator("custom_agents")
-    def validate_custom_agents_field(cls, v):
+    def validate_custom_agents_field(cls, v):  # noqa: N805
         return validate_custom_agents(v)
 
     # Application behavior
-    init: CliImplicitFlag[bool] = Field(
-        True, description="Enable/disable initial setup"
-    )
-    initialized: CliImplicitFlag[bool] = Field(
-        False, description="Pluscoder was or not initialized"
-    )
-    read_only: CliImplicitFlag[bool] = Field(
-        False, description="Enable/disable read-only mode"
-    )
+    init: CliImplicitFlag[bool] = Field(True, description="Enable/disable initial setup")
+    initialized: CliImplicitFlag[bool] = Field(False, description="Pluscoder was or not initialized")
+    read_only: CliImplicitFlag[bool] = Field(False, description="Enable/disable read-only mode")
     streaming: bool = Field(True, description="Enable/disable LLM streaming")
     user_feedback: bool = Field(True, description="Enable/disable user feedback")
-    display_internal_outputs: bool = Field(
-        False, description="Display internal agent outputs"
-    )
-    auto_confirm: bool = Field(
-        False, description="Enable/disable auto confirmation of pluscoder execution"
-    )
+    display_internal_outputs: bool = Field(False, description="Display internal agent outputs")
+    auto_confirm: bool = Field(False, description="Enable/disable auto confirmation of pluscoder execution")
     user_input: str = Field("", description="Predefined user input")
 
     # File paths
-    overview_filename: str = Field(
-        "PROJECT_OVERVIEW.md", description="Filename for project overview"
-    )
+    overview_filename: str = Field("PROJECT_OVERVIEW.md", description="Filename for project overview")
     log_filename: str = Field("pluscoder.log", description="Filename for logs")
-    overview_file_path: str = Field(
-        "PROJECT_OVERVIEW.md", description="Path to the project overview file"
-    )
-    guidelines_file_path: str = Field(
-        "CODING_GUIDELINES.md", description="Path to the coding guidelines file"
-    )
+    overview_file_path: str = Field("PROJECT_OVERVIEW.md", description="Path to the project overview file")
+    guidelines_file_path: str = Field("CODING_GUIDELINES.md", description="Path to the coding guidelines file")
 
     # Model and API settings
-    model: str = Field(
-        "anthropic.claude-3-5-sonnet-20240620-v1:0", description="LLM model to use"
-    )
+    model: Optional[str] = Field(None, description="LLM model to use")
     provider: Optional[str] = Field(
-        None,
-        description="Provider to use. Options: aws_bedrock, openai, litellm, anthropic",
+        "openai",
+        description="Provider to use. Options: bedrock, openai, anthropic, litellm, null",
     )
 
-    orchestrator_model: Optional[str] = Field(
-        None, description="LLM model to use for orchestrator"
-    )
-    orchestrator_model_provider: Optional[str] = Field(
-        None, description="Provider to use for orchestrator model"
-    )
+    orchestrator_model: Optional[str] = Field(None, description="LLM model to use for orchestrator")
+    orchestrator_model_provider: Optional[str] = Field(None, description="Provider to use for orchestrator model")
 
-    weak_model: Optional[str] = Field(
-        None, description="Weaker LLM model to use for less complex tasks"
-    )
-    weak_model_provider: Optional[str] = Field(
-        None, description="Provider to use for weak model"
-    )
+    weak_model: Optional[str] = Field(None, description="Weaker LLM model to use for less complex tasks")
+    weak_model_provider: Optional[str] = Field(None, description="Provider to use for weak model")
 
     # Providers API keys
     # OpenAI API keys
@@ -147,63 +125,42 @@ class Settings(BaseSettings):
 
     # AWS IAM keys
     aws_access_key_id: Optional[str] = Field(None, description="AWS Access Key ID")
-    aws_secret_access_key: Optional[str] = Field(
-        None, description="AWS Secret Access Key"
-    )
+    aws_secret_access_key: Optional[str] = Field(None, description="AWS Secret Access Key")
     aws_profile: str = Field("default", description="AWS profile name")
 
     # Git settings
-    auto_commits: bool = Field(True, description="Enable/disable automatic Git commits")
-    allow_dirty_commits: bool = Field(
-        True, description="Allow commits in a dirty repository"
-    )
+    auto_commits: bool = Field(False, description="Enable/disable automatic Git commits")
+    allow_dirty_commits: bool = Field(False, description="Allow commits in a dirty repository")
 
     # Test and Lint settings
     run_tests_after_edit: bool = Field(False, description="Run tests after file edits")
     run_lint_after_edit: bool = Field(False, description="Run linter after file edits")
     test_command: Optional[str] = Field(None, description="Command to run tests")
     lint_command: Optional[str] = Field(None, description="Command to run linter")
-    auto_run_linter_fix: bool = Field(
-        False, description="Automatically run linter fix before linting"
-    )
-    lint_fix_command: Optional[str] = Field(
-        None, description="Command to run linter fix"
-    )
+    auto_run_linter_fix: bool = Field(False, description="Automatically run linter fix before linting")
+    lint_fix_command: Optional[str] = Field(None, description="Command to run linter fix")
 
     # Repomap settings
     use_repomap: bool = Field(False, description="Enable/disable repomap feature")
     repomap_level: int = Field(2, description="Set the level of detail for repomap")
-    repomap_exclude_files: List[str] = Field(
-        [], description="List of files to exclude from repomap"
-    )
+    repomap_exclude_files: List[str] = Field([], description="List of files to exclude from repomap")
     repo_exclude_files: List[str] = Field(
         [], description="List of regex patterns to exclude files from repo operations"
     )
 
     # Show args
-    show_repo: CliImplicitFlag[bool] = Field(
-        False, description="Show repository information"
-    )
-    show_repomap: CliImplicitFlag[bool] = Field(
-        False, description="Show repository map"
-    )
-    show_config: CliImplicitFlag[bool] = Field(
-        False, description="Show repository information"
-    )
-    show_token_usage: CliImplicitFlag[bool] = Field(
-        True, description="Show token usage/cost"
-    )
+    show_repo: CliImplicitFlag[bool] = Field(False, description="Show repository information")
+    show_repomap: CliImplicitFlag[bool] = Field(False, description="Show repository map")
+    show_config: CliImplicitFlag[bool] = Field(False, description="Show repository information")
+    show_token_usage: CliImplicitFlag[bool] = Field(True, description="Show token usage/cost")
 
     # Output display settings
-    hide_thinking_blocks: CliImplicitFlag[bool] = Field(
-        True, description="Hide thinking blocks in LLM output"
-    )
-    hide_output_blocks: CliImplicitFlag[bool] = Field(
-        False, description="Hide output blocks in LLM output"
-    )
-    hide_source_blocks: CliImplicitFlag[bool] = Field(
-        True, description="Hide source blocks in LLM output"
-    )
+    hide_thinking_blocks: CliImplicitFlag[bool] = Field(True, description="Hide thinking blocks in LLM output")
+    hide_output_blocks: CliImplicitFlag[bool] = Field(False, description="Hide output blocks in LLM output")
+    hide_source_blocks: CliImplicitFlag[bool] = Field(True, description="Hide source blocks in LLM output")
+
+    # Debug mode
+    debug: CliImplicitFlag[bool] = Field(False, description="Enable debug mode")
 
     # Custom prompt commands
     custom_prompt_commands: List[Dict[str, Any]] = Field(

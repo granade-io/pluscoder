@@ -5,14 +5,18 @@ import re
 import sys
 import tempfile
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Optional
 
 from PIL import ImageGrab
 from prompt_toolkit import PromptSession
-from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.completion import Completer
+from prompt_toolkit.completion import Completion
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.key_binding import KeyBindings
-from rich.console import Console, ConsoleRenderable, Group, RichCast
+from rich.console import Console
+from rich.console import ConsoleRenderable
+from rich.console import Group
+from rich.console import RichCast
 from rich.live import Live
 from rich.progress import Progress
 from rich.prompt import Confirm
@@ -40,20 +44,19 @@ class CommandCompleter(Completer):
     def __init__(self, file_completer):
         super().__init__()
         self.file_completer = file_completer
-        self.commands = [
-            "/agent",
-            "/clear",
-            "/diff",
-            "/config",
-            "/help",
-            "/undo",
-            "/run",
-            "/init",
-            "/show_repo",
-            "/show_repomap",
-            "/show_config",
-            "/custom",
-        ]
+        self.commands = []
+
+    def register_command(self, command_name: str, command_description: str):
+        """Register a new command for autocompletion"""
+        if not command_name.startswith("/"):
+            command_name = f"/{command_name}"
+        if command_name not in self.commands:
+            self.commands.append(
+                {
+                    "name": command_name,
+                    "description": command_description,
+                }
+            )
 
     def get_completions(self, document, complete_event):
         text = document.text_before_cursor
@@ -62,16 +65,15 @@ class CommandCompleter(Completer):
             if len(words) == 1:
                 # Complete command names
                 for command in self.commands:
-                    if command.startswith(text):
-                        yield Completion(command, start_position=-len(text))
+                    if command["name"].startswith(text):
+                        yield Completion(
+                            command["name"], start_position=-len(text), display_meta=command["description"]
+                        )
             elif len(words) == 2 and words[0] == "/custom":
                 # Complete custom prompt names
                 prompt_name = words[1]
                 for prompt in config.custom_prompt_commands:
-                    if (
-                        prompt["prompt_name"].startswith(prompt_name)
-                        and prompt_name != prompt["prompt_name"]
-                    ):
+                    if prompt["prompt_name"].startswith(prompt_name) and prompt_name != prompt["prompt_name"]:
                         yield Completion(
                             prompt["prompt_name"],
                             start_position=-len(prompt_name),
@@ -84,16 +86,14 @@ class CommandCompleter(Completer):
                         completion.start_position,
                         display=completion.display,
                     )
-                    for completion in self.file_completer.get_completions(
-                        document, complete_event
-                    )
+                    for completion in self.file_completer.get_completions(document, complete_event)
                 )
 
 
 class FileNameCompleter(Completer):
     def __init__(self):
         super().__init__()
-        self.repo = Repository(io=io)
+        self.repo = Repository()
 
     def get_completions(self, document, complete_event):
         text_before_cursor = document.text_before_cursor
@@ -109,10 +109,7 @@ class FileNameCompleter(Completer):
         for filepath in repo_files:
             # splits filepath into directories and filename
             directories, filename = os.path.split(filepath)
-            if any(
-                part.startswith(last_word)
-                for part in directories.split(os.sep) + [filename]
-            ):
+            if any(part.startswith(last_word) for part in directories.split(os.sep) + [filename]):
                 yield Completion(filepath, start_position=-len(last_word))
 
 
@@ -176,10 +173,7 @@ class CustomProgress(Progress):
         return Text("".join(self.chunks), style=self.style)
 
     def get_renderable(self) -> ConsoleRenderable | RichCast | str:
-        renderable = Group(
-            self.get_stream_renderable(), Rule(), *self.get_renderables()
-        )
-        return renderable
+        return Group(self.get_stream_renderable(), Rule(), *self.get_renderables())
 
 
 class IO:
@@ -197,25 +191,25 @@ class IO:
         self.ctrl_c_count = 0
         self.last_input = ""
         self.buffer = ""  # Buffer para acumular los pequeños chunks
-        self.filepath_buffer = (
-            ""  # Buffer to store last 100 characters for filepath detection
-        )
+        self.filepath_buffer = ""  # Buffer to store last 100 characters for filepath detection
         self.in_block = False  # Indicador de si estamos dentro de un bloque
         self.block_content = ""  # Contenido dentro de un bloque
         self.block_type = ""
         self.current_filepath = ""  # New attribute to store the current filepath
         self.buffer_size = 20  # Buffer size to hold before display to look for blocks
         self.valid_blocks = {"thinking", "source"}
+        self.completer = CombinedCompleter()
+
+    def register_command(self, command_name: str, command_description: str):
+        """Register a new command for autocompletion"""
+        if self.completer.command_completer:
+            self.completer.command_completer.register_command(command_name, command_description)
 
     def _check_block_start(self, text):
-        return re.match(
-            r"^<(thinking|output|source)>", text.strip()
-        )  # Detectar inicio de bloque
+        return re.match(r"^<(thinking|step|source)>", text.strip())  # Detectar inicio de bloque
 
     def _check_block_end(self, text):
-        return re.match(
-            f"^</{self.block_type}>", text.strip()
-        )  # Detectar fin de bloque
+        return re.match(f"^</{self.block_type}>", text.strip())  # Detectar fin de bloque
 
     def event(self, string: str):
         return self.console.print(string, style="yellow")
@@ -232,7 +226,7 @@ class IO:
             self.console.print(f"Error handling clipboard image: {e}", style="bold red")
         return None
 
-    def input(self, string: str, autocomplete=True) -> Union[str, List[Dict[str, Any]]]:
+    def input(self, string: str, autocomplete=True) -> str:
         kb = KeyBindings()
 
         # Create the directory if it doesn't exist
@@ -264,7 +258,7 @@ class IO:
             if image_path:
                 event.current_buffer.insert_text("img::" + image_path)
 
-        completer = CombinedCompleter() if autocomplete else None
+        completer = self.completer if autocomplete else None
 
         session = PromptSession(key_bindings=kb, completer=completer, history=history)
 
@@ -280,12 +274,13 @@ class IO:
         if config.auto_confirm:
             io.event("> Auto-confirming...")
             return True
-        return Confirm.ask(
-            f"[green]{message}[/green]", console=self.console, default=True
-        )
+        return Confirm.ask(f"[green]{message}[/green]", console=self.console, default=True)
 
     def log_to_debug_file(
-        self, message: Optional[str] = None, json_data: Optional[dict] = None
+        self,
+        message: Optional[str] = None,
+        json_data: Optional[dict] = None,
+        indent: int = 0,
     ) -> None:
         if json_data is not None:
             try:
@@ -295,13 +290,18 @@ class IO:
         elif message is not None:
             content = message
         else:
-            raise ValueError("Either message or json_data must be provided")
+            msg = "Either message or json_data must be provided"
+            raise ValueError(msg)
 
         # Create the directory if it doesn't exist
         path = Path(self.DEBUG_FILE)
         path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Apply indentation
+        indented_content = "\n".join(" " * indent + line for line in content.split("\n"))
+
         with open(self.DEBUG_FILE, "a") as f:
-            f.write(f"{content}\n")
+            f.write(f"{indented_content}\n")
 
     def set_progress(self, progress: Progress | Live) -> None:
         self.progress = progress
@@ -336,14 +336,7 @@ class IO:
             self.progress.stream(chunk, style)
 
     def get_block_color(self) -> str:
-        pass
-        return (
-            "light_salmon3"
-            if self.block_type == "thinking"
-            else "blue"
-            if self.block_type == "output"
-            else "blue"
-        )
+        return "light_salmon3" if self.block_type == "thinking" else "blue" if self.block_type == "step" else "blue"
 
     def start_block(self, block_type: str) -> None:
         # starts new block
@@ -359,9 +352,7 @@ class IO:
     def end_block(self) -> None:
         if self.block_type == "source":
             self.flush()
-            displayed = display_file_diff(
-                self.block_content, self.current_filepath, self.console
-            )
+            displayed = display_file_diff(self.block_content, self.current_filepath, self.console)
 
             # Fall back to display raw code if fails to display diff
             if not displayed and not config.hide_source_blocks:
@@ -383,7 +374,7 @@ class IO:
             config.hide_thinking_blocks
             and self.block_type == "thinking"
             or config.hide_output_blocks
-            and self.block_type == "output"
+            and self.block_type == "step"
             or config.hide_source_blocks
             and self.block_type == "source"
         ):
@@ -405,25 +396,22 @@ class IO:
         elif isinstance(chunk, str):
             pass
         else:
-            raise ValueError("Not chunk type")
+            error = "Not chunk type"
+            raise ValueError(error)
 
         # Update filepath_buffer
         self.filepath_buffer += chunk
-        self.filepath_buffer = self.filepath_buffer[
-            -100:
-        ]  # Keep only last 100 characters
+        self.filepath_buffer = self.filepath_buffer[-100:]  # Keep only last 100 characters
 
         # Update main buffer
         self.buffer += chunk
 
         # Look for block start/end with capturing group for block type
         start_match = re.search(
-            r"\n<(thinking|output|source)>"
-            if self.seen_nl
-            else r"\n?<(thinking|output|source)>",
+            r"\n<(thinking|step|source)>" if self.seen_nl else r"\n?<(thinking|step|source)>",
             self.buffer,
         )
-        end_match = re.search(r"\n</(thinking|output|source)>", self.buffer)
+        end_match = re.search(r"\n</(thinking|step|source)>", self.buffer)
 
         if "<" in self.buffer:
             pass
@@ -451,14 +439,10 @@ class IO:
             block_type = start_match.group(1)
             if block_type in self.valid_blocks:
                 # Check for filepath pattern in filepath_buffer
-                filepath_match = re.search(
-                    r"`([^`\n]+):?`\n{1,2}^<source>", self.buffer, re.MULTILINE
-                )
+                filepath_match = re.search(r"`([^`\n]+):?`\n{1,2}^<source>", self.buffer, re.MULTILINE)
                 if filepath_match:
                     self.current_filepath = filepath_match.group(1)
-                    self.filepath_buffer = self.filepath_buffer.replace(
-                        filepath_match.group(0), "<source>"
-                    )
+                    self.filepath_buffer = self.filepath_buffer.replace(filepath_match.group(0), "<source>")
 
                 start_pos = start_match.start()
                 self._stream_to_user(self.buffer[:start_pos])

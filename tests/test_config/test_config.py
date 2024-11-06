@@ -2,7 +2,21 @@ import os
 import sys
 from unittest.mock import patch
 
+import pytest
+
 from pluscoder.config import Settings
+
+
+@pytest.fixture
+def clear_env(monkeypatch):
+    # Backup the original environment
+    original_env = os.environ.copy()
+    # Clear all environment variables
+    monkeypatch.setattr(os, "environ", {})
+
+    # Restore the environment after the test
+    yield
+    os.environ.update(original_env)
 
 
 def test_config_default_values():
@@ -85,7 +99,7 @@ def test_config_precedence():
             assert config.log_filename == "env.log"
 
 
-def test_config_precedence_empty_configs():
+def test_config_precedence_empty_configs(clear_env):
     # Test default values when neither env vars nor command-line args are provided
     with patch.dict(os.environ, {}, clear=True):
         with patch.object(sys, "argv", ["config.py"]):
@@ -97,28 +111,28 @@ def test_config_precedence_empty_configs():
             assert config.log_filename == "pluscoder.log"
 
 
-def test_update_method_non_persisting():
+def test_update_method_non_persisting(clear_env):
     with patch.object(sys, "argv", ["config.py"]):
         config = Settings(_env_file=None, ignore_yaml=True)
-        
+
         # Initial values
         assert config.streaming is True
-        assert config.model == "anthropic.claude-3-5-sonnet-20240620-v1:0"
-        
+        assert config.model is None
+
         # Update without persisting
         config.update(streaming=False, model="new-model", persist=False)
-        
+
         # Check if values are updated in the instance
         assert config.streaming is False
         assert config.model == "new-model"
-        
+
         # Ensure YAML file hasn't been modified
         with open(".pluscoder-config.yml", "r") as f:
             yaml_content = f.read()
         assert "streaming: false" not in yaml_content
         assert "model: new-model" not in yaml_content
-        
+
         # Re-initialize to check if changes persist
         new_config = Settings(_env_file=None, ignore_yaml=True)
         assert new_config.streaming is True
-        assert new_config.model == "anthropic.claude-3-5-sonnet-20240620-v1:0"
+        assert new_config.model is None

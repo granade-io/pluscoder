@@ -10,8 +10,10 @@
 # display_internal_outputs: false # Display internal agent outputs
 # auto_confirm: false             # Auto-confirm pluscoder execution
 # init: true                      # Enable/disable initial setup
+initialized: true                      # Enable/disable initial setup
 # read_only: false                # Enable/disable read-only mode
 # user_input: ""                  # Predefined user input
+debug: true
 
 #------------------------------------------------------------------------------
 # File Paths
@@ -40,7 +42,7 @@ provider: openai           # Provider (aws_bedrock, openai, litellm, anthropic)
 #------------------------------------------------------------------------------
 # Git Settings
 #------------------------------------------------------------------------------
-auto_commits: false       # Enable/disable automatic Git commits
+auto_commits: true       # Enable/disable automatic Git commits
 allow_dirty_commits: true # Allow commits in a dirty repository
 
 #------------------------------------------------------------------------------
@@ -48,10 +50,10 @@ allow_dirty_commits: true # Allow commits in a dirty repository
 #------------------------------------------------------------------------------
 run_tests_after_edit: true  # Run tests after file edits
 run_lint_after_edit: true   # Run linter after file edits
-test_command: pytest                # Command to run tests
-lint_command: ruff check .                # Command to run linter
+test_command: make test                # Command to run tests
+lint_command: make lint                # Command to run linter
 auto_run_linter_fix: true   # Auto-run linter fix before linting
-lint_fix_command: python -m ruff format . && python -m ruff check --fix .            # Command to run linter fix
+lint_fix_command: make format        # Command to run linter fix
 
 #------------------------------------------------------------------------------
 # Repomap Settings
@@ -77,17 +79,4 @@ repo_exclude_files: [".*.(png|jpg|jpeg|svg)"]       # Regex patterns to exclude 
 #   - prompt_name: hello
 #     description: Greet the user says hello
 #     prompt: Say hello to user
-custom_agents:
-  - name: CodeReviewer
-    description: "Review code changes and provide feedback on code quality, best practices, and potential issues"
-    prompt: "You are a code reviewer. Your task is to review code changes and provide feedback on code quality, best practices, and potential issues."
-    
-  - name: DocumentationWriter
-    description: "Create and update project documentation, including README files, API documentation, and user guides"
-    prompt: "You are a technical writer specializing in software documentation. Your task is to create and update project documentation, including README files, API documentation, and user guides."
-    read_only: false
-    
-  - name: SecurityAuditor
-    description: "Review code and configurations for potential security vulnerabilities and suggest security improvements"
-    prompt: "You are a security expert. Your task is to review code and configurations for potential security vulnerabilities and suggest improvements to enhance the overall security of the project."
-    read_only: true
+custom_agents: []

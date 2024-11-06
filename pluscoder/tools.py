@@ -1,6 +1,9 @@
 import re
 import shutil
-from typing import Annotated, Dict, List, Literal
+from typing import Annotated
+from typing import Dict
+from typing import List
+from typing import Literal
 from urllib.parse import urlparse
 
 import requests
@@ -96,9 +99,7 @@ def select_agent(
 @tool
 def file_detection_with_confirmation(
     file_path: Annotated[str, "The path to the file you want to update."],
-    content: Annotated[
-        str, "The entire content including file blocks to be processed."
-    ],
+    content: Annotated[str, "The entire content including file blocks to be processed."],
     confirmation: Annotated[str, "Confirmation status ('YES' or any other value)."],
 ) -> str:
     """
@@ -112,11 +113,8 @@ def file_detection_with_confirmation(
     for file_name, file_content in file_blocks:
         if file_name == file_path:
             if confirmation == "YES":
-                return update_file.run(
-                    {"file_path": file_path, "content": file_content.strip()}
-                )
-            else:
-                return f"Update for {file_path} was not confirmed."
+                return update_file.run({"file_path": file_path, "content": file_content.strip()})
+            return f"Update for {file_path} was not confirmed."
 
     return f"No matching file block found for {file_path}."
 
@@ -135,9 +133,7 @@ def read_files(
             result += get_formatted_file_content(file_path)
             loaded_files.append(file_path)
         except Exception as e:
-            errors.append(
-                f"Error reading file {file_path}. Maybe the path is wrong or the file never existed: {e!s}"
-            )
+            errors.append(f"Error reading file {file_path}. Maybe the path is wrong or the file never existed: {e!s}")
 
     if errors:
         result += "\n\nErrors:\n" + "\n".join(errors)
@@ -169,8 +165,7 @@ def ask_confirmation(
     response = io.console.input(f"[bold green]{message} (y/n): [/bold green]")
     if response.lower() == "y":
         return "Confirmed"
-    else:
-        return response
+    return response
 
 
 @tool
@@ -216,3 +211,6 @@ def is_task_completed(
     Extract a boolean indicating whether specified task was completed successfully or not
     """
     return {"completed": completed, "feedback": feedback}
+
+
+base_tools = [read_files, move_files, read_file_from_url]

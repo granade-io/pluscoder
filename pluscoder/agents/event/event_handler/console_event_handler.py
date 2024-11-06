@@ -2,13 +2,17 @@ import asyncio
 import re
 from typing import List
 
-from rich.progress import SpinnerColumn, TextColumn
+from rich.progress import SpinnerColumn
+from rich.progress import TextColumn
 
 from pluscoder.agents.event.base import AgentEventBaseHandler
 from pluscoder.config import config
 from pluscoder.display_utils import get_cost_usage_display
-from pluscoder.io_utils import IO, CustomProgress
-from pluscoder.type import AgentInstructions, AgentTask, TokenUsage
+from pluscoder.io_utils import IO
+from pluscoder.io_utils import CustomProgress
+from pluscoder.type import AgentInstructions
+from pluscoder.type import AgentTask
+from pluscoder.type import TokenUsage
 
 
 class ConsoleAgentEventHandler(AgentEventBaseHandler):
@@ -26,18 +30,14 @@ class ConsoleAgentEventHandler(AgentEventBaseHandler):
         text = get_cost_usage_display(token_usage)
         if self.io.progress:
             # Use regex to find numbers and surround them with [cyan]{number}[/cyan]
-            text = re.sub(
-                r"(\d+(?:\.\d+)?)", lambda m: f"[cyan]{m.group(1)}[/cyan]", text
-            )
+            text = re.sub(r"(\d+(?:\.\d+)?)", lambda m: f"[cyan]{m.group(1)}[/cyan]", text)
             description = "[yellow]" + text + "[/yellow]"
             self.progress.update(self.usage_task_id, description=description)
         else:
             # Use regex to find numbers and surround them with [cyan]{number}[/cyan]
             self.io.console.print(text, style="yellow")
 
-    async def on_new_agent_instructions(
-        self, agent_instructions: AgentInstructions = None
-    ):
+    async def on_new_agent_instructions(self, agent_instructions: AgentInstructions = None):
         self.agent_instructions = agent_instructions
         self.progress = CustomProgress(
             SpinnerColumn(),
@@ -59,15 +59,11 @@ class ConsoleAgentEventHandler(AgentEventBaseHandler):
             self.task_ids.append(task_id)
 
         total_tasks = self.agent_instructions.get_task_count()
-        self.task_id = self.progress.add_task(
-            self.get_instructions_progress_text(), total=total_tasks
-        )
+        self.task_id = self.progress.add_task(self.get_instructions_progress_text(), total=total_tasks)
 
         if config.show_token_usage:
             # Display token usage
-            self.usage_task_id = self.progress.add_task(
-                get_cost_usage_display({}), start=True, completed=1, total=1
-            )
+            self.usage_task_id = self.progress.add_task(get_cost_usage_display({}), start=True, completed=1, total=1)
 
         self.progress.start()
 
@@ -80,9 +76,7 @@ class ConsoleAgentEventHandler(AgentEventBaseHandler):
                 self.task_ids[task_index],
                 description=f"[yellow][ ] {current_task.objective} - {current_task.agent}: Delegating...",
             )
-            self.progress.update(
-                self.task_id, description=self.get_instructions_progress_text()
-            )
+            self.progress.update(self.task_id, description=self.get_instructions_progress_text())
 
     async def on_task_validation_start(self, agent_instructions: AgentInstructions):
         self.agent_instructions = agent_instructions
@@ -93,9 +87,7 @@ class ConsoleAgentEventHandler(AgentEventBaseHandler):
                 self.task_ids[task_index],
                 description=f"[yellow][ ] {current_task.objective} - {current_task.agent}: Validating...",
             )
-            self.progress.update(
-                self.task_id, description=self.get_instructions_progress_text()
-            )
+            self.progress.update(self.task_id, description=self.get_instructions_progress_text())
 
     async def on_task_completed(self, agent_instructions: AgentInstructions = None):
         self.agent_instructions = agent_instructions
@@ -104,9 +96,7 @@ class ConsoleAgentEventHandler(AgentEventBaseHandler):
                 task
                 for task in self.agent_instructions.task_list
                 if task.is_finished
-                and not self.progress.tasks[
-                    self.task_ids[self.agent_instructions.task_list.index(task)]
-                ].completed
+                and not self.progress.tasks[self.task_ids[self.agent_instructions.task_list.index(task)]].completed
             ),
             None,
         )
@@ -118,22 +108,16 @@ class ConsoleAgentEventHandler(AgentEventBaseHandler):
                 description=f"[green][✓] {completed_task.objective}",
             )
 
-        self.progress.update(
-            self.task_id, advance=1, description=self.get_instructions_progress_text()
-        )
+        self.progress.update(self.task_id, advance=1, description=self.get_instructions_progress_text())
         self.progress.refresh()
 
-    async def on_task_list_completed(
-        self, agent_instructions: AgentInstructions = None
-    ):
+    async def on_task_list_completed(self, agent_instructions: AgentInstructions = None):
         self.progress.refresh()
         asyncio.sleep(1)
         self.io.set_progress(None)
         self.progress.stop()
 
-    async def on_task_list_interrumpted(
-        self, agent_instructions: AgentInstructions = None
-    ):
+    async def on_task_list_interrumpted(self, agent_instructions: AgentInstructions = None):
         self.io.set_progress(None)
         self.progress.stop()
 

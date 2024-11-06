@@ -11,9 +11,7 @@ class GitEventHandler(AgentEventBaseHandler):
         # TODO: why do we initialize the repo here again?
         self.repo = None
 
-    async def on_new_agent_instructions(
-        self, agent_instructions: AgentInstructions = None
-    ):
+    async def on_new_agent_instructions(self, agent_instructions: AgentInstructions = None):
         pass
 
     async def on_task_delegated(self, agent_instructions: AgentInstructions):
@@ -25,12 +23,13 @@ class GitEventHandler(AgentEventBaseHandler):
     async def on_task_completed(self, agent_instructions: AgentInstructions = None):
         pass
 
-    async def on_task_list_completed(
-        self, agent_instructions: AgentInstructions = None
-    ):
+    async def on_task_list_completed(self, agent_instructions: AgentInstructions = None):
         pass
 
-    async def on_files_updated(self, updated_files=[]):
+    async def on_files_updated(self, updated_files=None):
+        if updated_files is None:
+            updated_files = []
+
         if not self.repo:
             self.repo = Repository(io=io)
         if updated_files and config.auto_commits:

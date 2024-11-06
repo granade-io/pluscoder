@@ -1,8 +1,11 @@
 import os
 import re
-from typing import Dict, List, Tuple
+from typing import Dict
+from typing import List
+from typing import Tuple
 
-from tree_sitter_language_pack import get_language, get_parser
+from tree_sitter_language_pack import get_language
+from tree_sitter_language_pack import get_parser
 
 # Map file extensions to languages
 LANGUAGE_MAP = {
@@ -65,14 +68,8 @@ def should_include_file(
     relative_path = os.path.relpath(file_path, start=repo_working_tree_dir)
     return (
         (relative_path in tracked_files)
-        and any(
-            re.match(re.compile(pattern), os.path.basename(file_path))
-            for pattern in include_patterns
-        )
-        and not any(
-            re.match(re.compile(pattern), os.path.basename(file_path))
-            for pattern in exclude_patterns
-        )
+        and any(re.match(re.compile(pattern), os.path.basename(file_path)) for pattern in include_patterns)
+        and not any(re.match(re.compile(pattern), os.path.basename(file_path)) for pattern in exclude_patterns)
     )
 
 
@@ -82,7 +79,7 @@ def analyze_file_with_tree_sitter(file_path: str, level: int, io) -> str:
         content = file.read()
 
     file_extension = os.path.splitext(file_path)[1][1:]
-    language, parser = get_language_and_parser(file_extension, io)
+    _language, parser = get_language_and_parser(file_extension, io)
     tree = parser.parse(content)
 
     summary = []
@@ -93,12 +90,7 @@ def analyze_file_with_tree_sitter(file_path: str, level: int, io) -> str:
             "method_definition",
             "function_declaration",
         ] + ["expression_statement"]:
-            class_name = (
-                content[node.start_byte : node.end_byte]
-                .decode("utf-8")
-                .split("\n")[0]
-                .strip()
-            )
+            class_name = content[node.start_byte : node.end_byte].decode("utf-8").split("\n")[0].strip()
             summary.append(f"{indent}{class_name}")
 
             if level >= 1:
@@ -110,23 +102,14 @@ def analyze_file_with_tree_sitter(file_path: str, level: int, io) -> str:
                             if grandchild.type == "expression_statement":
                                 docstring_node = grandchild.children[0]
                                 if docstring_node.type == "string":
-                                    docstring = content[
-                                        docstring_node.start_byte : docstring_node.end_byte
-                                    ].decode("utf-8")
-                                    first_line = (
-                                        docstring.split("\n")[0]
-                                        .strip('"""')
-                                        .strip("'''")
-                                        .strip()
+                                    docstring = content[docstring_node.start_byte : docstring_node.end_byte].decode(
+                                        "utf-8"
                                     )
+                                    first_line = docstring.split("\n")[0].strip('"""').strip("'''").strip()
                                     summary.append(f"{indent}    {first_line}")
                                     break
                             elif grandchild.type == "comment":
-                                comment = (
-                                    content[grandchild.start_byte : grandchild.end_byte]
-                                    .decode("utf-8")
-                                    .strip()
-                                )
+                                comment = content[grandchild.start_byte : grandchild.end_byte].decode("utf-8").strip()
                                 summary.append(f"{indent}    {comment}")
                                 break
 
@@ -158,9 +141,7 @@ def generate_tree(
     for root, _, files in os.walk(repo_path):
         for file in files:
             file_path = os.path.join(root, file)
-            if should_include_file(
-                file_path, tracked_files, include_patterns, exclude_patterns, repo_path
-            ):
+            if should_include_file(file_path, tracked_files, include_patterns, exclude_patterns, repo_path):
                 relative_path = os.path.relpath(file_path, start=repo_path)
                 tree.append(f"\n{relative_path}")
                 tree.append("=" * len(relative_path))

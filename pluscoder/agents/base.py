@@ -1,29 +1,38 @@
 import asyncio
 import re
+import traceback
 from time import sleep
-from typing import List, Literal
+from typing import Callable
+from typing import List
+from typing import Literal
 
 from langchain_community.callbacks.manager import get_openai_callback
-from langchain_core.messages import AIMessage, merge_message_runs
+from langchain_core.messages import AIMessage
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import Runnable, RunnableMap
+from langchain_core.runnables import Runnable
+from langchain_core.runnables import RunnableMap
 from langgraph.graph import StateGraph
 from langgraph.prebuilt import ToolNode
 
+from pluscoder import tools
 from pluscoder.agents.event.config import event_emitter
-from pluscoder.agents.prompts import (
-    REMINDER_PREFILL_FILE_OPERATIONS_PROMPT,
-    REMINDER_PREFILL_PROMP,
-)
+from pluscoder.agents.prompts import REMINDER_PREFILL_FILE_OPERATIONS_PROMPT
+from pluscoder.agents.prompts import REMINDER_PREFILL_PROMPT
+from pluscoder.agents.prompts import build_system_prompt
 from pluscoder.config import config
 from pluscoder.exceptions import AgentException
-from pluscoder.fs import apply_block_update, get_formatted_files_content
+from pluscoder.fs import apply_block_update
+from pluscoder.fs import get_formatted_files_content
 from pluscoder.io_utils import io
 from pluscoder.logs import file_callback
-from pluscoder.message_utils import HumanMessage, get_message_content_str
+from pluscoder.message_utils import HumanMessage
+from pluscoder.message_utils import filter_messages
+from pluscoder.message_utils import get_message_content_str
+from pluscoder.message_utils import tag_messages
 from pluscoder.model import get_llm
 from pluscoder.repo import Repository
-from pluscoder.type import AgentState
+from pluscoder.type import AgentConfig
+from pluscoder.type import OrchestrationState
 
 
 def parse_block(text):
@@ -45,42 +54,36 @@ def parse_mentioned_files(text):
     mentioned_files = re.findall(r"`([^`\n]+\.\w+)`", text)
 
     # Remove duplicates
-    mentioned_files = list(set(mentioned_files))
-
-    return mentioned_files
+    return list(set(mentioned_files))
 
 
 class Agent:
-    state_schema = AgentState
+    state_schema = OrchestrationState
 
-    def __init__(
-        self,
-        system_message: str,
-        name: str,
-        tools=[],
-        extraction_tools=[],
-        default_context_files: List[str] = [],
-    ):
-        self.name = name
-        self.system_message = system_message
-        self.tools = tools
+    def __init__(self, agent_config: AgentConfig, extraction_tools: list[Callable] = []):
+        self.id = agent_config.id
+        self.name = agent_config.name
+        self.system_message = agent_config.prompt
+        self.tools = [getattr(tools, tool, None) for tool in agent_config.tools if getattr(tools, tool, None)]
         self.extraction_tools = extraction_tools
-        self.default_context_files = default_context_files
+        self.default_context_files = agent_config.default_context_files
         self.graph = self.get_graph()
         self.max_deflections = 3
         self.current_deflection = 0
         self.repo = Repository(io=io)
         self.state = None
         self.disable_reminder = False
+        self.read_only = agent_config.read_only
+        self.description = agent_config.description
+        self.reminder = agent_config.reminder
+        self.repository_interaction = agent_config.repository_interaction
 
     def get_context_files(self, state):
         state_files = state.get("context_files") or []
         files = [*self.default_context_files, *state_files]
-        # files = [*self.default_context_files]
 
         # remove duplicates
-        files = list(set(files))
-        return files
+        return list(set(files))
 
     def get_context_files_panel(self, files):
         if files:
@@ -111,16 +114,35 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
     def get_repomap(self):
         return self.repo.generate_repomap()
 
-    def get_system_message(self, state: AgentState):
-        return self.system_message
+    def get_system_message(self, state: OrchestrationState):
+        return build_system_prompt(
+            self.system_message,
+            can_read_files=self.repository_interaction,
+            can_edit_files=not self.read_only and not config.read_only and self.repository_interaction,
+        )
 
-    def get_reminder_prefill(self, state: AgentState) -> str:
-        prompt = REMINDER_PREFILL_PROMP
-        if not config.read_only:
+    def get_reminder_prefill(self, state: OrchestrationState) -> str:
+        prompt = REMINDER_PREFILL_PROMPT
+        if not config.read_only and not self.read_only and self.repository_interaction:
             prompt += REMINDER_PREFILL_FILE_OPERATIONS_PROMPT
+        if self.reminder:
+            prompt += self.reminder
         return prompt
 
-    def build_assistant_prompt(self, state: AgentState, deflection_messages: list):
+    def get_prompt_template_messages(self, state: OrchestrationState):
+        templates_messages = [("system", self.get_system_message(state))]
+
+        if self.repository_interaction:
+            # Context files
+            templates_messages += [
+                ("user", self.get_files_context_prompt(state)),
+                AIMessage(content="ok", name=self.id),
+            ]
+        return templates_messages + [
+            ("placeholder", "{messages}"),
+        ]
+
+    def build_assistant_prompt(self, state: OrchestrationState, deflection_messages: list):
         # last_message = state["messages"][-1]
         # check if last message is from a tool
         # if last_message.type == "tool":
@@ -136,37 +158,25 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         # reminders
         reminder_messages = []
         if not self.disable_reminder:
-            reminder_messages.append(
-                HumanMessage(content=self.get_reminder_prefill(state))
-            )
+            reminder_messages.append(HumanMessage(content=self.get_reminder_prefill(state), tags=[self.id]))
 
-        assistant_prompt = RunnableMap(
+        # assistant_prompt
+        return RunnableMap(
             {
-                "messages": lambda x: merge_message_runs(
-                    state["messages"] + deflection_messages + reminder_messages
-                ),
+                "messages": lambda x: state["messages"] + deflection_messages + reminder_messages,
                 "files_content": lambda x: files_content,
                 "repomap": lambda x: self.get_repomap() if config.use_repomap else "",
             }
-        ) | ChatPromptTemplate.from_messages(
-            [
-                ("system", self.get_system_message(state)),
-                # Context files
-                ("user", self.get_files_context_prompt(state)),
-                AIMessage(content="ok"),
-                ("placeholder", "{messages}"),
-            ]  # + user_message_list
-        )
-        return assistant_prompt
+        ) | ChatPromptTemplate.from_messages(self.get_prompt_template_messages(state))
 
-    def get_tool_choice(self, state: AgentState) -> str:
+    def get_tool_choice(self, state: OrchestrationState) -> str:
         """Chooses a the tool to use when calling the llm"""
         return "auto"
 
     def get_agent_model(self):
         return get_llm()
 
-    def _stream_events(self, chain, state: AgentState, deflection_messages: List[str]):
+    def _stream_events(self, chain, state: OrchestrationState, deflection_messages: List[str]):
         io.start_stream()
         first = True
         gathered = None
@@ -189,10 +199,8 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
             io.stop_stream()
         return gathered
 
-    def _invoke_llm_chain(self, state: AgentState, deflection_messages: List[str] = []):
-        assistant_prompt = self.build_assistant_prompt(
-            state, deflection_messages=deflection_messages
-        )
+    def _invoke_llm_chain(self, state: OrchestrationState, deflection_messages: List[str] = []):
+        assistant_prompt = self.build_assistant_prompt(state, deflection_messages=deflection_messages)
         llm = self.get_agent_model()
         chain: Runnable = assistant_prompt | llm.bind_tools(
             self.tools + self.extraction_tools, tool_choice=self.get_tool_choice(state)
@@ -200,15 +208,15 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
 
         if config.streaming:
             return self._stream_events(chain, state, deflection_messages)
-        else:
-            response = chain.invoke(
-                {
-                    "messages": state["messages"],
-                    "deflection_messages": deflection_messages,
-                },
-                {"callbacks": [file_callback]},
-            )
-            return response
+
+        # response
+        return chain.invoke(
+            {
+                "messages": state["messages"],
+                "deflection_messages": deflection_messages,
+            },
+            {"callbacks": [file_callback]},
+        )
 
     def call_agent(self, state):
         """When entering this agent graph, this function is the first node to be called"""
@@ -224,43 +232,41 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
             while self.current_deflection <= self.max_deflections:
                 try:
                     llm_response = self._invoke_llm_chain(state, interaction_msgs)
+                    llm_response.tags = [self.id]
                     interaction_msgs.append(llm_response)
-                    post_process_state = self.process_agent_response(
-                        state, llm_response
-                    )
+                    post_process_state = self.process_agent_response(state, llm_response)
                     break
                 except AgentException as e:
                     # Disable sysetem reminders when solving specific errors
                     self.disable_reminder = True
 
+                    io.log_to_debug_file("## AgentException Deflection")
+                    io.log_to_debug_file(e.message, indent=4)
+
                     # io.console.print(f"Error: {e!s}")
-                    io.console.print(
-                        "::re-thinking due an issue:: ", style="bold dark_goldenrod"
-                    )
+                    io.console.print("::re-thinking due an issue:: ", style="bold dark_goldenrod")
                     if self.current_deflection <= self.max_deflections:
                         self.current_deflection += 1
-                        interaction_msgs.append(
-                            HumanMessage(content=f"An error ocurrred: {e!s}")
-                        )
-                except Exception as e:
+                        interaction_msgs.append(HumanMessage(content=f"An error ocurrred: {e!s}", tags=[self.id]))
+                except Exception:
                     # Handles unknown exceptions, maybe caused by llm api or wrong state
-                    io.console.log(f"An error occurred: {e!s}", style="bold red")
-                    io.log_to_debug_file("########### CALL AGENT ERROR ###########")
-                    io.log_to_debug_file(f"Error: {e!s}")
+                    error_traceback = traceback.format_exc()
+                    if config.debug:
+                        io.console.log(f"Traceback:\n{error_traceback}", style="bold red")
+                    io.log_to_debug_file(f"\n\nTraceback:\n{error_traceback}", indent=4)
                     io.log_to_debug_file("State:")
-                    io.log_to_debug_file(message=str(state))
+                    io.log_to_debug_file(message=str(state), indent=4)
                     io.log_to_debug_file("Deflection messages:")
-                    io.log_to_debug_file(message=str(interaction_msgs))
+                    io.log_to_debug_file(message=str(interaction_msgs), indent=4)
                     sleep(1)  # Wait a bit, some api calls need time to recover
                     interaction_msgs.append(
-                        HumanMessage(
-                            content="An error ocurrred. Please try exactly the same again"
-                        )
+                        HumanMessage(content="An error occurred. Please try exactly the same again", tags=[self.id])
                     )
                     if self.current_deflection <= self.max_deflections:
                         self.current_deflection += 1
 
-        new_state = {
+        # new_state
+        return {
             "messages": interaction_msgs,
             "token_usage": {
                 "total_tokens": cb.total_tokens,
@@ -270,15 +276,12 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
             },
             **post_process_state,
         }
-        return new_state
 
-    def agent_router(self, state: AgentState) -> Literal["tools", "__end__"]:
+    def agent_router(self, state: OrchestrationState) -> Literal["tools", "__end__"]:
         """Edge to chose next node after agent was executed"""
         # Ends agent if max deflections reached
         if self.current_deflection > self.max_deflections:
-            io.console.log(
-                "Maximum deflections reached. Stopping.", style="bold dark_goldenrod"
-            )
+            io.console.log("Maximum deflections reached. Stopping.", style="bold dark_goldenrod")
             return "__end__"
 
         messages = state["messages"]
@@ -289,13 +292,15 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
 
         return "__end__"
 
-    def parse_tool_node(self, state: AgentState):
+    def parse_tool_node(self, state: OrchestrationState):
         messages = state["messages"]
-        last_message = messages[
-            -2
-        ]  # Last message that contains ToolMessage with executed tool data. We need to extract tool args from AIMessage at index -2
+
+        # Mark tool message for filtering
+        messages = tag_messages(messages, tags=[self.id], exclude_tagged=True)
+
+        last_message = filter_messages(messages, include_types=["ai"])[-1]
+        # Last message that contains ToolMessage with executed tool data. We need to extract tool args from AIMessage at index -2
         tool_data = {}
-        loaded_files = []
 
         for tool_call in last_message.tool_calls:
             # Extract data if extraction tool was used
@@ -312,18 +317,16 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         return {
             **state,
             "tool_data": tool_data,
-            "context_files": state["context_files"] + loaded_files,
+            # "context_files": state["context_files"] + loaded_files,
         }
 
-    def parse_tools_router(self, state: AgentState) -> Literal["__end__", "agent"]:
+    def parse_tools_router(self, state: OrchestrationState) -> Literal["__end__", "agent"]:
         """Edge to decide where to go after all tools data was extracted"""
 
         last_message = state["messages"][-1]
 
         # check if called tool were extraction tools
-        if last_message.type == "tool" and last_message.name in [
-            tool.name for tool in self.extraction_tools
-        ]:
+        if last_message.type == "tool" and last_message.name in [tool.name for tool in self.extraction_tools]:
             # Extractions tools dosn't need to go back to agent to review them.
             return "__end__"
 
@@ -349,18 +352,17 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
 
     async def graph_node(self, state):
         """Node for handling interactions with the user and other nodes. Called every time a new message is received."""
-        state_updates = {**state}
 
         # Restart deflection counter
         self.current_deflection = 0
 
-        state_updates = self.graph.invoke(state_updates, {"callbacks": [file_callback]})
+        state_updates = self.graph.invoke(state, {"callbacks": [file_callback]})
 
         io.console.print("")
-        return state_updates
+        return {**state, **state_updates, "messages": state_updates["messages"]}
 
     def process_agent_response(self, state, response: AIMessage):
-        if config.read_only:
+        if config.read_only or self.read_only or not self.repository_interaction:
             # Ignore file editions when readonly
             return {}
 
@@ -390,9 +392,7 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                 error_messages.append(error_msg)
 
         if error_messages:
-            raise AgentException(
-                "Some files couldn't be updated:\n" + "\n".join(error_messages)
-            )
+            raise AgentException("Some files couldn't be updated:\n" + "\n".join(error_messages))
 
         if updated_files:
             # Run tests and linting if enabled
@@ -408,6 +408,11 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                 raise AgentException(error_message)
 
         if updated_files:
-            asyncio.run(
-                event_emitter.emit("files_updated", updated_files=updated_files)
-            )
+            try:
+                # Try to get current event loop
+                loop = asyncio.get_running_loop()
+                # If exists, run in current loop
+                loop.create_task(event_emitter.emit("files_updated", updated_files=updated_files))  # noqa: RUF006
+            except RuntimeError:
+                # If no loop exists, create new one
+                asyncio.run(event_emitter.emit("files_updated", updated_files=updated_files))

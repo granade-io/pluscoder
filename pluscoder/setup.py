@@ -6,11 +6,16 @@ from pathlib import Path
 from rich.prompt import Prompt
 
 from pluscoder import tools
-from pluscoder.config import Settings, config
+from pluscoder.config import Settings
+from pluscoder.config import config
 from pluscoder.io_utils import io
+from pluscoder.model import get_default_model_for_provider
+from pluscoder.model import get_inferred_provider
+from pluscoder.model import get_model_token_info
+from pluscoder.model import get_model_validation_message
 from pluscoder.repo import Repository
-from pluscoder.state_utils import get_model_token_info
-from pluscoder.type import AgentInstructions, AgentState, TokenUsage
+from pluscoder.type import AgentInstructions
+from pluscoder.type import TokenUsage
 
 # TODO: Move this?
 CONFIG_FILE = ".pluscoder-config.yml"
@@ -50,6 +55,7 @@ CONFIG_TEMPLATE = """
 # provider: null                      # Provider (aws_bedrock, openai, litellm, anthropic, azure)
 # orchestrator_model_provider: null   # Provider for orchestrator model (default: same as provider)
 # weak_model_provider: null           # Provider for weak model (default: same as provider)
+# TODO: remove these keys
 # openai_api_key:                     # OpenAI API key
 # openai_api_base:                    # OpenAI API base URL
 # anthropic_api_key:                  # Anthropic API key
@@ -57,6 +63,7 @@ CONFIG_TEMPLATE = """
 #------------------------------------------------------------------------------
 # AWS Settings
 #------------------------------------------------------------------------------
+# TODO: remove these keys
 # aws_access_key_id:       # AWS Access Key ID
 # aws_secret_access_key:   # AWS Secret Access Key
 # aws_profile: default     # AWS profile name
@@ -161,8 +168,7 @@ def read_file_as_text(file_path):
 
 
 def load_example_config():
-    content = CONFIG_TEMPLATE
-    return content
+    return CONFIG_TEMPLATE
 
 
 def write_yaml(file_path, data):
@@ -173,35 +179,45 @@ def write_yaml(file_path, data):
 def prompt_for_config():
     example_config_text = load_example_config()
     descriptions = get_config_descriptions()
-    defaults = get_config_defaults()
+    current_config = get_config_defaults()
 
     for option in CONFIG_OPTIONS:
         description = descriptions[option]
-        default = defaults[option]
+        if option == "provider" and not config.provider:
+            default = get_inferred_provider()
+        elif option == "model":
+            default = config.model or get_default_model_for_provider(current_config.get("provider"))
+            current_config[option] = default
+        else:
+            default = current_config[option]
 
         prompt = f"{option} ({description})"
 
         if isinstance(default, bool):
-            value = Prompt.ask(
-                prompt, default=str(default).lower(), choices=["true", "false"]
-            )
+            value = Prompt.ask(prompt, default=str(default).lower(), choices=["true", "false"])
             value = value.lower() == "true"
         elif isinstance(default, int):
             value = Prompt.ask(prompt, default=str(default), validator=int)
         elif isinstance(default, float):
             value = Prompt.ask(prompt, default=str(default), validator=float)
         else:
-            value = Prompt.ask(
-                prompt, default=str(default) if default is not None else "null"
-            )
+            value = Prompt.ask(prompt, default=str(default) if default is not None else "null")
 
         # Update the config text with the new value
+        current_config[option] = value
         example_config_text = re.sub(
             rf"^#?\s*{option}:.*$",
             f"{option}: {value}",
             example_config_text,
             flags=re.MULTILINE,
         )
+
+    if not current_config["provider"]:
+        io.event(f"> Inferred provider is '{get_inferred_provider()}'")
+
+    error_msg = get_model_validation_message(current_config["provider"])
+    if error_msg:
+        io.console.print(error_msg, style="bold red")
 
     return example_config_text
 
@@ -217,26 +233,20 @@ def additional_config():
         files_to_add = [file for file in files_to_ignore if file not in content]
 
         if files_to_add:
-            if io.confirm(
-                f"Do you want to add {', '.join(files_to_add)} to .gitignore?"
-            ):
+            if io.confirm(f"Do you want to add {', '.join(files_to_add)} to .gitignore?"):
                 with open(gitignore_path, "a") as f:
                     f.write("\n" + "\n".join(files_to_add) + "\n")
                 io.event(f"> Added {', '.join(files_to_add)} to .gitignore")
             else:
                 io.event("> No changes made to .gitignore")
         else:
-            io.event(
-                "> PROJECT_OVERVIEW.md and CODING_GUIDELINES.md are already in .gitignore"
-            )
+            io.event("> PROJECT_OVERVIEW.md and CODING_GUIDELINES.md are already in .gitignore")
     elif io.confirm(
         "> .gitignore file not found. Do you want to create it with PROJECT_OVERVIEW.md and CODING_GUIDELINES.md?"
     ):
         with open(gitignore_path, "w") as f:
             f.write("\n".join(files_to_ignore) + "\n")
-        io.event(
-            "> Created .gitignore with PROJECT_OVERVIEW.md and CODING_GUIDELINES.md"
-        )
+        io.event("> Created .gitignore with PROJECT_OVERVIEW.md and CODING_GUIDELINES.md")
     else:
         io.event("> Skipped creating .gitignore")
 
@@ -336,11 +346,13 @@ TASK_LIST = [
 
 
 def initialize_repository():
-    from pluscoder.workflow import build_agents, build_workflow, run_workflow
+    from pluscoder.workflow import build_agents
+    from pluscoder.workflow import build_workflow
+    from pluscoder.workflow import run_workflow
 
     io.event("> Starting repository initialization...")
-    agents = build_agents()
-    app = build_workflow(agents)
+    agents_configs = build_agents()
+    app = build_workflow(agents_configs)
 
     # Setup config to automatize agents calls
     auto_confirm = config.auto_confirm
@@ -350,26 +362,28 @@ def initialize_repository():
     config.use_repomap = False
     config.auto_commits = False
 
-    orchestrator_state = AgentState.default()
-    orchestrator_state["tool_data"][tools.delegate_tasks.name] = AgentInstructions(
+    tool_data = {}
+    tool_data[tools.delegate_tasks.name] = AgentInstructions(
         general_objective="Number test sequence",
         task_list=TASK_LIST,
         resources=[],
     ).dict()
 
     initial_state = {
+        "agents_configs": agents_configs,
+        "chat_agent": agents_configs["orchestrator"],
+        "status": "active",
+        "max_iterations": 1,
+        "current_iterations": 0,
+        "messages": [],
+        "tool_data": tool_data,
         "return_to_user": False,
-        "orchestrator_state": orchestrator_state,
         "accumulated_token_usage": TokenUsage.default(),
-        "chat_agent": "orchestrator",
+        "token_usage": None,
         "is_task_list_workflow": True,
         "max_agent_deflections": 2,
         "current_agent_deflections": 0,
     }
-    for agent_id in agents:
-        if agent_id == "orchestrator":
-            continue
-        initial_state[f"{agent_id.lower()}_state"] = AgentState.default()
 
     asyncio.run(run_workflow(app, initial_state))
 
@@ -379,10 +393,7 @@ def initialize_repository():
     config.auto_commits = auto_commits
 
     # Check if both files were created
-    if not (
-        Path(config.overview_file_path).exists()
-        and Path(config.guidelines_file_path).exists()
-    ):
+    if not (Path(config.overview_file_path).exists() and Path(config.guidelines_file_path).exists()):
         io.console.print(
             "Error: Could not create `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md`. Please try again.",
             style="bold red",
@@ -405,7 +416,7 @@ def setup() -> bool:
     # TODO: Get repository path from config
     repo = Repository(io=io)
 
-    if not Path(CONFIG_FILE).exists() or not config.initialized and config.init:
+    if (not Path(CONFIG_FILE).exists() or not config.initialized) and config.init:
         io.console.print(
             "Welcome to Pluscoder! Let's customize your project configuration.",
             style="bold green",
@@ -431,9 +442,7 @@ def setup() -> bool:
         if io.confirm("Do you want to initialize it now (takes ~1min)? (recommended)"):
             initialize_repository()
         else:
-            io.event(
-                "> Skipping initialization. You can run it later using the /init command."
-            )
+            io.event("> Skipping initialization. You can run it later using the /init command.")
     elif not Path(CONFIG_FILE).exists() and not config.init:
         io.event("> Skipping initialization due to --no-init flag.")
         # Path.touch(CONFIG_FILE)

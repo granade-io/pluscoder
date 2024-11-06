@@ -39,9 +39,7 @@ def display_file_diff(content: str, filepath: str, console=None) -> None:
     if not matches:
         # Generate unified diff
         replace_lines = content.splitlines()
-        diff = difflib.unified_diff(
-            "", replace_lines, fromfile=filepath, tofile=filepath, lineterm=""
-        )
+        diff = difflib.unified_diff("", replace_lines, fromfile=filepath, tofile=filepath, lineterm="")
 
         # Convert diff to a single string
         diff_text = "\n".join(diff)
@@ -54,9 +52,7 @@ def display_file_diff(content: str, filepath: str, console=None) -> None:
         replace_lines = replace_block.splitlines()
 
         # Generate unified diff
-        diff = difflib.unified_diff(
-            find_lines, replace_lines, fromfile=filepath, tofile=filepath, lineterm=""
-        )
+        diff = difflib.unified_diff(find_lines, replace_lines, fromfile=filepath, tofile=filepath, lineterm="")
 
         # Convert diff to a single string
         diff_text = "\n".join(diff)
@@ -75,11 +71,7 @@ def get_cost_usage_display(token_usage: TokenUsage):
 
 
 def display_agent(agent, agent_type: str):
-    description = (
-        agent.description
-        if hasattr(agent, "description")
-        else "No description available"
-    )
+    description = agent.description if hasattr(agent, "description") else "No description available"
     return f"[bold green]{agent.name}[/bold green] ({agent_type}): {description}"
 
 

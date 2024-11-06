@@ -2,9 +2,14 @@ import os
 import pprint
 import re
 import subprocess
-from typing import List, Optional
+import traceback
+from typing import List
+from typing import Optional
 
-from git import Actor, GitCommandError, Repo
+from git import Actor
+from git import GitCommandError
+from git import Repo
+from git.exc import HookExecutionError
 
 from pluscoder.config import config
 from pluscoder.exceptions import NotGitRepositoryException
@@ -14,7 +19,8 @@ class Repository:
     def __init__(self, io=None, repository_path=None):
         self.repository_path = repository_path or os.getcwd()
         if not os.path.isdir(self.repository_path):
-            raise ValueError(f"Invalid repository path: {self.repository_path}")
+            msg = f"Invalid repository path: {self.repository_path}"
+            raise ValueError(msg)
 
         if not os.path.isdir(os.path.join(self.repository_path, ".git")):
             raise NotGitRepositoryException(self.repository_path)
@@ -43,9 +49,7 @@ class Repository:
             # Get current git user
             config_reader = self.repo.config_reader()
             current_name = config_reader.get_value("user", "name", "Pluscoder")
-            current_email = config_reader.get_value(
-                "user", "email", "unknown@pluscoder.com"
-            )
+            current_email = config_reader.get_value("user", "email", "unknown@pluscoder.com")
             # Create custom committer
             committer = Actor(f"{current_name} (pluscoder)", current_email)
             # Use the custom committer for the commit
@@ -55,6 +59,12 @@ class Repository:
         except GitCommandError as e:
             self.io.console.print(f"Error creating commit: {e}", style="bold red")
             return False
+        except HookExecutionError:
+            if config.debug:
+                self.io.console.print(traceback.format_exc())
+            self.io.console.print("WARN: Pre-commit hook didn't pass", style="bold dark_goldenrod")
+            # Return true event when the commit failed
+            return True
 
     def undo(self):
         """Revert the last commit if made by pluscoder, without preserving changes."""
@@ -63,12 +73,11 @@ class Repository:
             if "(pluscoder)" in last_commit.author.name:
                 self.repo.git.reset("--hard", "HEAD~1")
                 return True
-            else:
-                self.io.console.print(
-                    "Last commit was not made by pluscoder, can't be reverted.",
-                    style="bold dark_goldenrod",
-                )
-                return False
+            self.io.console.print(
+                "Last commit was not made by pluscoder, can't be reverted.",
+                style="bold dark_goldenrod",
+            )
+            return False
         except GitCommandError as e:
             self.io.console.print(f"Error undoing last commit: {e}", style="bold red")
             return False
@@ -91,24 +100,14 @@ class Repository:
             tracked_files = set(repo.git.ls_files().splitlines())
 
             # Get untracked files (excluding ignored ones)
-            untracked_files = set(
-                repo.git.ls_files(others=True, exclude_standard=True).splitlines()
-            )
+            untracked_files = set(repo.git.ls_files(others=True, exclude_standard=True).splitlines())
 
             # Combine and sort the results
             all_files = sorted(tracked_files.union(untracked_files))
 
             # Filter out files based on repo_exclude_files patterns
-            exclude_patterns = [
-                re.compile(pattern) for pattern in config.repo_exclude_files
-            ]
-            filtered_files = [
-                file
-                for file in all_files
-                if not any(pattern.match(file) for pattern in exclude_patterns)
-            ]
-
-            return filtered_files
+            exclude_patterns = [re.compile(pattern) for pattern in config.repo_exclude_files]
+            return [file for file in all_files if not any(pattern.match(file) for pattern in exclude_patterns)]
 
         except Exception as e:
             self.io.console.print(f"An error occurred: {e}", style="bold red")
@@ -141,10 +140,7 @@ class Repository:
 
         # Ask y/n to create the files if missing
         if missing_files:
-            if (
-                input("To proceed, create the missing files? (y/n):").lower().strip()
-                == "y"
-            ):
+            if self.io.confirm("To proceed, create the missing files?"):
                 self.create_default_files()
 
                 # allow to continue using pluscoder
@@ -164,7 +160,7 @@ class Repository:
         """
         if not config.run_lint_after_edit:
             return None  # Return None as there's no error, just not configured
-        elif config.run_lint_after_edit and not config.lint_command:
+        if config.run_lint_after_edit and not config.lint_command:
             self.io.console.print(
                 "No lint command configured. Skipping linting.",
                 style="bold dark_goldenrod",
@@ -173,9 +169,7 @@ class Repository:
 
         # Run linter fix if configured
         if config.auto_run_linter_fix and config.lint_fix_command:
-            subprocess.run(
-                config.lint_fix_command, shell=True, check=False, capture_output=True
-            )
+            subprocess.run(config.lint_fix_command, shell=True, check=False, capture_output=True)
 
         try:
             subprocess.run(
@@ -189,9 +183,7 @@ class Repository:
         except subprocess.CalledProcessError as e:
             # Both stdout and stderr returned because stderr not showing
             error_message = e.stdout if e.stdout else ""
-            error_message += (
-                e.stderr if e.stderr else ""
-            )  # Append stderr to error message
+            error_message += e.stderr if e.stderr else ""  # Append stderr to error message
             return f"Linting failed:\n\n{error_message}"  # Return error message
 
     def run_test(self) -> Optional[str]:
@@ -205,7 +197,7 @@ class Repository:
 
         if not config.run_tests_after_edit:
             return None  # Return None as there's no error, just not configured
-        elif config.run_tests_after_edit and not config.test_command:
+        if config.run_tests_after_edit and not config.test_command:
             self.io.console.print(
                 "No test command configured. Skipping tests.",
                 style="bold dark_goldenrod",
@@ -224,9 +216,7 @@ class Repository:
         except subprocess.CalledProcessError as e:
             # Both stdout and stderr returned because stderr not showing
             error_message = e.stdout if e.stdout else ""
-            error_message += (
-                e.stderr if e.stderr else ""
-            )  # Append stderr to error message
+            error_message += e.stderr if e.stderr else ""  # Append stderr to error message
             return f"Tests failed:\n\n{error_message}"
 
     def generate_repomap(self) -> Optional[str]:
@@ -240,11 +230,10 @@ class Repository:
         if not config.use_repomap:
             return None
 
-        from pluscoder.repomap import LANGUAGE_MAP, generate_tree
+        from pluscoder.repomap import LANGUAGE_MAP
+        from pluscoder.repomap import generate_tree
 
-        include_patterns = config.repomap_include_files or [
-            r".*\.(" + "|".join(LANGUAGE_MAP.keys()) + ")$"
-        ]
+        include_patterns = config.repomap_include_files or [r".*\.(" + "|".join(LANGUAGE_MAP.keys()) + ")$"]
         exclude_patterns = config.repomap_exclude_files
         level = config.repomap_level
 
