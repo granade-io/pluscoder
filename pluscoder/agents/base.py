@@ -19,6 +19,7 @@ from pluscoder.agents.event.config import event_emitter
 from pluscoder.agents.prompts import REMINDER_PREFILL_FILE_OPERATIONS_PROMPT
 from pluscoder.agents.prompts import REMINDER_PREFILL_PROMPT
 from pluscoder.agents.prompts import build_system_prompt
+from pluscoder.agents.stream_parser import XMLStreamParser
 from pluscoder.config import config
 from pluscoder.exceptions import AgentException
 from pluscoder.fs import apply_block_update
@@ -60,7 +61,9 @@ def parse_mentioned_files(text):
 class Agent:
     state_schema = OrchestrationState
 
-    def __init__(self, agent_config: AgentConfig, extraction_tools: list[Callable] = []):
+    def __init__(
+        self, agent_config: AgentConfig, stream_parser: XMLStreamParser, extraction_tools: list[Callable] = []
+    ):
         self.id = agent_config.id
         self.name = agent_config.name
         self.system_message = agent_config.prompt
@@ -77,6 +80,7 @@ class Agent:
         self.description = agent_config.description
         self.reminder = agent_config.reminder
         self.repository_interaction = agent_config.repository_interaction
+        self.stream_parser = stream_parser
 
     def get_context_files(self, state):
         state_files = state.get("context_files") or []
@@ -177,7 +181,7 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         return get_llm()
 
     def _stream_events(self, chain, state: OrchestrationState, deflection_messages: List[str]):
-        io.start_stream()
+        self.stream_parser.start_stream()
         first = True
         gathered = None
         try:
@@ -189,14 +193,14 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                 {"callbacks": [file_callback]},
             ):
                 if first:
-                    io.stream(chunk.content)
+                    self.stream_parser.stream(chunk.content)
                     gathered = chunk
                     first = False
                 else:
-                    io.stream(chunk.content)
+                    self.stream_parser.stream(chunk.content)
                     gathered = gathered + chunk
         finally:
-            io.stop_stream()
+            self.stream_parser.close_stream()
         return gathered
 
     def _invoke_llm_chain(self, state: OrchestrationState, deflection_messages: List[str] = []):
@@ -247,9 +251,10 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                     io.console.print("::re-thinking due an issue:: ", style="bold dark_goldenrod")
                     if self.current_deflection <= self.max_deflections:
                         self.current_deflection += 1
-                        interaction_msgs.append(HumanMessage(content=f"An error ocurrred: {e!s}", tags=[self.id]))
-                except Exception:
+                        interaction_msgs.append(HumanMessage(content=f"An error ocurred: {e!s}", tags=[self.id]))
+                except Exception as e:
                     # Handles unknown exceptions, maybe caused by llm api or wrong state
+                    io.console.print(f"An error ocurred when calling model: {e!s}", style="bold red")
                     error_traceback = traceback.format_exc()
                     if config.debug:
                         io.console.log(f"Traceback:\n{error_traceback}", style="bold red")

@@ -17,6 +17,9 @@ from pluscoder.agents.core import DomainStakeholderAgent
 from pluscoder.agents.core import PlanningAgent
 from pluscoder.agents.event.config import event_emitter
 from pluscoder.agents.orchestrator import OrchestratorAgent
+from pluscoder.agents.output_handlers.action_handlers import ActionProcessHandler
+from pluscoder.agents.output_handlers.tag_handlers import ConsoleDisplayHandler
+from pluscoder.agents.stream_parser import XMLStreamParser
 from pluscoder.commands import handle_command
 from pluscoder.commands import is_command
 from pluscoder.config import config
@@ -34,7 +37,16 @@ set_debug(False)
 # Ignore deprecation warnings
 warnings.filterwarnings("ignore")
 
-default_context_files = ["PROJECT_OVERVIEW.md", "CODING_GUIDELINES.md"]
+default_context_files = []
+
+# Setup handlers to process llm outputs
+action_handler = ActionProcessHandler()
+display_handler = ConsoleDisplayHandler(io=io)
+
+# Setup parser and subscribe main handler
+parser = XMLStreamParser()
+parser.subscribe(lambda element: display_handler.handle(element))
+parser.subscribe(lambda element: action_handler.handle(element))
 
 
 def build_agents() -> dict[str, AgentConfig]:
@@ -229,7 +241,7 @@ async def _agent_node(state: OrchestrationState) -> OrchestrationState:
     # Execute the agent's graph node and get a its modified state
     messages = filter_messages(state["messages"], include_tags=[agent_config.id])
 
-    agent = Agent(agent_config)
+    agent = Agent(agent_config, stream_parser=parser)
     updated_state = await agent.graph_node({**state, "messages": messages})
 
     # Update token usage
@@ -496,7 +508,7 @@ async def _orchestrator_agent_node(
 
 def build_workflow(agents_config: dict[str, AgentConfig]):
     # Create orchestrator instance for router functions
-    orchestrator_agent = OrchestratorAgent(agents_config[OrchestratorAgent.id])
+    orchestrator_agent = OrchestratorAgent(agents_config[OrchestratorAgent.id], stream_parser=parser)
 
     # Create the graph
     workflow = StateGraph(OrchestrationState)

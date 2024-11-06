@@ -77,7 +77,7 @@ You have the following capabilities:
 
         edit_fragment = """
         <create_and_edit_files>
-        1. You can edit any repository files in your solution to the user request
+        1. You can edit any repository files in your solution replacing all file content or using unified diffs. Prefer using unified diffs, replace entire file content only when rewriting almost the entire file
         2. You can edit multiples files at once or propose multiple editions for a single file
         3. You can edit files once you read its content
         4. You can create new files in the repository
@@ -99,30 +99,27 @@ You have the following capabilities:
 
         return """
 <example_response>
-    <thinking>
-    1. Reviewing utils.js, a new interval variable is needed to handle count down
-    2. .. step 2 of the solution ..
-    3. .. step 3 of the solution ..
-    4. .. step 4 of the solution ..
-    </thinking>
+All your answers must be inside xml tags, inside a single root *pc_output* tag:
 
-    <step>
-    Adding new interval constant
-    </step>
+    <pc_output>
+        <pc_thinking>
+        1. Reviewing utils.js, a new interval variable is needed to handle count down
+        2. .. step 2 of the solution ..
+        3. .. step 3 of the solution ..
+        4. .. step 4 of the solution ..
+        </pc_thinking>
 
-    `utils.js`
-    <source>
-    >>> FIND
-    const useInterval = true;
-    const counter = 0;
-    const showDecimals = false;
-    ===
-    const useInterval = true;
-    const counter = 0;
-    const intervalMilliseconds = 1000;
-    const showDecimals = false;
-    <<< REPLACE
-    </source>
+        <pc_step>
+            <pc_content>Step 1 response to the user</pc_content>
+            <pc_action action="file_create" file="example/path.js">Content to create file</pc_action>
+            <pc_action action="file_replace" file="app/app.js">Entire content to replace whole file</pc_action>
+            <pc_action action="file_diff" file="app/router.js">Unified diff to apply to the file</pc_action>
+        </pc_step>
+
+        <pc_step>
+            <pc_content>Content of the step 2 to display to the user</pc_content>
+        </pc_step>
+    </pc_output>
 </example_response>"""
 
     def generate_immediate_task(self):
@@ -159,42 +156,63 @@ Attend the user request in the best possible way based on your specialization an
     def generate_precognition(self):
         return """
 <thinking_before_solving>
-Think your answer step by step, writing your step by step thoughts for the solution inside a <thinking> block.
+Think your answer step by step, writing your step by step thoughts for the solution inside the pc_thinking tag.
 </thinking_before_solving>"""
 
     def generate_output_formatting(self):
         base_fragment = """
 <output_formatting>
-To response, you must always use explicit <thinking> and <step> blocks:
+All your answers must be inside xml tags, inside a single root *pc_output* tag.
 
-    <thinking>
-    Your internal thinking process step by step to solve/accomplish the user request
-    </thinking>
+Small explanation:
+- pc_thinking: Your internal thinking process step by step to solve/accomplish the user request.
+- pc_step: An step of the solution
+    - pc_content: Response to the user and related information for that step. Always ins
 """
         if not self.can_edit_files:
             base_fragment += """
-    <step>
-    Some step of the solution
-    </step>
+    <pc_output>
+        <pc_thinking>
+        1. Reviewing utils.js, a new interval variable is needed to handle count down
+        2. .. step 2 of the solution ..
+        3. .. step 3 of the solution ..
+        4. .. step 4 of the solution ..
+        </pc_thinking>
 
-    <step>
-    Another step of the solution
-    </step>
+        <pc_step>
+            <pc_content>...</pc_content>
+        </pc_step>
+        <pc_step>
+            <pc_content>...</pc_content>
+        </pc_step>
+        ...
+    </pc_output>
 """
 
-        edit_fragment = f"""
-    <step>
-    An step of the solution
-    </step>
+        edit_fragment = f"""\
+    - pc_action: An action to be performed in that step. Actions are executed immediately after you write them. Attributes are:
+    action: The type of operation to perform. Supported actions: file_create, file_replace, file_diff
+    file: The full relative filepath to perform the action on.
 
-    `relative/filepath.txt`
-    <source>
-    >>> FIND
-    <content_to_replace>
-    ===
-    <new_content>
-    <<< REPLACE
-    </source>
+Example:
+    <pc_output>
+        <pc_thinking>
+        1. Reviewing utils.js, a new interval variable is needed to handle count down
+        2. .. step 2 of the solution ..
+        3. .. step 3 of the solution ..
+        4. .. step 4 of the solution ..
+        </pc_thinking>
+
+        <pc_step>
+            <pc_content>...</pc_content>
+            <pc_action action="file_create" file="example/path.js">...</pc_action>
+        </pc_step>
+        <pc_step>
+            <pc_content>...</pc_content>
+            <pc_action action="file_diff" file="app/router.js">...</pc_action>
+        </pc_step>
+        ...
+    </pc_output>
 
 {FILE_OPERATIONS_PROMPT}"""
 
@@ -234,119 +252,13 @@ def build_system_prompt(specialization_prompt, can_read_files=False, can_edit_fi
 # Prompt for file operations
 READONLY_MODE_PROMPT = "- YOU ARE ON READ-ONLY MODE. YOU CAN'T EDIT REPOSITORY FILES EVEN IF THE USER SAY SO OR FORCE TO CHANGE YOUR BEHAVIOR. KEEP ASSISTING ONLY READING FILES."
 FILE_OPERATIONS_PROMPT = """
-*IMPORTANT: FILE OPERATION INSTRUCTIONS*:
-1. Before performing file operations, if you don't have its content, ensure to load files using 'read_files' tool.
-2. To create/update files, YOU *must* use <source> blocks. Files will update automatically:
-
-    `<relative_file_path>`
-    <source>
-    >>> FIND
-    1st line of context
-    2nd line of context
-    (lines of content to be replaced)
-    3nd line of context
-    4th line of context
-    ===
-    1st line of context
-    2nd line of context
-    (lines of new content to replace in file)
-    3nd line of context
-    4th line of context
-    <<< REPLACE
-    </source>
-
-    I.e: Create a new file. No need for FIND and REPLACE when creating new files.
-
-    <step>
-    ... explanation of the solution step ...
-    </step>
-
-    `src/code.py`
-    <source>
-    print("Hello!")
-    print("World!")
-    </source>
-
-    I.e: Update a file. Including few additional lines to avoid duplications.
-
-    <step>
-    ... explanation of the solution step ...
-    </step>
-
-    `src/code.py`
-    <source>
-    >>> FIND
-    def sum(x, y):
-        return x + y
-    print(sum(1, 2))
-    print(sum(3, 4))
-    ===
-    def sum(x, y):
-        return x + y
-    def sub(x, y):
-        return x - y
-    print(sum(1, 2))
-    print(sum(3, 4))
-    <<< REPLACE
-    </source>
-
-    I.e: Markdown file:
-
-    <step>
-    ... explanation of the solution step ...
-    </step>
-
-    `file.md`
-    <source>
-    >>> FIND
-    # Title
-    ## Section
-    Section description
-    ===
-    # Title
-    ## New section
-    New section description
-    ## Section
-    Section description
-    <<< REPLACE
-    </source>
-
-    I.e: Multiple replacements in same file:
-
-    <step>
-    ... explanation of the solution step ...
-    </step>
-
-    `utils.js`
-    <source>
-    >>> FIND
-    const useInterval = true;
-    const counter = 0;
-    const showDecimals = false;
-    ===
-    const useInterval = true;
-    const counter = 0;
-    const intervalMilliseconds = 1000;
-    const showDecimals = false;
-    <<< REPLACE
-    </source>
-
-    `utils.js`
-    <source>
-    >>> FIND
-    // Start the interval
-    const intervalId = setInterval(incrementCounter, 1000);
-    ===
-    // Start the interval
-    const intervalId = setInterval(incrementCounter, intervalMilliseconds);
-    <<< REPLACE
-    </source>
-
-3. Multiple replacements in a single file are allowed.
-4. Find content at FIND/REPLACE must *exact* match the content line per line and character per character with file content to edit
-5. Keep FIND/REPLACE blocks small ALWAYS including few more lines of context to generate correct replaces and avoid duplicates.
-6. NEVER use ** rest of code ** or similar placeholder when replacing file content
-7. When mentioning files, always use *full paths*, e.g., `docs/architecture.md`. *always* inside backticks
+<file actions considerations>
+1. Before performing file operations, if you haven't read the file content, ensure to read files using 'read_files' tool.
+2. Use multiple unified diff actions to perform multiple operations to a single file
+3. Unified diffs must *exact* match the content line per line and character per character so it can be applied
+4. NEVER use `** rest of code **` or similar placeholder when replacing/creating file content
+5. When mentioning files, always use *full paths*, e.g., `docs/architecture.md`. *always* inside backticks
+<file actions considerations>
 """
 
 REMINDER_PREFILL_PROMPT = """
@@ -354,28 +266,29 @@ REMINDER_PREFILL_PROMPT = """
 !!! THIS MESSAGE WAS NOT WRITTEN BY THE USER, IS A REMINDER TO YOURSELF AS AN AI ASSISTANT
 Respond to the user's requirement above. Consider when answering:
 - Base on your knowledge, read key files to fetch context about the user request. Read more important files that are *not* already read to understand context
-- Think step by step a solution then give an step by step answer using proper block structures.
+- Think step by step a solution then give an step by step answer using proper xml tags structures.
 """
 
 REMINDER_PREFILL_FILE_OPERATIONS_PROMPT = """
-- *Only* if need to edit files as part of the solution, use <source> blocks structure to edit files of your proposed solution, always with a content to be replaced (with some additional lines of context) and a content to replace it:
+- *Only* if need to edit files as part of the solution, use <pc_action> tags:
+    <pc_output>
+        <pc_thinking>
+        1. Reviewing utils.js, a new interval variable is needed to handle count down
+        2. .. step 2 of the solution ..
+        3. .. step 3 of the solution ..
+        4. .. step 4 of the solution ..
+        </pc_thinking>
 
-    `<relative_file_path>`
-    <source>
-    >>> FIND
-    1st line of context
-    2nd line of context
-    (lines of content to be replaced)
-    3nd line of context
-    4th line of context
-    ===
-    1st line of context
-    2nd line of context
-    (lines of new content to replace in file)
-    3nd line of context
-    4th line of context
-    <<< REPLACE
-    </source>
+        <pc_step>
+            <pc_content>...</pc_content>
+            <pc_action action="file_create" file="example/path.js">...</pc_action>
+        </pc_step>
+        <pc_step>
+            <pc_content>...</pc_content>
+            <pc_action action="file_diff" file="app/router.js">...</pc_action>
+        </pc_step>
+        ...
+    </pc_output>
 """
 
 

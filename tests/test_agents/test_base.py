@@ -7,6 +7,7 @@ from langchain_core.messages import AIMessage
 from pluscoder.agents.base import Agent
 from pluscoder.agents.base import parse_block
 from pluscoder.agents.base import parse_mentioned_files
+from pluscoder.agents.stream_parser import XMLStreamParser
 from pluscoder.exceptions import AgentException
 from pluscoder.message_utils import HumanMessage
 from pluscoder.repo import Repository
@@ -139,7 +140,8 @@ def agent():
             tools=[],
             default_context_files=["test_file.txt"],
             repository_interaction=True,
-        )
+        ),
+        stream_parser=XMLStreamParser(),
     )
 
 
