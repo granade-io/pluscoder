@@ -82,6 +82,7 @@ PlusCoder supports the following commands during interaction:
 - `/config <key> <value>`: Override any pluscoder configuration. e.g., `/config auto-commits false`
 - `/undo`: Revert last commit and remove last message from chat history.
 - `/agent`: Start a conversation with a new agent from scratch.
+- `/agent_create`: Creates a persistent specialized agent to chat with.
 - `/help`: Display help information for available commands.
 - `/init`: (Re)Initialize repository understanding the code base to generate project overview and code guidelines md files.
 - `/show_repo`: Display information about the current repository.
@@ -197,14 +198,19 @@ custom_prompt_commands:
 
 PlusCoder supports the creation of custom agents for specialized tasks. These agents can be defined in the configuration and used alongside the predefined agents.
 
-To configure custom agents:
+**Create a new agent helped by an llm using `/agent_create`command.**
+
+To configure custom agents manually:
 
 1. Open or create the `.pluscoder-config.yml` file in your project root.
 2. Add a `custom_agents` section with a list of custom agent configurations, each containing:
    - `name`: A unique name for the agent
    - `description`: a description of the agent
    - `prompt`: The system prompt defining the agent's role and capabilities
+   - `repository_interaction`: Where or not the agent can interact with the repository. Useful for agents repository agnostic.
    - `read_only`: Boolean indicating whether the agent is restricted to read-only file operations
+   - `reminder`: Reminder to the agent to send with every user message
+   - `default_context_files`: Files that the agent will read automatically every chat session or execution
 
 Example:
 
