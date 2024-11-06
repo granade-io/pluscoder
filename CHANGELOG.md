@@ -1,3 +1,21 @@
+# [2.3.0](https://gitlab.com/codematos/pluscoder/compare/v2.2.0...v2.3.0) (2024-11-06)
+
+
+### Bug Fixes
+
+* broken --no-init flags now is working again ([070b943](https://gitlab.com/codematos/pluscoder/commit/070b94349d5fd64ef0bfce566fb0bb04c5d9abdc))
+* fixed messages with dict and str content items when merged when using multimodal inputs ([1acce49](https://gitlab.com/codematos/pluscoder/commit/1acce49521e8b43f4a50dff9e1449d7ad5bcfacd))
+* now openAI endpoints stream token usage ([6db44df](https://gitlab.com/codematos/pluscoder/commit/6db44df2d53bc5367a222f15898ce2ddfe46ce7a))
+* required PROJECT_OVERVIEW.md and CODING_GUIDELINES.md can now be created using --auto_confirm flag ([5b96a71](https://gitlab.com/codematos/pluscoder/commit/5b96a714e3a03c4deab6e6bd46235eb39a07a083))
+* run event emitter on current running loop if exists ([84e0100](https://gitlab.com/codematos/pluscoder/commit/84e01008152166c84bba3a571bad0ff982e8c9b9))
+
+
+### Features
+
+* added /agent_create to create a persistent specialized agent and start a chat with it ([1ccad26](https://gitlab.com/codematos/pluscoder/commit/1ccad2616863e75a00627a75a12f78754c11e128))
+* default models ([5eb9adc](https://gitlab.com/codematos/pluscoder/commit/5eb9adcea08383bf29a26962a6414b5769507457))
+* new --debug flag to display some relevant debug information ([d757a80](https://gitlab.com/codematos/pluscoder/commit/d757a80ba630dbb92efa0b902703d2f3e37647a1))
+
 # [2.2.0](https://gitlab.com/codematos/pluscoder/compare/v2.1.0...v2.2.0) (2024-10-18)
 
 
