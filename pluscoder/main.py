@@ -2,6 +2,7 @@
 import asyncio
 import sys
 import traceback
+from pathlib import Path
 
 from rich.prompt import Prompt
 
@@ -12,6 +13,7 @@ from pluscoder.config import config
 from pluscoder.display_utils import display_agent
 from pluscoder.io_utils import io
 from pluscoder.model import get_inferred_provider
+from pluscoder.model import get_model_token_info
 from pluscoder.model import get_model_validation_message
 from pluscoder.repo import Repository
 from pluscoder.setup import setup
@@ -119,6 +121,13 @@ def display_initial_messages():
     if config.read_only:
         io.event("> Running on 'read-only' mode")
 
+    # Warns token cost
+    if not get_model_token_info(config.model):
+        io.console.print(
+            f"Token usage info not available for model `{config.model}`. Cost calculation can be unaccurate.",
+            style="bold dark_goldenrod",
+        )
+
 
 # Run the workflow
 def choose_chat_agent_node(agents: dict):
@@ -163,6 +172,19 @@ def explain_default_agent_usage():
     )
 
 
+def validate_run_requirements():
+    git_dir = Path(".git")
+    if not git_dir.is_dir():
+        io.event("> .git directory not found. Make sure you're in a Git repository.")
+        sys.exit(1)
+    if config.model is None:
+        io.console.print("Model is empty. Configure a model to run Pluscoder.", style="bold red")
+        io.console.print(
+            "Use [green]--config <your-model>[/green], the [green].pluscoder-config.yml[/green] config file or env vars to configure"
+        )
+        sys.exit(1)
+
+
 def main() -> None:
     """
     Main entry point for the Pluscoder application.
@@ -184,6 +206,7 @@ def main() -> None:
         if not setup():
             return
 
+        validate_run_requirements()
         display_initial_messages()
 
         # Check if the default_agent is valid
@@ -231,13 +254,13 @@ def main() -> None:
 
         app = build_workflow(agent_dict)
         asyncio.run(run_workflow(app, state))
+    except KeyboardInterrupt:
+        io.event("\nProgram interrupted. Exiting gracefully...")
+        return
     except Exception as err:
         if config.debug:
             io.console.print(traceback.format_exc(), style="bold red")
         io.event(f"An error occurred. {err} during workflow run.")
-        return
-    except KeyboardInterrupt:
-        io.event("\nProgram interrupted. Exiting gracefully...")
         return
 
 

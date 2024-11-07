@@ -15,6 +15,7 @@ from pydantic_settings import PydanticBaseSettingsSource
 from pydantic_settings import SettingsConfigDict
 from pydantic_settings import YamlConfigSettingsSource
 from rich.console import Console
+from yaml.scanner import ScannerError
 
 
 def validate_custom_agents(custom_agents: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -219,7 +220,11 @@ class Settings(BaseSettings):
 
 
 def get_settings():
-    return Settings()
+    try:
+        return Settings()
+    except ScannerError:
+        print("Failed to parse .pluscoder-config.yml. Please check the configuration file.")
+        sys.exit(1)
 
 
 # Usage

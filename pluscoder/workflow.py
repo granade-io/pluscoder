@@ -37,7 +37,7 @@ set_debug(False)
 # Ignore deprecation warnings
 warnings.filterwarnings("ignore")
 
-default_context_files = []
+default_context_files = ["PROJECT_OVERVIEW.md", "CODING_GUIDELINES.md"]
 
 # Setup handlers to process llm outputs
 action_handler = ActionProcessHandler()

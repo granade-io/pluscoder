@@ -11,7 +11,6 @@ from pluscoder.config import config
 from pluscoder.io_utils import io
 from pluscoder.model import get_default_model_for_provider
 from pluscoder.model import get_inferred_provider
-from pluscoder.model import get_model_token_info
 from pluscoder.model import get_model_validation_message
 from pluscoder.repo import Repository
 from pluscoder.type import AgentInstructions
@@ -132,25 +131,6 @@ CONFIG_TEMPLATE = """
 """
 
 
-def required_setup():
-    git_dir = Path(".git")
-    if not git_dir.is_dir():
-        io.event("> .git directory not found. Make sure you're in a Git repository.")
-        return False
-
-    exclude_file = git_dir / "info" / "exclude"
-    exclude_file.parent.mkdir(parents=True, exist_ok=True)
-
-    with open(exclude_file, "a+") as f:
-        f.seek(0)
-        content = f.read()
-        if ".pluscoder/" not in content:
-            f.write("\n.pluscoder/")
-            # io.event("> Added 'pluscoder/' to .git/info/exclude")
-
-    return True
-
-
 def get_config_descriptions():
     return {field: Settings.model_fields[field].description for field in CONFIG_OPTIONS}
 
@@ -249,6 +229,17 @@ def additional_config():
         io.event("> Created .gitignore with PROJECT_OVERVIEW.md and CODING_GUIDELINES.md")
     else:
         io.event("> Skipped creating .gitignore")
+
+    # DEfault ignore files
+    git_dir = Path(".git")
+    exclude_file = git_dir / "info" / "exclude"
+    exclude_file.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(exclude_file, "a+") as f:
+        f.seek(0)
+        content = f.read()
+        if ".pluscoder/" not in content:
+            f.write("\n.pluscoder/")
 
 
 TASK_LIST = [
@@ -410,9 +401,6 @@ def initialize_repository():
 
 
 def setup() -> bool:
-    if not required_setup():
-        return False
-
     # TODO: Get repository path from config
     repo = Repository(io=io)
 
@@ -451,12 +439,4 @@ def setup() -> bool:
     if not repo.setup():
         io.event("> Exiting pluscoder")
         return False
-
-    # Warns token cost
-    if not get_model_token_info(config.model):
-        io.console.print(
-            f"Token usage info not available for model `{config.model}`. Cost calculation can be unaccurate.",
-            style="bold dark_goldenrod",
-        )
-
     return True
