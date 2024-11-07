@@ -59,7 +59,7 @@ class FileActionHandler(ActionStrategy):
                 msg = f"The file {filepath} were not found in the repository to edit its contents."
                 raise AgentException(msg)
 
-            pattern = re.compile(r"<original>(.*?)<\/original>[\s\n]*<new>(.*?)<\/new>", re.DOTALL)
+            pattern = re.compile(r"%%original%%(.*?)%%\/original%%[\s\n]*%%new%%(.*?)%%\/new%%", re.DOTALL)
             match = re.search(pattern, content)
             if match:
                 old_content = match.group(1).strip()
@@ -97,10 +97,10 @@ class ActionProcessHandler(TagHandler):
             "bash_cmd": self.bash_handler,
         }
 
-    def process(self, tag, attributes, content, element) -> None:
+    def process(self, tag, attributes, content) -> None:
         action = attributes["action"]
         if action in self.handlers:
             result = self.handlers[action].execute(attributes, content)
-            self.updated_files.append(result.get("updated_files"))
+            self.updated_files.add(result.get("updated_files"))
         else:
             print(f"Unknown action type: {action}")
