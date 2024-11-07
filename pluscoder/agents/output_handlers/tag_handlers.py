@@ -15,7 +15,11 @@ class TagHandler:
 
     def handle(self, tag, content, attributes) -> None:
         if tag in self.handled_tags:
+            self.validate_tag(attributes, content)
             self.process(tag, attributes, content)
+
+    def validate_tag(self, attributes: dict, content: str):
+        pass
 
     def clear_updated_files(self):
         self.updated_files = set()
@@ -29,20 +33,16 @@ class ConsoleDisplayHandler(TagHandler):
         self.handled_tags = {"pc_content", "pc_thinking", "pc_action"}
         self.io = io
 
-    def process(self, tag: str, attributes: dict, content: str) -> None:
+    def display_file_action(self, action: str, attributes: dict, content: str):
+        file = attributes.get("file")
         style = "green"
-        if tag == "pc_thinking":
-            content = "::thinking::\n"
-            style = "light_salmon3"
-        elif tag == "pc_content":
-            style = "blue"
-        elif tag == "pc_action":
-            file = attributes.get("file")
-            style = "green"
+        diff_text = None
+
+        if file:
             self.io.console.print(f"\n`{file}`", style=style)
 
-            # get contents
-            pattern = re.compile(r"%%original%%(.*?)<\/original>[\s\n]*%%new%%(.*?)<\/new>", re.DOTALL)
+        if action == "file_diff":
+            pattern = re.compile(r"<original>(.*?)<\/original>[\s\n]*<new>(.*?)<\/new>", re.DOTALL)
             match = re.search(pattern, content)
             if match:
                 old_content = match.group(1).strip().splitlines()
@@ -54,9 +54,23 @@ class ConsoleDisplayHandler(TagHandler):
                 # Convert diff to a single string
                 diff_text = "\n".join(diff)
 
-                # Display using rich syntax highlighting
-                display_diff(diff_text, file, self.io.console)
-            else:
-                self.io.console.print(content, style=style)
+        elif action in ["file_create", "file_replace"]:
+            diff_text = content
+        # Any errors encountered will be handler and reported by another handler
+
+        if diff_text:
+            # Display using rich syntax highlighting
+            display_diff(diff_text, file, self.io.console)
+
+    def process(self, tag: str, attributes: dict, content: str) -> None:
+        style = "green"
+        if tag == "pc_thinking":
+            content = "::thinking::\n"
+            style = "light_salmon3"
+        elif tag == "pc_content":
+            style = "blue"
+            content = "\n\n" + content
+        elif tag == "pc_action":
+            self.display_file_action(attributes["action"], attributes, content)
             return
         self.io.console.print(content, style=style)

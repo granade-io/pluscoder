@@ -235,12 +235,14 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         post_process_state = {}
 
         with get_openai_callback() as cb:
+            backoff_time = 3  # Start with 3 seconds
             while self.current_deflection <= self.max_deflections:
                 try:
                     llm_response = self._invoke_llm_chain(state, interaction_msgs)
                     llm_response.tags = [self.id]
                     interaction_msgs.append(llm_response)
                     post_process_state = self.process_agent_response(state, llm_response)
+                    backoff_time = 3  # Reset backoff time on success
                     break
                 except AgentException as e:
                     # Disable sysetem reminders when solving specific errors
@@ -254,6 +256,8 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                     if self.current_deflection <= self.max_deflections:
                         self.current_deflection += 1
                         interaction_msgs.append(HumanMessage(content=f"An error ocurred: {e!s}", tags=[self.id]))
+                        sleep(backoff_time)
+                        backoff_time *= backoff_time  # Exponential backoff
                 except Exception as e:
                     # Handles unknown exceptions, maybe caused by llm api or wrong state
                     io.console.print(f"An error ocurred when calling model: {e!s}", style="bold red")
@@ -265,12 +269,14 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                     io.log_to_debug_file(message=str(state), indent=4)
                     io.log_to_debug_file("Deflection messages:")
                     io.log_to_debug_file(message=str(interaction_msgs), indent=4)
-                    sleep(1)  # Wait a bit, some api calls need time to recover
+                    sleep(backoff_time)  # Wait a bit, some api calls need time to recover
                     interaction_msgs.append(
                         HumanMessage(content="An error occurred. Please try exactly the same again", tags=[self.id])
                     )
                     if self.current_deflection <= self.max_deflections:
                         self.current_deflection += 1
+                        sleep(backoff_time)
+                        backoff_time *= backoff_time  # Exponential backoff
 
         # new_state
         return {

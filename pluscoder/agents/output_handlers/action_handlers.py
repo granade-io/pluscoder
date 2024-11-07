@@ -64,9 +64,10 @@ class FileActionHandler(ActionStrategy):
             if match:
                 old_content = match.group(1).strip()
                 new_content = match.group(2).strip()
-                apply_diff_edition(filepath, old_content, new_content, None)
+                _, error = apply_diff_edition(filepath, old_content, new_content, None)
+                if error:
+                    raise AgentException(error)
                 io.event(f"> `{filepath}` file updated. ")
-
                 return {"updated_files": filepath}
         return {}
 
@@ -98,7 +99,23 @@ class ActionProcessHandler(TagHandler):
             "bash_cmd": self.bash_handler,
         }
 
+    def validate_tag(self, attributes: dict, content: str):
+        required_attributes = ["action", "file"]
+        missing_attributes = [attr for attr in required_attributes if attr not in attributes]
+        if missing_attributes:
+            msg = f"One of the actions has missing attributes: {', '.join(missing_attributes)}. Please ensure that all necessary attributes are provided when writing an action tag."
+            raise AgentException(msg)
+
+        valid_actions = ["file_create", "file_replace", "file_diff", "bash_cmd"]
+        action = attributes.get("action")
+        if action not in valid_actions:
+            msg = f"Invalid tag action '{action}'. Valid actions are: {', '.join(valid_actions)}. Please use a valid action. Remember to provider proper attributes."
+            raise AgentException(msg)
+
+        # Add additional content validation if necessary
+
     def process(self, tag, attributes, content) -> None:
+        self.validate_tag(attributes, content)
         action = attributes["action"]
         if action in self.handlers:
             result = self.handlers[action].execute(attributes, content)

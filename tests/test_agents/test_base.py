@@ -176,12 +176,13 @@ def test_build_assistant_prompt(mock_get_formatted_files_content, mock_generate_
 
 
 # @patch.object(Repository, 'generate_repomap')
+@patch("pluscoder.agents.base.sleep", return_value=None)
 @patch.object(Agent, "_invoke_llm_chain")
 @patch("pluscoder.agents.base.get_formatted_files_content")
 @patch("pluscoder.agents.base.io")
 @patch("pluscoder.agents.base.file_callback")
 def test_call_agent(
-    mock_file_callback, mock_io, mock_get_formatted_files_content, mock_invoke_llm_chain, agent
+    mock_file_callback, mock_io, mock_get_formatted_files_content, mock_invoke_llm_chain, mock_sleep, agent
 ) -> None:
     # mock_generate_repomap.return_value = "My Repomap"
     mock_invoke_llm_chain.return_value = AIMessage(content="Mocked LLM response")
@@ -245,9 +246,10 @@ async def test_graph_node_normal_response(mock_invoke_llm_chain, agent):
     assert agent.current_deflection == 0
 
 
+@patch("pluscoder.agents.base.sleep", return_value=None)
 @patch.object(Agent, "_invoke_llm_chain")
 @pytest.mark.asyncio
-async def test_graph_node_one_deflection_and_recover(mock_invoke_llm_chain, agent):
+async def test_graph_node_one_deflection_and_recover(mock_invoke_llm_chain, mock_time_sleep, agent):
     # Mock the graph.invoke method to raise an exception once, then return a normal response
     mock_invoke_llm_chain.side_effect = [
         AgentException("Test error"),
@@ -262,10 +264,13 @@ async def test_graph_node_one_deflection_and_recover(mock_invoke_llm_chain, agen
     assert agent.current_deflection == 1
 
 
+@patch("pluscoder.agents.base.sleep", return_value=None)
 @patch.object(Agent, "process_agent_response")
 @patch.object(Agent, "_invoke_llm_chain")
 @pytest.mark.asyncio
-async def test_graph_node_max_deflections_no_recover(mock_invoke_llm_chain, mock_process_agent_response, agent):
+async def test_graph_node_max_deflections_no_recover(
+    mock_invoke_llm_chain, mock_process_agent_response, mock_time_sleep, agent
+):
     # Mock the graph.invoke method to always raise an exception
     mock_process_agent_response.side_effect = AgentException("Persistent error")
     mock_invoke_llm_chain.return_value = AIMessage(content="Edit response")
