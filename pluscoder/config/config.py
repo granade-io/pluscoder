@@ -174,6 +174,7 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         cli_parse_args=True,
+        cli_ignore_unknown_args=True,
         case_sensitive=False,
         yaml_file=".pluscoder-config.yml",
         yaml_file_encoding="utf-8",
@@ -215,7 +216,7 @@ class Settings(BaseSettings):
                 f.write(config_text)
 
         # Re-execute initialization
-        new_config = {key: getattr(self, key) for key in self.__fields__}
+        new_config = {key: getattr(self, key) for key in self.model_fields}
         self.__init__(**new_config)
 
 
