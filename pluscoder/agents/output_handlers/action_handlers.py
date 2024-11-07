@@ -1,4 +1,8 @@
+import re
+
 from pluscoder.agents.output_handlers.tag_handlers import TagHandler
+from pluscoder.exceptions import AgentException
+from pluscoder.fs import apply_diff_edition
 
 
 class ActionStrategy:
@@ -8,22 +12,62 @@ class ActionStrategy:
         raise NotImplementedError
 
 
+def normalize_diff(diff_text):
+    # Split the input text into lines
+    lines = diff_text.lstrip().splitlines()
+
+    # Find the minimum leading whitespace on lines starting with + or -
+    min_leading_spaces = min(
+        (len(re.match(r"^ *", line).group()) for line in lines if line.lstrip().startswith(("+", "-"))), default=0
+    )
+
+    # Remove min_leading_spaces from all lines
+    normalized_lines = [re.sub(f"^ {{{min_leading_spaces}}}", "", line) for line in lines]
+
+    return "\n".join(normalized_lines).strip("\n")
+
+
 class FileActionHandler(ActionStrategy):
     """Handles file-related actions like create, replace, diff"""
 
     def execute(self, params: dict, content: str) -> None:
-        action = params["action"]
-        filepath = params["filepath"]
-        action_type = action.replace("file_", "")
+        from pathlib import Path
 
-        print(f"[FileAction] Would {action_type} file: {filepath}")
-        # Mock implementations
+        from pluscoder.io_utils import io
+
+        action = params["action"]
+        filepath = params["file"]
+        action_type = action.replace("file_", "")
+        path = Path(filepath)
+
         if action_type == "create":
-            print(f"[FileAction] Creating new file {filepath}")
-        elif action_type == "replace":
-            print(f"[FileAction] Replacing content in {filepath}")
-        elif action_type == "diff":
-            print(f"[FileAction] Generating diff for {filepath}")
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content)
+            io.event(f"> `{filepath}` file created.")
+            return {"updated_files": filepath}
+
+        if action_type == "replace":
+            if not path.exists():
+                msg = f"The file {filepath} were not found in the repository to edit its contents."
+                raise AgentException(msg)
+            path.write_text(content)
+            io.event(f"> `{filepath}` file updated.")
+            return {"updated_files": filepath}
+
+        if action_type == "diff":
+            if not path.exists():
+                msg = f"The file {filepath} were not found in the repository to edit its contents."
+                raise AgentException(msg)
+
+            pattern = re.compile(r"<original>(.*?)<\/original>[\s\n]*<new>(.*?)<\/new>", re.DOTALL)
+            match = re.search(pattern, content)
+            if match:
+                old_content = match.group(1).strip()
+                new_content = match.group(2).strip()
+                apply_diff_edition(filepath, old_content, new_content, None)
+                io.event(f"> `{filepath}` file updated. ")
+                return {"updated_files": filepath}
+        return {}
 
 
 class BashActionHandler(ActionStrategy):
@@ -34,6 +78,7 @@ class BashActionHandler(ActionStrategy):
         print(f"[BashAction] Would execute: {command}")
         # Mock implementation
         print("[BashAction] Command execution simulated")
+        return {}
 
 
 class ActionProcessHandler(TagHandler):
@@ -52,12 +97,10 @@ class ActionProcessHandler(TagHandler):
             "bash_cmd": self.bash_handler,
         }
 
-    def process(self, tag, attributes, content) -> None:
-        try:
-            action = attributes["action"]
-            if action in self.handlers:
-                self.handlers[action].execute(attributes, content)
-            else:
-                print(f"Unknown action type: {action}")
-        except KeyError as e:
-            print(f"Missing required attribute: {e}")
+    def process(self, tag, attributes, content, element) -> None:
+        action = attributes["action"]
+        if action in self.handlers:
+            result = self.handlers[action].execute(attributes, content)
+            self.updated_files.append(result.get("updated_files"))
+        else:
+            print(f"Unknown action type: {action}")

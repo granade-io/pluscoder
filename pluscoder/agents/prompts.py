@@ -99,26 +99,26 @@ You have the following capabilities:
 
         return """
 <example_response>
-All your answers must be inside xml tags, inside a single root *pc_output* tag:
-
+All your responses must be inside xml tags, inside a single root *pc_output* tag:
     <pc_output>
-        <pc_thinking>
-        1. Reviewing utils.js, a new interval variable is needed to handle count down
-        2. .. step 2 of the solution ..
-        3. .. step 3 of the solution ..
-        4. .. step 4 of the solution ..
-        </pc_thinking>
-
-        <pc_step>
-            <pc_content>Step 1 response to the user</pc_content>
-            <pc_action action="file_create" file="example/path.js">Content to create file</pc_action>
-            <pc_action action="file_replace" file="app/app.js">Entire content to replace whole file</pc_action>
-            <pc_action action="file_diff" file="app/router.js">Unified diff to apply to the file</pc_action>
-        </pc_step>
-
-        <pc_step>
-            <pc_content>Content of the step 2 to display to the user</pc_content>
-        </pc_step>
+    <pc_thinking>
+    1. Reviewing utils.js, a new interval variable is needed to handle count down
+    2. .. step 2 of the solution ..
+    3. .. step 3 of the solution ..
+    4. .. step 4 of the solution ..
+    </pc_thinking>
+    <pc_step>
+    <pc_content>Step 1 response to the user</pc_content>
+    <pc_action action="file_create" file="example/path.js">Content to create file</pc_action>
+    <pc_action action="file_replace" file="app/app.js">Entire content to replace whole file</pc_action>
+    <pc_action action="file_diff" file="app/router.js">
+    <original>Original content to replace</original>
+    <new>New content</new>
+    </pc_action>
+    </pc_step>
+    <pc_step>
+    <pc_content>Content of the step 2 to display to the user</pc_content>
+    </pc_step>
     </pc_output>
 </example_response>"""
 
@@ -172,47 +172,71 @@ Small explanation:
         if not self.can_edit_files:
             base_fragment += """
     <pc_output>
-        <pc_thinking>
-        1. Reviewing utils.js, a new interval variable is needed to handle count down
-        2. .. step 2 of the solution ..
-        3. .. step 3 of the solution ..
-        4. .. step 4 of the solution ..
-        </pc_thinking>
-
-        <pc_step>
-            <pc_content>...</pc_content>
-        </pc_step>
-        <pc_step>
-            <pc_content>...</pc_content>
-        </pc_step>
-        ...
+    <pc_thinking>
+    1. Reviewing utils.js, a new interval variable is needed to handle count down
+    2. .. step 2 of the solution ..
+    3. .. step 3 of the solution ..
+    4. .. step 4 of the solution ..
+    </pc_thinking>
+    <pc_step>
+    <pc_content>...</pc_content>
+    </pc_step>
+    <pc_step>
+    <pc_content>...</pc_content>
+    </pc_step>
+    ...
     </pc_output>
 """
 
         edit_fragment = f"""\
     - pc_action: An action to be performed in that step. Actions are executed immediately after you write them. Attributes are:
-    action: The type of operation to perform. Supported actions: file_create, file_replace, file_diff
-    file: The full relative filepath to perform the action on.
+        action: The type of operation to perform. Supported actions: file_create, file_replace, file_diff
+        file: The full relative filepath to perform the action on.
 
 Example:
     <pc_output>
-        <pc_thinking>
-        1. Reviewing utils.js, a new interval variable is needed to handle count down
-        2. .. step 2 of the solution ..
-        3. .. step 3 of the solution ..
-        4. .. step 4 of the solution ..
-        </pc_thinking>
-
-        <pc_step>
-            <pc_content>...</pc_content>
-            <pc_action action="file_create" file="example/path.js">...</pc_action>
-        </pc_step>
-        <pc_step>
-            <pc_content>...</pc_content>
-            <pc_action action="file_diff" file="app/router.js">...</pc_action>
-        </pc_step>
-        ...
+    <pc_thinking>
+    1. Reviewing utils.js, a new interval variable is needed to handle count down
+    2. .. step 2 of the solution ..
+    3. .. step 3 of the solution ..
+    4. .. step 4 of the solution ..
+    </pc_thinking>
+    <pc_step>
+    <pc_content>...</pc_content>
+    <pc_action action="file_create" file="example/path.js">...</pc_action>
+    </pc_step>
+    <pc_step>
+    <pc_content>...</pc_content>
+    <pc_action action="file_diff" file="app/router.js">
+    <original>... lines of context ...\n content to replace \n... lines of context ...</original>
+    <new>... lines of context ...\n new content \n... lines of context ..</new>
+    </pc_action>
+    </pc_step>
+    ...
     </pc_output>
+
+<dif_spec>
+For generating diffs when editing files:
+1. Be sure <original>...</original> always exactly matches the original content, line per line, character per character
+2. Add few lines of context to perform diffs
+3. Keep diffs small
+
+Example:
+    <pc_action action="file_diff" file="app/router.py">
+    <original>
+    def handle_request(request):
+        # Process the request
+        response = "Hello, World!"
+        return response
+    </original>
+    <new>
+    def handle_request(request):
+        # Process the request with new logic
+        response = "Hello, Python World!"
+        return response
+    </new>
+    </pc_action>
+</dif_spec>
 
 {FILE_OPERATIONS_PROMPT}"""
 
@@ -270,25 +294,28 @@ Respond to the user's requirement above. Consider when answering:
 """
 
 REMINDER_PREFILL_FILE_OPERATIONS_PROMPT = """
-- *Only* if need to edit files as part of the solution, use <pc_action> tags:
+- Remember to always use your output structure:
     <pc_output>
-        <pc_thinking>
-        1. Reviewing utils.js, a new interval variable is needed to handle count down
-        2. .. step 2 of the solution ..
-        3. .. step 3 of the solution ..
-        4. .. step 4 of the solution ..
-        </pc_thinking>
-
-        <pc_step>
-            <pc_content>...</pc_content>
-            <pc_action action="file_create" file="example/path.js">...</pc_action>
-        </pc_step>
-        <pc_step>
-            <pc_content>...</pc_content>
-            <pc_action action="file_diff" file="app/router.js">...</pc_action>
-        </pc_step>
-        ...
+    <pc_thinking>
+    1. Reviewing utils.js, a new interval variable is needed to handle count down
+    2. .. step 2 of the solution ..
+    3. .. step 3 of the solution ..
+    4. .. step 4 of the solution ..
+    </pc_thinking>
+    <pc_step>
+    <pc_content>...</pc_content>
+    <pc_action action="file_create" file="example/path.js">...</pc_action>
+    </pc_step>
+    <pc_step>
+    <pc_content>...</pc_content>
+    <pc_action action="file_diff" file="app/router.js">
+    <original>... lines of context ...\n content to replace \n... lines of context ...</original>
+    <new>... lines of context ...\n new content \n... lines of context ..</new>
+    </pc_action>
+    </pc_step>
+    ...
     </pc_output>
+- <original> must *exactly* match the original content with ALL lines and characters
 """
 
 

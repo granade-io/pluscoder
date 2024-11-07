@@ -22,7 +22,6 @@ from pluscoder.agents.prompts import build_system_prompt
 from pluscoder.agents.stream_parser import XMLStreamParser
 from pluscoder.config import config
 from pluscoder.exceptions import AgentException
-from pluscoder.fs import apply_block_update
 from pluscoder.fs import get_formatted_files_content
 from pluscoder.io_utils import io
 from pluscoder.logs import file_callback
@@ -200,7 +199,10 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                     self.stream_parser.stream(chunk.content)
                     gathered = gathered + chunk
         finally:
-            self.stream_parser.close_stream()
+            try:
+                self.stream_parser.close_stream()
+            except Exception as e:
+                print(f"Error in stream events: {e}")
         return gathered
 
     def _invoke_llm_chain(self, state: OrchestrationState, deflection_messages: List[str] = []):
@@ -312,13 +314,6 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
             if tool_call["name"] in [tool.name for tool in self.extraction_tools]:
                 tool_data[tool_call["name"]] = tool_call["args"]
 
-            # Extract files if read_files were used
-            # This is a patch because tools can't read/edit agent state or call agent methods
-            # DEPRECATED: files body are inyected by the tool because performance decreases significantly using this method
-            # if tool_call['name'] in ["read_files"]:
-            #     loaded_files = tool_call["args"].get("file_paths", [])
-            #     io.event(f"> The latest version of these files were added to the chat: {', '.join(loaded_files)}")
-
         return {
             **state,
             "tool_data": tool_data,
@@ -374,30 +369,21 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         content_text = get_message_content_str(response)
 
         found_blocks = parse_block(content_text)
-        self.process_blocks(found_blocks)
+        self.post_process(found_blocks)
 
         return {}
 
-    def process_blocks(self, file_blocks):
+    def post_process(self, file_blocks):
         # Process the blocks found in the response to replace/create files in the project
-        updated_files = []
-        error_messages = []
-        for block in file_blocks:
-            file_path = block["file_path"]
-            content = block["content"]
-
-            if file_path.startswith("/"):
-                file_path = file_path[1:]
-
-            # Apply the block update to the file
-            error_msg = apply_block_update(file_path, content)
-            if not error_msg:
-                updated_files.append(file_path)
-            else:
-                error_messages.append(error_msg)
+        updated_files = self.stream_parser.get_updated_files()
+        error_messages = self.stream_parser.agent_errors
 
         if error_messages:
-            raise AgentException("Some files couldn't be updated:\n" + "\n".join(error_messages))
+            raise AgentException(
+                "Some errors occurred when executing your actions"
+                + "\n".join(error_messages)
+                + "\nPlease review all errors and solve the present issues if you can"
+            )
 
         if updated_files:
             # Run tests and linting if enabled

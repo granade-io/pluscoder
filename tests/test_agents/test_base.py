@@ -208,36 +208,6 @@ def test_process_agent_response(agent):
     assert result == {}
 
 
-@patch.object(Repository, "run_lint")
-@patch.object(Repository, "run_test")
-@patch("pluscoder.agents.event.config.event_emitter.emit")
-@patch("pluscoder.agents.base.apply_block_update")
-def test_process_blocks_success(mock_apply_block_update, mock_event_emitter, mock_run_test, mock_run_lint, agent):
-    mock_run_test.return_value = False  # Indicates success
-    mock_run_lint.return_value = False  # Indicates success
-    mock_apply_block_update.return_value = False  # Indicates success
-    blocks = [{"file_path": "test.py", "content": "print('Hello')", "language": "python"}]
-    agent.process_blocks(blocks)
-    mock_apply_block_update.assert_called_once_with("test.py", "print('Hello')")
-    mock_event_emitter.assert_called_once()
-
-
-@patch("pluscoder.agents.event.config.event_emitter.emit")
-@patch("pluscoder.agents.base.apply_block_update")
-def test_process_blocks_with_errors(mock_apply_block_update, mock_event_emitter, agent):
-    mock_apply_block_update.return_value = "Error in file `test.py`"  # Indicates error message
-    blocks = [
-        {"file_path": "test.py", "content": "print('Hello')", "language": "python"},
-        {"file_path": "test2.py", "content": "print('World')", "language": "python"},
-    ]
-    with pytest.raises(AgentException) as excinfo:
-        agent.process_blocks(blocks)
-
-    assert "Some files couldn't be updated:" in str(excinfo.value)
-    assert "Error in file `test.py`" in str(excinfo.value)
-    mock_event_emitter.assert_not_called()
-
-
 def test_agent_router_return_tools(agent):
     message = AIMessage(content="")
     message.tool_calls = True  # Just to simulate a tool call message

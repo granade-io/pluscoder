@@ -44,9 +44,9 @@ action_handler = ActionProcessHandler()
 display_handler = ConsoleDisplayHandler(io=io)
 
 # Setup parser and subscribe main handler
-parser = XMLStreamParser()
-parser.subscribe(lambda element: display_handler.handle(element))
-parser.subscribe(lambda element: action_handler.handle(element))
+parser = XMLStreamParser(io=io)
+parser.subscribe(display_handler)
+parser.subscribe(action_handler)
 
 
 def build_agents() -> dict[str, AgentConfig]:
