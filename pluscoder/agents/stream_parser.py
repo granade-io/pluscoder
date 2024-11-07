@@ -46,6 +46,10 @@ class XMLStreamParser:
 
     def stream(self, chunk: str):
         """Process incoming data chunk by chunk."""
+        if isinstance(chunk, list) and len(chunk) >= 0:
+            chunk = "".join([c["text"] for c in chunk if c["type"] == "text"])
+        elif isinstance(chunk, str):
+            pass
         self.buffer += chunk
         self.process_buffer()
 
