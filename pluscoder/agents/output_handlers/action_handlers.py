@@ -59,13 +59,14 @@ class FileActionHandler(ActionStrategy):
                 msg = f"The file {filepath} were not found in the repository to edit its contents."
                 raise AgentException(msg)
 
-            pattern = re.compile(r"%%original%%(.*?)%%\/original%%[\s\n]*%%new%%(.*?)%%\/new%%", re.DOTALL)
+            pattern = re.compile(r"<original>(.*?)<\/original>[\s\n]*<new>(.*?)<\/new>", re.DOTALL)
             match = re.search(pattern, content)
             if match:
                 old_content = match.group(1).strip()
                 new_content = match.group(2).strip()
                 apply_diff_edition(filepath, old_content, new_content, None)
                 io.event(f"> `{filepath}` file updated. ")
+
                 return {"updated_files": filepath}
         return {}
 
