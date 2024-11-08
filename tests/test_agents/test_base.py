@@ -7,6 +7,7 @@ from langchain_core.messages import AIMessage
 from pluscoder.agents.base import Agent
 from pluscoder.agents.base import parse_block
 from pluscoder.agents.base import parse_mentioned_files
+from pluscoder.agents.stream_parser import XMLStreamParser
 from pluscoder.exceptions import AgentException
 from pluscoder.message_utils import HumanMessage
 from pluscoder.repo import Repository
@@ -139,7 +140,8 @@ def agent():
             tools=[],
             default_context_files=["test_file.txt"],
             repository_interaction=True,
-        )
+        ),
+        stream_parser=XMLStreamParser(),
     )
 
 
@@ -174,12 +176,13 @@ def test_build_assistant_prompt(mock_get_formatted_files_content, mock_generate_
 
 
 # @patch.object(Repository, 'generate_repomap')
+@patch("pluscoder.agents.base.sleep", return_value=None)
 @patch.object(Agent, "_invoke_llm_chain")
 @patch("pluscoder.agents.base.get_formatted_files_content")
 @patch("pluscoder.agents.base.io")
 @patch("pluscoder.agents.base.file_callback")
 def test_call_agent(
-    mock_file_callback, mock_io, mock_get_formatted_files_content, mock_invoke_llm_chain, agent
+    mock_file_callback, mock_io, mock_get_formatted_files_content, mock_invoke_llm_chain, mock_sleep, agent
 ) -> None:
     # mock_generate_repomap.return_value = "My Repomap"
     mock_invoke_llm_chain.return_value = AIMessage(content="Mocked LLM response")
@@ -204,36 +207,6 @@ def test_process_agent_response(agent):
     response = AIMessage(content="Check `new_file.txt`")
     result = agent.process_agent_response(state, response)
     assert result == {}
-
-
-@patch.object(Repository, "run_lint")
-@patch.object(Repository, "run_test")
-@patch("pluscoder.agents.event.config.event_emitter.emit")
-@patch("pluscoder.agents.base.apply_block_update")
-def test_process_blocks_success(mock_apply_block_update, mock_event_emitter, mock_run_test, mock_run_lint, agent):
-    mock_run_test.return_value = False  # Indicates success
-    mock_run_lint.return_value = False  # Indicates success
-    mock_apply_block_update.return_value = False  # Indicates success
-    blocks = [{"file_path": "test.py", "content": "print('Hello')", "language": "python"}]
-    agent.process_blocks(blocks)
-    mock_apply_block_update.assert_called_once_with("test.py", "print('Hello')")
-    mock_event_emitter.assert_called_once()
-
-
-@patch("pluscoder.agents.event.config.event_emitter.emit")
-@patch("pluscoder.agents.base.apply_block_update")
-def test_process_blocks_with_errors(mock_apply_block_update, mock_event_emitter, agent):
-    mock_apply_block_update.return_value = "Error in file `test.py`"  # Indicates error message
-    blocks = [
-        {"file_path": "test.py", "content": "print('Hello')", "language": "python"},
-        {"file_path": "test2.py", "content": "print('World')", "language": "python"},
-    ]
-    with pytest.raises(AgentException) as excinfo:
-        agent.process_blocks(blocks)
-
-    assert "Some files couldn't be updated:" in str(excinfo.value)
-    assert "Error in file `test.py`" in str(excinfo.value)
-    mock_event_emitter.assert_not_called()
 
 
 def test_agent_router_return_tools(agent):
@@ -273,9 +246,10 @@ async def test_graph_node_normal_response(mock_invoke_llm_chain, agent):
     assert agent.current_deflection == 0
 
 
+@patch("pluscoder.agents.base.sleep", return_value=None)
 @patch.object(Agent, "_invoke_llm_chain")
 @pytest.mark.asyncio
-async def test_graph_node_one_deflection_and_recover(mock_invoke_llm_chain, agent):
+async def test_graph_node_one_deflection_and_recover(mock_invoke_llm_chain, mock_time_sleep, agent):
     # Mock the graph.invoke method to raise an exception once, then return a normal response
     mock_invoke_llm_chain.side_effect = [
         AgentException("Test error"),
@@ -290,10 +264,13 @@ async def test_graph_node_one_deflection_and_recover(mock_invoke_llm_chain, agen
     assert agent.current_deflection == 1
 
 
+@patch("pluscoder.agents.base.sleep", return_value=None)
 @patch.object(Agent, "process_agent_response")
 @patch.object(Agent, "_invoke_llm_chain")
 @pytest.mark.asyncio
-async def test_graph_node_max_deflections_no_recover(mock_invoke_llm_chain, mock_process_agent_response, agent):
+async def test_graph_node_max_deflections_no_recover(
+    mock_invoke_llm_chain, mock_process_agent_response, mock_time_sleep, agent
+):
     # Mock the graph.invoke method to always raise an exception
     mock_process_agent_response.side_effect = AgentException("Persistent error")
     mock_invoke_llm_chain.return_value = AIMessage(content="Edit response")

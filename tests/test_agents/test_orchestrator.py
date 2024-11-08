@@ -3,6 +3,7 @@ from langchain_core.messages import AIMessage
 
 from pluscoder import tools
 from pluscoder.agents.orchestrator import OrchestratorAgent
+from pluscoder.agents.stream_parser import XMLStreamParser
 from pluscoder.message_utils import HumanMessage
 from pluscoder.type import AgentConfig
 from pluscoder.type import OrchestrationState
@@ -20,7 +21,8 @@ def orchestrator_agent():
             tools=[],
             default_context_files=[],
             repository_interaction=True,
-        )
+        ),
+        stream_parser=XMLStreamParser(),
     )  # We don't need a real LLM for these tests
 
 

@@ -9,6 +9,7 @@ from langgraph.prebuilt import ToolNode
 from pluscoder import tools
 from pluscoder.agents.base import Agent
 from pluscoder.agents.orchestrator import OrchestratorAgent
+from pluscoder.agents.stream_parser import XMLStreamParser
 from pluscoder.config import config
 from pluscoder.message_utils import HumanMessage
 from pluscoder.type import AgentConfig
@@ -56,7 +57,8 @@ def agent():
             tools=[],
             default_context_files=["test_file.txt"],
             repository_interaction=True,
-        )
+        ),
+        stream_parser=XMLStreamParser(),
     )
 
 
@@ -65,6 +67,7 @@ def orchestrator_agent(mock_agents_config):
     return OrchestratorAgent(
         mock_agents_config["orchestrator"],
         extraction_tools=[tools.delegate_tasks, tools.is_task_completed],
+        stream_parser=XMLStreamParser(),
     )
 
 

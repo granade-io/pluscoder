@@ -113,7 +113,6 @@ class ConsoleAgentEventHandler(AgentEventBaseHandler):
 
     async def on_task_list_completed(self, agent_instructions: AgentInstructions = None):
         self.progress.refresh()
-        asyncio.sleep(1)
         self.io.set_progress(None)
         self.progress.stop()
 
