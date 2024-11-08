@@ -2,35 +2,20 @@ from pathlib import Path
 from typing import List
 
 BLOCK_FORMAT = """
-`<relative_file_path>`
-<source>
->>> FIND
-1st line of context
-2nd line of context
-(lines of content to be replaced)
-3nd line of context
-4th line of context
-===
-1st line of context
-2nd line of context
-(lines of new content to put in file)
-3nd line of context
-4th line of context
-<<< REPLACE
-</source>
+    <pc_action action="file_diff" file="app/router.js">
+    <original>... lines of context ...\n content to replace \n... lines of context ...</original>
+    <new>... lines of context ...\n new content \n... lines of context ..</new>
+    </pc_action>
 """
 MSG_WRONG_FORMAT = f"""Invalid file update format when updating '%s' file. Please use the format:
 {BLOCK_FORMAT}
 """
-MSG_FIND_NOT_FOUND = f"""Couldn't replace some changes at file `{{file_path}}`.
+MSG_FIND_NOT_FOUND = f"""{{content}}
 
->>> FIND
-{{content}}
-===
+The previous content was not found in the file `{{file_path}}` to be replaced. Please try again this file operation.
 
-The previous content was not found in the file to be replaced. Please try again this file operation.
 
-Remember to use the format:
+Remember, when using action tags you must exactly match content to replace, line by line, character by character:
 {BLOCK_FORMAT}
 
 Read the `{{file_path}}` file again, identify content that was not replaced properly and them perform exact content match for replacements.
@@ -38,7 +23,7 @@ Read the `{{file_path}}` file again, identify content that was not replaced prop
 
 MSG_WHOLE_FILE_REPLACEMENT = f"""Couldn't replace some changes at file `{{file_path}}`. You are trying to replace the entire file but it already have a content.
 
-Remember to use the format:
+Remember, when using action tags you must exactly match content to replace, line by line, character by character:
 {BLOCK_FORMAT}
 
 Read the `{{file_path}}` file again, identify content that was not replaced properly and the perform exact content match for replacements.
