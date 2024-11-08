@@ -1,0 +1,23 @@
+bm25s[full]>=0.2.3
+cohere>=5.11.3
+devtools>=0.12.2
+dspy-ai>=2.5.27
+faiss-cpu>=1.9.0
+fastembed>=0.4.1
+jitter>=0.1.18
+llvmlite>=0.43.0
+numba>=0.60.0
+numpy>=1.26.4
+pydantic-settings>=2.6.1
+pydantic>=2.9.2
+rich[jupyter]>=13.9.4
+scikit-learn>=1.5.2
+tiktoken>=0.8.0
+usearch>=2.16.2
+# pathspec
+
+# bm25s[full] requires llvmlite and numba to be installed first
+# uv pip install --python 3.12 --python-preference managed --no-cache --upgrade --color always --native-tls llvmlite numba 'bm25s[full]'
+
+# https://github.com/cohere-ai/DiskVectorIndex
+# DiskVectorIndex
