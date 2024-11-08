@@ -9,6 +9,7 @@ import logging
 import os
 import re
 import traceback
+from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import AbstractSet
@@ -115,8 +116,12 @@ _STOPWORD_LISTS = (
 )
 UNIQUE_STOPWORDS_LIST = list(set(itertools.chain.from_iterable(_STOPWORD_LISTS)))
 
-TOP_K_SPARSE = 50
-TOP_K_DENSE = 5
+TOP_K_DENSE = 10  # 5
+TOP_K_SPARSE = 10  # 50
+TOP_K_HYBRID = min(
+    max(TOP_K_DENSE, TOP_K_SPARSE),
+    5,
+)
 
 
 # cache files for the TikToken library
@@ -339,16 +344,18 @@ async def vector_retreival(
         Y=vector_index,
         dense_output=True,
     )
-    print()
-    print()
-    print("BEFORE: similarity_scores".center(80, "*"))
-    print(similarity_scores.shape)
-    print(similarity_scores.dtype)
-    print("*" * 80)
-    pprint(similarity_scores)
-    print("*" * 80)
-    print()
-    print()
+
+    if verbose:
+        print()
+        print()
+        print("BEFORE: similarity_scores".center(80, "*"))
+        print(similarity_scores.shape)
+        print(similarity_scores.dtype)
+        print("*" * 80)
+        pprint(similarity_scores)
+        print("*" * 80)
+        print()
+        print()
 
     # get the top-k most similar items
     indices = np.argsort(a=-similarity_scores)[:top_k]
@@ -1152,7 +1159,7 @@ def find_end_line_number(file_path: Path, end_index: int) -> int:
 # Query the corpus and get top-k results
 
 
-def __bm25_retreival(
+def bm25_retreival(
     query: str,
     k: int,
     bm25_index: bm25s.BM25,
@@ -1340,7 +1347,12 @@ documents = corpus
 
 for kwe_result in keyword_extraction_result_list:
     query = kwe_result.query
-    # keywords = kwe_result.keywords
+
+    print("".center(80, "$"), flush=True)
+    pprint(" Query ".upper().center(80, "."), flush=True)
+    print(query)
+    pprint("".center(80, "."), flush=True)
+    print()
 
     # retrieve the top-k most relevant documents based on the query
     result = await vector_retreival(  # noqa: F704, PLE1142 # pyright: ignore
@@ -1424,5 +1436,154 @@ for kwe_result in keyword_extraction_result_list:
     print("".center(80, "$"), flush=True)
     print("".center(80, "$"), flush=True)
     print("".center(80, "$"), flush=True)
+
+# %% [markdown] ## Hybrid Search
+
+
+def reciprocal_rank_fusion(
+    *list_of_list_ranks_system,
+    K: int = 60,  # noqa: N803
+) -> tuple[list[tuple[int, float]], list[int]]:
+    """
+    Fuse rank from multiple IR systems using Reciprocal Rank Fusion.
+
+    Args:
+        * list_of_list_ranks_system: Ranked results from different IR system.
+        K: A constant used in the RRF formula (default is 60).
+
+    Returns:
+        Tuple of list of sorted documents by score and sorted documents
+    """
+    # Dictionary to store RRF mapping
+    rrf_map = defaultdict(float)
+
+    # Calculate RRF score for each result in each list
+    for rank_list in list_of_list_ranks_system:
+        for rank, item in enumerate(rank_list, 1):
+            rrf_map[item] += 1 / (rank + K)
+
+    # Sort items based on their RRF scores in descending order
+    sorted_items = sorted(rrf_map.items(), key=lambda x: x[1], reverse=True)
+
+    # Return tuple of list of sorted documents by score and sorted documents
+    return sorted_items, [item for item, score in sorted_items]
+
+
+USE_QUERY_KEYWORDS = False
+
+for kwe_result in keyword_extraction_result_list:
+    query = kwe_result.query
+    keywords = kwe_result.keywords
+
+    print()
+    print("".center(80, "$"), flush=True)
+    print()
+    pprint(f" Use Query Keywords : {USE_QUERY_KEYWORDS} ".upper().center(80, "."), flush=True)
+    pprint(" Query ".upper().center(80, "."), flush=True)
+    print(query)
+    pprint("".center(80, "."), flush=True)
+    print()
+
+    print(" Keywords ".upper().center(80, "."), flush=True)
+    pprint(keywords, flush=True)
+    query_keywords = " ".join(keywords)
+    query_keywords = query_keywords.strip().lower()
+    pprint(" Query Keywords ".upper().center(80, "."), flush=True)
+    print()
+    print(query_keywords)
+    print()
+    pprint("".center(80, "."), flush=True)
+
+    # ranked lists from different sources
+    # source: vector search (dense)
+    vector_top_k: list[int] = (
+        (
+            await vector_retreival(  # noqa: PLE1142, F704 # pyright: ignore
+                query=query,
+                top_k=TOP_K_DENSE,
+                vector_index=doc_embeddings,
+                embedding_type=EMBEDDING_TYPE,
+                verbose=False,
+            )
+        )
+        .indices.flatten()
+        .tolist()
+    )  # indices of the top-k most similar documents to the query
+
+    # source: bm25 search (sparse)
+    bm25_top_k = bm25_retreival(
+        query=query_keywords if USE_QUERY_KEYWORDS else query,
+        k=TOP_K_SPARSE,
+        bm25_index=retriever,
+    )
+
+    # Combine the lists using RRF
+    hybrid_top_k = reciprocal_rank_fusion(vector_top_k, bm25_top_k)
+    hybrid_top_k[1]
+
+    print("".center(80, "$"), flush=True)
+    print("".center(80, "$"), flush=True)
+    print("".center(80, "$"), flush=True)
+
+    # NOTE: the reordering of the chunks based on the RRF score
+    # print the top k most relevant documents
+    for _idx, index in enumerate(hybrid_top_k[1]):
+        doc = corpus[index]
+        assert results[corpus.index(doc)].content == doc, f"Content mismatch for document: {doc}"  # noqa: S101
+
+        print()
+        print(
+            f" Chunk Index {corpus.index(doc)} ".upper().center(80, "-"),
+            flush=True,
+        )
+        print()
+        print(
+            f"File Name: {results[corpus.index(doc)].metadata.file.file_name}",
+            flush=True,
+        )
+        print()
+        print(
+            f"File Path: {results[corpus.index(doc)].metadata.file.file_path}",
+            flush=True,
+        )
+        print(
+            f"File Path (short): {Path(results[corpus.index(doc)].metadata.file.file_path).relative_to(get_root_path())}",
+            flush=True,
+        )
+        print()
+        print(
+            "Reference: {file_path}:{chunk_start_line}:{chunk_end_line}".format(
+                file_path=results[corpus.index(doc)].metadata.file.file_path,
+                chunk_start_line=find_start_line_number(
+                    file_path=Path(results[corpus.index(doc)].metadata.file.file_path),
+                    start_index=results[corpus.index(doc)].metadata.chunk.chunk_start_index,
+                ),
+                chunk_end_line=find_end_line_number(
+                    file_path=Path(results[corpus.index(doc)].metadata.file.file_path),
+                    end_index=results[corpus.index(doc)].metadata.chunk.chunk_end_index,
+                ),
+            ),
+            flush=True,
+        )
+        print()
+        print(" Content ".upper().center(80, "-"), flush=True)
+        print()
+        Console().print(Syntax(doc, "python"))
+        print()
+        print(" Metadata ".upper().center(80, "-"), flush=True)
+        print()
+        pprint(results[corpus.index(doc)].metadata)
+        print()
+        print("-" * 80)
+
+        if _idx == TOP_K_HYBRID - 1:
+            break
+
+    print("".center(80, "$"), flush=True)
+    print("".center(80, "$"), flush=True)
+    print("".center(80, "$"), flush=True)
+
+    break
+
 
 # %%
