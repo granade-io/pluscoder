@@ -129,6 +129,9 @@ class Settings(BaseSettings):
     aws_secret_access_key: Optional[str] = Field(None, description="AWS Secret Access Key")
     aws_profile: str = Field("default", description="AWS profile name")
 
+    # PlusCoder API
+    pluscoder_token: Optional[str] = Field(None, description="PlusCoder API token for authentication")
+
     # Git settings
     auto_commits: bool = Field(False, description="Enable/disable automatic Git commits")
     allow_dirty_commits: bool = Field(False, description="Allow commits in a dirty repository")
@@ -162,6 +165,7 @@ class Settings(BaseSettings):
 
     # Debug mode
     debug: CliImplicitFlag[bool] = Field(False, description="Enable debug mode")
+    dev: CliImplicitFlag[bool] = Field(False, description="Enable development mode (skips token validation)")
 
     # Custom prompt commands
     custom_prompt_commands: List[Dict[str, Any]] = Field(
