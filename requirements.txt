@@ -11,7 +11,7 @@ langgraph==0.1.14
 litellm==1.41.6
 pillow==10.4.0
 prompt_toolkit==3.0.47
-pydantic_settings==2.5.2
+pydantic_settings>=2.6.1
 python-dotenv==1.0.1
 rich==13.7.1
 ruff==0.7.1

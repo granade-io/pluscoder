@@ -61,6 +61,7 @@ def build_agents() -> dict[str, AgentConfig]:
             tools=[tool.name for tool in tools.base_tools],
             default_context_files=default_context_files,
             repository_interaction=True,
+            read_only=True,
         ),
         "developer": AgentConfig(
             id=DeveloperAgent.id,
@@ -71,6 +72,7 @@ def build_agents() -> dict[str, AgentConfig]:
             tools=[tool.name for tool in tools.base_tools],
             default_context_files=default_context_files,
             repository_interaction=True,
+            read_only=False,
         ),
         "domain_stakeholder": AgentConfig(
             id=DomainStakeholderAgent.id,
@@ -81,6 +83,7 @@ def build_agents() -> dict[str, AgentConfig]:
             tools=[tool.name for tool in tools.base_tools],
             default_context_files=default_context_files,
             repository_interaction=True,
+            read_only=False,
         ),
         "planning": AgentConfig(
             id=PlanningAgent.id,
@@ -91,6 +94,7 @@ def build_agents() -> dict[str, AgentConfig]:
             tools=[tool.name for tool in tools.base_tools],
             default_context_files=default_context_files,
             repository_interaction=True,
+            read_only=False,
         ),
         "domain_expert": AgentConfig(
             id=DomainExpertAgent.id,
@@ -101,6 +105,7 @@ def build_agents() -> dict[str, AgentConfig]:
             tools=[tool.name for tool in tools.base_tools],
             default_context_files=default_context_files,
             repository_interaction=True,
+            read_only=False,
         ),
     }
 
