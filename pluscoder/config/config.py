@@ -107,7 +107,7 @@ class Settings(BaseSettings):
     model: Optional[str] = Field(None, description="LLM model to use")
     provider: Optional[str] = Field(
         "openai",
-        description="Provider to use. Options: bedrock, openai, anthropic, litellm, null",
+        description="Provider to use. Options: bedrock, openai, anthropic, litellm, vertexai, null",
     )
 
     orchestrator_model: Optional[str] = Field(None, description="LLM model to use for orchestrator")
