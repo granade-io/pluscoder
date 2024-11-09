@@ -107,7 +107,7 @@ class Settings(BaseSettings):
     model: Optional[str] = Field(None, description="LLM model to use")
     provider: Optional[str] = Field(
         "openai",
-        description="Provider to use. Options: bedrock, openai, anthropic, litellm, null",
+        description="Provider to use. Options: bedrock, openai, anthropic, litellm, vertexai, null",
     )
 
     orchestrator_model: Optional[str] = Field(None, description="LLM model to use for orchestrator")
@@ -128,6 +128,9 @@ class Settings(BaseSettings):
     aws_access_key_id: Optional[str] = Field(None, description="AWS Access Key ID")
     aws_secret_access_key: Optional[str] = Field(None, description="AWS Secret Access Key")
     aws_profile: str = Field("default", description="AWS profile name")
+
+    # PlusCoder API
+    pluscoder_token: Optional[str] = Field(None, description="PlusCoder API token for authentication")
 
     # Git settings
     auto_commits: bool = Field(False, description="Enable/disable automatic Git commits")
@@ -162,6 +165,7 @@ class Settings(BaseSettings):
 
     # Debug mode
     debug: CliImplicitFlag[bool] = Field(False, description="Enable debug mode")
+    dev: CliImplicitFlag[bool] = Field(False, description="Enable development mode (skips token validation)")
 
     # Custom prompt commands
     custom_prompt_commands: List[Dict[str, Any]] = Field(

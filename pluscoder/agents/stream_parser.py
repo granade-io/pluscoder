@@ -117,3 +117,14 @@ class XMLStreamParser:
 
     def get_updated_files(self):
         return set(chain(*[sub.updated_files for sub in self.subscribers if sub.updated_files]))
+
+    def pop_updated_files(self):
+        updated_files = set(chain(*[sub.updated_files for sub in self.subscribers if sub.updated_files]))
+        for sub in self.subscribers:
+            sub.updated_files.clear()
+        return updated_files
+
+    def pop_agent_errors(self):
+        errors = self.agent_errors
+        self.agent_errors = []
+        return errors

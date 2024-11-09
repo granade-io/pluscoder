@@ -94,10 +94,10 @@ def filter_messages(
     messages = convert_to_messages(messages)
     filtered: List[BaseMessage] = []
     for msg in messages:
-        if include_tags and any(tag in include_tags for tag in msg.tags):
+        if include_tags and hasattr(msg, "tags") and any(tag in include_tags for tag in msg.tags):
             filtered.append(msg)
 
-        if include_no_tags and not msg.tags:
+        if include_no_tags and (not hasattr(msg, "tags") or not msg.tags):
             filtered.append(msg)
 
         if include_types and msg.type in include_types:

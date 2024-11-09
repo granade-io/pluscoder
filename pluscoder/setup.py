@@ -51,7 +51,7 @@ CONFIG_TEMPLATE = """
 # model: anthropic.claude-3-5-sonnet-20240620-v1:0 # LLM model to use
 # orchestrator_model: null            # Model to use for the orchestrator agent (default: same as model)
 # weak_model: null                    # Weaker LLM model for less complex tasks (default: same as model)
-# provider: null                      # Provider (aws_bedrock, openai, litellm, anthropic, azure)
+# provider: null                      # Provider (aws_bedrock, openai, litellm, anthropic, vertexai)
 # orchestrator_model_provider: null   # Provider for orchestrator model (default: same as provider)
 # weak_model_provider: null           # Provider for weak model (default: same as provider)
 # TODO: remove these keys

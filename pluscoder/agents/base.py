@@ -27,7 +27,6 @@ from pluscoder.io_utils import io
 from pluscoder.logs import file_callback
 from pluscoder.message_utils import HumanMessage
 from pluscoder.message_utils import filter_messages
-from pluscoder.message_utils import get_message_content_str
 from pluscoder.message_utils import tag_messages
 from pluscoder.model import get_llm
 from pluscoder.repo import Repository
@@ -80,6 +79,7 @@ class Agent:
         self.reminder = agent_config.reminder
         self.repository_interaction = agent_config.repository_interaction
         self.stream_parser = stream_parser
+        self.updated_files = set()
 
     def get_context_files(self, state):
         state_files = state.get("context_files") or []
@@ -235,14 +235,15 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         post_process_state = {}
 
         with get_openai_callback() as cb:
-            backoff_time = 3  # Start with 3 seconds
+            backoff_time = 2  # Start with 3 seconds
             while self.current_deflection <= self.max_deflections:
                 try:
                     llm_response = self._invoke_llm_chain(state, interaction_msgs)
                     llm_response.tags = [self.id]
+
                     interaction_msgs.append(llm_response)
                     post_process_state = self.process_agent_response(state, llm_response)
-                    backoff_time = 3  # Reset backoff time on success
+                    backoff_time = 2  # Reset backoff time on success
                     break
                 except AgentException as e:
                     # Disable sysetem reminders when solving specific errors
@@ -257,7 +258,7 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                         self.current_deflection += 1
                         interaction_msgs.append(HumanMessage(content=f"An error ocurred: {e!s}", tags=[self.id]))
                         sleep(backoff_time)
-                        backoff_time *= backoff_time  # Exponential backoff
+                        backoff_time *= 2  # Exponential backoff
                 except Exception as e:
                     # Handles unknown exceptions, maybe caused by llm api or wrong state
                     io.console.print(f"An error ocurred when calling model: {e!s}", style="bold red")
@@ -276,7 +277,7 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                     if self.current_deflection <= self.max_deflections:
                         self.current_deflection += 1
                         sleep(backoff_time)
-                        backoff_time *= backoff_time  # Exponential backoff
+                        backoff_time *= 2  # Exponential backoff
 
         # new_state
         return {
@@ -362,36 +363,37 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         # Restart deflection counter
         self.current_deflection = 0
 
+        # Resets updated files of this call
+        self.updated_files = set()
+
         state_updates = self.graph.invoke(state, {"callbacks": [file_callback]})
 
         io.console.print("")
         return {**state, **state_updates, "messages": state_updates["messages"]}
 
     def process_agent_response(self, state, response: AIMessage):
-        if config.read_only or self.read_only or not self.repository_interaction:
-            # Ignore file editions when readonly
-            return {}
+        # Updated files of the call
+        call_updated_files = set()
+        call_updated_files.update(self.stream_parser.pop_updated_files())
 
-        content_text = get_message_content_str(response)
+        error_messages = self.stream_parser.pop_agent_errors()
 
-        found_blocks = parse_block(content_text)
-        self.post_process(found_blocks)
-
-        return {}
-
-    def post_process(self, file_blocks):
-        # Process the blocks found in the response to replace/create files in the project
-        updated_files = self.stream_parser.get_updated_files()
-        error_messages = self.stream_parser.agent_errors
+        # check if last message has tool calls to ignore lint/test when files were edited during tool call
 
         if error_messages:
+            updated_files_msg = (
+                f"You successfully updated these files: {', '.join(call_updated_files)}, but there are some issues.\n"
+                if call_updated_files
+                else ""
+            )
             raise AgentException(
                 "Some errors occurred when executing your actions"
                 + "\n".join(error_messages)
-                + "\nPlease review all errors and solve the present issues if you can"
+                + "\nPlease review all errors and solve the present issues if you can. Maybe you will need to read files again to understand what is missing or what happened."
+                + updated_files_msg
             )
 
-        if updated_files:
+        if call_updated_files:
             # Run tests and linting if enabled
             lint_error = self.repo.run_lint()
             test_error = self.repo.run_test()
@@ -404,12 +406,17 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                     error_message += f"Tests: {test_error}\n"
                 raise AgentException(error_message)
 
-        if updated_files:
+        # Updated files during entire agent execution
+        self.updated_files.update(call_updated_files)
+        if self.updated_files:
             try:
+                io.event(f"> These files were successfully updated: {', '.join(self.updated_files)}")
                 # Try to get current event loop
                 loop = asyncio.get_running_loop()
                 # If exists, run in current loop
-                loop.create_task(event_emitter.emit("files_updated", updated_files=updated_files))  # noqa: RUF006
+                loop.create_task(event_emitter.emit("files_updated", updated_files=self.updated_files))  # noqa: RUF006
+                self.updated_files = []
             except RuntimeError:
                 # If no loop exists, create new one
-                asyncio.run(event_emitter.emit("files_updated", updated_files=updated_files))
+                asyncio.run(event_emitter.emit("files_updated", updated_files=self.updated_files))
+        return {}
