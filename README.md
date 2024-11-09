@@ -11,7 +11,7 @@ PlusCoder is an AI-assisted software development tool designed to enhance and st
 5. Auto-commit on editions
 6. Cost and token tracking for LLM interactions
 7. Flexible configuration system supporting command-line arguments, environment variables, and default values
-8. Support for multiple LLM models (LLMLite, OpenAI, AWS Bedrock, Anthropic)
+8. Support for multiple LLM models (LLMLite, OpenAI, AWS Bedrock, Anthropic, VertexAI)
 9. Enhanced user interaction with rich console output and auto-completion
 10. Real-time task execution progress display
 11. File downloading and context addition during agent interactions
@@ -19,15 +19,20 @@ PlusCoder is an AI-assisted software development tool designed to enhance and st
 
 ## Requirements
 - Requires python 3.12 or Docker
-- Credentials for AWS Bedrock, Anthropic, OpenAI or other providers throught LLMLite
+- Credentials for AWS Bedrock, Anthropic, OpenAI, VertexAI or other providers through LLMLite
 
 ## Usage:
+
+First, ensure you have set your PlusCoder API token:
+```bash
+export PLUSCODER_TOKEN=your_token_here
+```
 
 **Docker**:
 
 ```bash
-# Passing ANTHROPIC_API_KEY in --env or having ANTHROPIC_API_KEY in the environment vars
-docker run --env-file <(env) -v $(pwd):/app -it --rm registry.gitlab.com/codematos/pluscoder:latest --auto_commits f
+# Pass required tokens through environment
+docker run --env PLUSCODER_TOKEN --env ANTHROPIC_API_KEY -v $(pwd):/app -it --rm registry.gitlab.com/codematos/pluscoder:latest --auto_commits f
 ```
 
 **Python**:
@@ -36,7 +41,7 @@ docker run --env-file <(env) -v $(pwd):/app -it --rm registry.gitlab.com/codemat
    # Install pluscoder
    pip install --no-cache git+https://gitlab.com/codematos/pluscoder.git
 
-   # Run, pluscoder will detect credentials automatically
+   # Run with PLUSCODER_TOKEN set in environment
    pluscoder --auto_commits f --model claude-3-5-sonnet-20240620
    ```
 
@@ -99,11 +104,10 @@ PlusCoder can be configured using several methods (using this priotity):
 4. A `.pluscoder-config.yml` file for persistent configuration
 5. Environment variables
 
-ANY option below can be configured with ANY prefered method.
-
 Display current configuration settings using command `/show_config` or cmd line arg `--show_config`.
 
 ### Application Behavior
+- `PLUSCODER_TOKEN`: Your PlusCoder API authentication token
 - `READ_ONLY`: Enable/disable read-only mode to avoid file editions (default: `False`)
 - `STREAMING`: Enable/disable LLM streaming (default: `True`)
 - `USER_FEEDBACK`: Enable/disable user feedback (default: `True`)
@@ -124,12 +128,12 @@ Display current configuration settings using command `/show_config` or cmd line 
 ### Models and Providers
 
 *Models*:
-- `MODEL`: LLM model to use (default: `"anthropic.claude-3-5-sonnet-20240620-v1:0"`)
+- `MODEL`: LLM model to use (default: `None`)
 - `ORCHESTRATOR_MODEL`: LLM model to use for orchestrator (default: same as `MODEL`)
 - `WEAK_MODEL`: Weaker LLM model to use for less complex tasks (default: same as `MODEL`). (CURRENLY NOT BEING USED)
 
 *Provider*:
-- `PROVIDER`: Provider to use. If `None`, provider will be selected based on available credentaial variables. Options: aws_bedrock, openai, litellm, anthropic (default: `None`)
+- `PROVIDER`: Provider to use. If `None`, provider will be selected based on available credentaial variables. Options: aws_bedrock, openai, litellm, anthropic, vertexai (default: `None`)
 - `ORCHESTRATOR_MODEL_PROVIDER`: Provider to use for orchestrator model (default: same as `PROVIDER`)
 - `WEAK_MODEL_PROVIDER`: Provider to use for weak model (default: same as `PROVIDER`). (CURRENLY NOT BEING USED)
 

@@ -321,20 +321,9 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
             if tool_call["name"] in [tool.name for tool in self.extraction_tools]:
                 tool_data[tool_call["name"]] = tool_call["args"]
 
-        # add pending errors after tool
-        errors_messages = []
-        if self.stream_parser.agent_errors:
-            agent_errors = self.stream_parser.pop_agent_errors()
-            error_message = (
-                "Also, I have these errors to solve"
-                + "\n\n".join(agent_errors)
-                + ". Review files carefully and solve them"
-            )
-            errors_messages = [HumanMessage(content=error_message, tags=[self.id])]
         return {
             **state,
             "tool_data": tool_data,
-            "messages": errors_messages,
             # "context_files": state["context_files"] + loaded_files,
         }
 

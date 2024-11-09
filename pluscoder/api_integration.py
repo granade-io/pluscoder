@@ -18,8 +18,7 @@ async def verify_token() -> Dict:
                 headers={"Authorization": f"Token {config.pluscoder_token}"},
             )
             if response.status_code != 200:
-                raise TokenValidationException(response.json().get("detail", "Unknown error"))
-
+                raise TokenValidationException(response.json())
             data = response.json()
             if not data.get("valid"):
                 raise TokenValidationException("Invalid token")
