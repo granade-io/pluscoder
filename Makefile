@@ -147,6 +147,15 @@ clean:
 	rm -rf dist
 	rm -rf coverage.xml
 
+.PHONY: clean-remote-branches ## Remove stale remote-tracking branches and references
+clean-remote-branches:
+	@echo [$(DATETIME)] $@
+	@echo "Fetching and removing stale remote branch references..."
+	@git fetch --prune
+	@git remote prune origin
+	@echo "Removing local branches that track deleted remote branches..."
+	@git branch -vv | grep ': gone]' | awk '{print $$1}' | xargs -r git branch -D
+
 .PHONY: docker-rmi  ## Remove the docker image (force)
 docker-rmi: .docker
 	@echo [$(DATETIME)] $@

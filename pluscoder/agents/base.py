@@ -410,12 +410,13 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         self.updated_files.update(call_updated_files)
         if self.updated_files:
             try:
-                io.event(f"> These files were successfully updated: {', '.join(self.updated_files)}")
+                if len(self.updated_files) > 1:
+                    io.event(f"> These files were successfully updated: {', '.join(self.updated_files)}")
                 # Try to get current event loop
                 loop = asyncio.get_running_loop()
                 # If exists, run in current loop
                 loop.create_task(event_emitter.emit("files_updated", updated_files=self.updated_files))  # noqa: RUF006
-                self.updated_files = []
+                self.updated_files = set()
             except RuntimeError:
                 # If no loop exists, create new one
                 asyncio.run(event_emitter.emit("files_updated", updated_files=self.updated_files))

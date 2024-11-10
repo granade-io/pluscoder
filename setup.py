@@ -9,7 +9,7 @@ with open("requirements.txt") as f:
 
 setup(
     name="plus-coder",
-    version="0.1.0",
+    version="2.3.0",
     install_requires=required,
     # extras_require={
     #     "dev": dev_requirements,
