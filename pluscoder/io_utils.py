@@ -60,16 +60,16 @@ class CommandCompleter(Completer):
         text = document.text_before_cursor
         if text.startswith("/"):
             words = text.split()
-            if len(words) == 1:
+            if len(words) == 1 and not text.endswith(" "):
                 # Complete command names
                 for command in self.commands:
                     if command["name"].startswith(text):
                         yield Completion(
                             command["name"], start_position=-len(text), display_meta=command["description"]
                         )
-            elif len(words) == 2 and words[0] == "/custom":
+            elif len(words) == 2 and words[0] == "/custom" or len(words) == 1 and text.endswith(" "):
                 # Complete custom prompt names
-                prompt_name = words[1]
+                prompt_name = words[1] if len(words) == 2 else ""
                 for prompt in config.custom_prompt_commands:
                     if prompt["prompt_name"].startswith(prompt_name) and prompt_name != prompt["prompt_name"]:
                         yield Completion(

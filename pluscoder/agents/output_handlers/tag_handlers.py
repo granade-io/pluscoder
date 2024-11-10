@@ -1,5 +1,6 @@
 import difflib
 import re
+from pathlib import Path
 from typing import Optional
 from typing import Set
 
@@ -54,8 +55,17 @@ class ConsoleDisplayHandler(TagHandler):
                 # Convert diff to a single string
                 diff_text = "\n".join(diff)
 
-        elif action in ["file_create", "file_replace"]:
+        elif action == "file_create":
             diff_text = content
+        elif action == "file_replace":
+            filepath = Path(file)
+            if filepath.exists():
+                old_content = filepath.read_text().splitlines()
+                new_content = content.splitlines()
+                diff = difflib.unified_diff(old_content, new_content, fromfile=file, tofile=file, lineterm="")
+                diff_text = "\n".join(diff)
+            else:
+                diff_text = content
         # Any errors encountered will be handler and reported by another handler
 
         if diff_text:

@@ -1,10 +1,53 @@
+import os
 import re
+from pathlib import Path
 from typing import Dict
 from typing import List
+from typing import NamedTuple
 from typing import Tuple
 from typing import Union
 
 CONFIG_FILEPATH = ".pluscoder-config.yml"
+
+
+class ConfigPaths(NamedTuple):
+    local: str  # Repository local config
+    global_config: str  # User global config
+
+
+def get_config_paths() -> ConfigPaths:
+    """Get all possible configuration file paths for pluscoder.
+
+    Returns:
+        ConfigPaths: Named tuple containing paths for local and global configs
+    """
+    local = CONFIG_FILEPATH
+    home = str(Path.home())
+
+    if os.name == "nt":  # Windows
+        global_config = os.path.join(home, "AppData", "Local", "pluscoder", "config.yml")
+    else:  # Unix-like
+        global_config = os.path.join(home, ".config", "pluscoder", "config.yml")
+
+    return ConfigPaths(local, global_config)
+
+
+def get_local_config() -> str:
+    """Get local repository config file path.
+
+    Returns:
+        str: Path to local config file
+    """
+    return get_config_paths().local
+
+
+def get_global_config() -> str:
+    """Get global user config file path.
+
+    Returns:
+        str: Path to global config file
+    """
+    return get_config_paths().global_config
 
 
 def read_yaml_file(file_path: str) -> List[str]:

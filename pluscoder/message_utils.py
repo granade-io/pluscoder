@@ -114,7 +114,7 @@ def delete_messages(
     messages = convert_to_messages(messages)
     messages_to_delete: List[BaseMessage] = []
     for msg in messages:
-        if include_tags and any(tag in include_tags for tag in msg.tags):
+        if include_tags and hasattr(msg, "tags") and any(tag in include_tags for tag in msg.tags):
             messages_to_delete.append(RemoveMessage(id=msg.id))
         if include_ids and msg.id in include_ids:
             messages_to_delete.append(RemoveMessage(id=msg.id))

@@ -17,6 +17,8 @@ from pydantic_settings import YamlConfigSettingsSource
 from rich.console import Console
 from yaml.scanner import ScannerError
 
+from pluscoder.config.utils import get_global_config
+
 
 def validate_custom_agents(custom_agents: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     console = Console()
@@ -105,6 +107,7 @@ class Settings(BaseSettings):
 
     # Model and API settings
     model: Optional[str] = Field(None, description="LLM model to use")
+    repository: Optional[str] = Field(None, description="Git repository URL to clone and process")
     provider: Optional[str] = Field(
         "openai",
         description="Provider to use. Options: bedrock, openai, anthropic, litellm, vertexai, null",
@@ -193,10 +196,12 @@ class Settings(BaseSettings):
         dotenv_settings: PydanticBaseSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> Tuple[PydanticBaseSettingsSource, ...]:
+        global_config = YamlConfigSettingsSource(settings_cls, yaml_file=get_global_config())
         if not init_settings.init_kwargs.get("ignore_yaml", False):
             yaml_config = YamlConfigSettingsSource(settings_cls)
-            return init_settings, dotenv_settings, yaml_config, env_settings
-        return init_settings, dotenv_settings, env_settings
+            # Priority: init_settings > dotenv > project yaml > env > global yaml
+            return init_settings, dotenv_settings, yaml_config, env_settings, global_config
+        return init_settings, dotenv_settings, env_settings, global_config
 
     def update(self, persist: bool = False, **kwargs):
         for key, value in kwargs.items():
