@@ -90,7 +90,7 @@ class Agent:
 
     def get_context_files_panel(self, files):
         if files:
-            files_context = f"{" ".join(files[0:5])}{f' (+{len(files) - 5} files)' if len(files) > 5 else ''}"
+            files_context = " ".join(files[0:5]) + (f" (+{len(files) - 5} files)" if len(files) > 5 else "")
         else:
             files_context = "<No files available>"
         return f"> Files context: {files_context}"

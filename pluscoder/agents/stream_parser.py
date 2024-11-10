@@ -77,7 +77,7 @@ class XMLStreamParser:
                 # Parse the tag content
                 try:
                     # Wrap content to make it a well-formed XML
-                    wrapped_content = f'<root>{tag_content.split('>', 1)[0] + '>' + f'</{tag}>'}</root>'
+                    wrapped_content = f"<root>{tag_content.split('>', 1)[0] + '>' + f'</{tag}>'}</root>"
                     root = ET.fromstring(wrapped_content)  # noqa: S314
                     element = root.find(tag)
                     if element is None:

@@ -15,8 +15,6 @@ from prompt_toolkit.key_binding import KeyBindings
 from rich.console import Console
 from rich.console import ConsoleRenderable
 from rich.console import Group
-from rich.console import RichCast
-from rich.live import Live
 from rich.progress import Progress
 from rich.prompt import Confirm
 from rich.rule import Rule
@@ -167,10 +165,10 @@ class CustomProgress(Progress):
             self.chunks.append(chunk)
         self.style = style
 
-    def get_stream_renderable(self) -> ConsoleRenderable | RichCast | str:
+    def get_stream_renderable(self) -> ConsoleRenderable:
         return Text("".join(self.chunks), style=self.style)
 
-    def get_renderable(self) -> ConsoleRenderable | RichCast | str:
+    def get_renderable(self) -> ConsoleRenderable:
         return Group(self.get_stream_renderable(), Rule(), *self.get_renderables())
 
 
@@ -287,7 +285,7 @@ class IO:
         with open(self.DEBUG_FILE, "a") as f:
             f.write(f"{indented_content}\n")
 
-    def set_progress(self, progress: Progress | Live) -> None:
+    def set_progress(self, progress: Progress) -> None:
         self.progress = progress
 
     def stream(self, chunk: str, style=None) -> None:

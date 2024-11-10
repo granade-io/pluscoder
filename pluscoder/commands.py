@@ -278,7 +278,7 @@ def create_agent(state: OrchestrationState, *args):
     try:
         new_agent = generate_agent(description, repository_interaction)
         io.console.print(Rule("Generated Agent"))
-        io.console.print(f"[bold green]{new_agent["name"]}[/bold green]: {new_agent["description"]}\n")
+        io.console.print(f"[bold green]{new_agent['name']}[/bold green]: {new_agent['description']}\n")
         io.console.print(new_agent["prompt"], style="bold green")
         io.console.print(Rule())
         if not io.confirm("Do you to proceed with this agent?"):
@@ -299,7 +299,7 @@ def create_agent(state: OrchestrationState, *args):
             new_agent["name"] = name.lower().replace(" ", "")
 
         # Adds agent to config
-        io.event(f"> Agent '{new_agent["name"]}' saved to .pluscoder-config.yml")
+        io.event(f"> Agent '{new_agent['name']}' saved to .pluscoder-config.yml")
         append_custom_agent_to_config(new_agent)
 
         # Reloads config to apply changes

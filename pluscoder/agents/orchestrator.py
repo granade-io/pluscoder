@@ -373,9 +373,9 @@ You *must follow* following rules when suggesting a task list:
         resources_instruction = ""
 
         if images:
-            images_instruction += f"\n*Reference images:* {"".join(images)}"
+            images_instruction += f"\n*Reference images:* {''.join(images)}"
         if other_resources:
-            resources_instruction += f"\n*Other resources:* {"".join(other_resources)}"
+            resources_instruction += f"\n*Other resources:* {''.join(other_resources)}"
 
         return f"""\
 You are requested to solve a specific task related to the objective: {general_objective}.

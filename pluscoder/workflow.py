@@ -370,7 +370,7 @@ async def _orchestrator_agent_node(
     if OrchestratorAgent.validate_current_task_completed(validation_response) or (
         # Manual validation when max reflections are reached
         global_state["current_agent_deflections"] >= global_state["max_agent_deflections"]
-        and io.confirm(f"Was the task `{task["objective"]}` completed by the agent?")
+        and io.confirm("Was the task `" + task["objective"] + "` completed by the agent?")
     ):
         # Task has been completed. Move to next task
 
@@ -393,7 +393,7 @@ async def _orchestrator_agent_node(
             # Generate a final summarized answer to the user
             task_results = "\n---\n".join(
                 [
-                    f"Task: {task["objective"]}\nDetails: {task["details"]}\nResponse: {task["response"]}"
+                    f"Task: {task['objective']}\nDetails: {task['details']}\nResponse: {task['response']}"
                     for task in OrchestratorAgent.get_task_list(state_update)
                 ]
             )

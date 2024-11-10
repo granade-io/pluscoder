@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import LiteralString
+from typing import Optional
 
 from langchain_anthropic import ChatAnthropic
 from langchain_aws import ChatBedrock
@@ -103,12 +103,12 @@ def get_model_token_info(model_name: str) -> dict:
 
 
 @lru_cache
-def get_default_model_for_provider(provider_name: str) -> str | None:
+def get_default_model_for_provider(provider_name: str) -> Optional[str]:
     default_models = _get_provider_model()
     return default_models.get(provider_name, None)
 
 
-def get_model_validation_message(provider) -> None | LiteralString:
+def get_model_validation_message(provider) -> Optional[str]:
     # Check AWS Bedrock
     if provider == "aws_bedrock" and not config.aws_access_key_id:
         return "AWS Bedrock provider defined but AWS access key ID is not configured or empty."

@@ -138,7 +138,7 @@ def read_files(
     if errors:
         result += "\n\nErrors:\n" + "\n".join(errors)
 
-    io.event(f"> Added files: {", ".join(loaded_files)}")
+    io.event(f"> Added files: {', '.join(loaded_files)}")
 
     return "Here are the files content:\n\n" + result.strip()
 
