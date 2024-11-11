@@ -65,7 +65,8 @@ You have the following capabilities:
 
         read_fragment = """
         <read_files>
-        1. You can read any file of the repository as you please
+        1. You can read any file of the repository as you please using read_file tool (not using pc_action)
+        1. You can read files from git urls using read_file_from_url tool (not using pc_action)
         2. Review the overview, guidelines and repository files to determine which files to read
         3. Read files only once if you already read it
         4. Only re-read files if them were updated and your knowledge of that file is stale
