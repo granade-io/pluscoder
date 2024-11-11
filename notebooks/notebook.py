@@ -30,10 +30,12 @@ import numpy as np
 import numpy.typing as npt
 import tiktoken
 from git import Repo
+from google.cloud import discoveryengine_v1 as discoveryengine
 from pydantic import BaseModel
 from pydantic import Field
 from rich.console import Console
 from rich.syntax import Syntax
+from sklearn.metrics import pairwise_distances
 from sklearn.metrics.pairwise import cosine_similarity
 from tqdm.auto import tqdm
 
@@ -53,11 +55,12 @@ logger = logging.getLogger(__name__)
 
 settings = config
 
-_COHERE_API_KEY = "YzlmUKBwH9JJPjCFxJ0auJcSjzQgYDp3tBediqdT"
-COHERE_API_KEY = os.getenv(key="COHERE_API_KEY", default=_COHERE_API_KEY)
 
 co: cohere.AsyncClient = cohere.AsyncClient(
-    api_key=COHERE_API_KEY,
+    api_key=os.getenv(
+        key="COHERE_API_KEY",
+        default=getattr(settings, "COHERE_API_KEY", None) or "",
+    ),
 )
 
 # constants for error messages
@@ -65,36 +68,32 @@ _UNEXPECTED_EMBEDDINGS_FORMAT_ERROR_MESSAGE = "Unexpected embeddings format"
 _COHERE_EMBEDDING_FAILED_ERROR_MESSAGE = "Cohere embedding failed with error: %s"
 _QUERY_MUST_BE_STRING_ERROR_MESSAGE = "Query must be a string"
 
-#             model                     dimensions
-#       embed-english-v3.0                 1024
-#       embed-multilingual-v3.0            1024
-#       embed-english-light-v3.0            384
-#       embed-multilingual-light-v3.0       384
-#       embed-english-v2.0                 4096
-#       embed-english-light-v2.0           1024
-#       embed-multilingual-v2.0             768
+#             model                     dimensions      max tokens (context length)        modality                             similarity metric
+#       embed-english-v3.0                 1024                  512                     Text, Images       Cosine Similarity, Dot Product Similarity, Euclidean Distance
+#       embed-multilingual-v3.0            1024                  512                     Text, Images       Cosine Similarity, Dot Product Similarity, Euclidean Distance
+#       embed-english-light-v3.0            384                  512                     Text, Images       Cosine Similarity, Dot Product Similarity, Euclidean Distance
+#       embed-multilingual-light-v3.0       384                  512                     Text, Images       Cosine Similarity, Dot Product Similarity, Euclidean Distance
 
-#         embedding types               dimensions
-#             float                        1024
-#             int8                         1024
-#             uint8                        1024
-#             binary                        128
-#             ubinary                       128
+#         embedding types               dimensions     memory saving                 description
+#             float                        1024             1x              float32 embeddings with 4 bytes per dimension
+#             int8                         1024             4x              signed int8 embeddings in the range [-128, 127]. 1 byte per dimension
+#             uint8                        1024             4x              unsigned int8 embeddings in the range [0, 255]. 1 byte per dimension
+#             binary                        128             32x             one bit per dimension. 8 bits are packaged to one int8 byte. So a 1024 dimensional embedding will become 128 int8-values. Embeddings must be compared with hamming distance.
+#             ubinary                       128             32x             one bit per dimension. 8 bits are packaged to one uint8 byte. So a 1024 dimensional embedding will become 128 uint8-values. Embeddings must be compared with hamming distance.
 
-EMBEDDING_MODEL: (
-    Literal[
+
+EmbedModel = (
+    Any
+    | Literal[
         "embed-english-v3.0",
         "embed-multilingual-v3.0",
         "embed-english-light-v3.0",
         "embed-multilingual-light-v3.0",
-        "embed-english-v2.0",
-        "embed-english-light-v2.0",
-        "embed-multilingual-v2.0",
     ]
-    | Any
-) = "embed-english-v3.0"
+)
 
-EMBEDDING_TYPE: Literal["ubinary"] = "ubinary"
+EMBEDDING_MODEL: EmbedModel = "embed-english-v3.0"
+EMBEDDING_TYPE: cohere.types.embedding_type.EmbeddingType = "binary"  # "ubinary"
 
 CHUNK_SIZE: Literal[512] = 512
 CHUNK_OVERLAP: Literal[64] = 64
@@ -161,16 +160,7 @@ documents: list[str] = [
 
 async def _embed(
     texts: str | list[str],
-    model: Literal[
-        "embed-english-v3.0",
-        "embed-multilingual-v3.0",
-        "embed-english-light-v3.0",
-        "embed-multilingual-light-v3.0",
-        "embed-english-v2.0",
-        "embed-english-light-v2.0",
-        "embed-multilingual-v2.0",
-    ]
-    | Any,
+    model: EmbedModel,
     input_type: cohere.types.embed_input_type.EmbedInputType,
     embedding_types: list[cohere.types.embedding_type.EmbeddingType],
     truncate: cohere.types.embed_request_truncate.EmbedRequestTruncate | None = None,
@@ -198,16 +188,7 @@ async def _embed(
 
 async def _generate_embedding(
     texts: str | list[str],
-    model: Literal[
-        "embed-english-v3.0",
-        "embed-multilingual-v3.0",
-        "embed-english-light-v3.0",
-        "embed-multilingual-light-v3.0",
-        "embed-english-v2.0",
-        "embed-english-light-v2.0",
-        "embed-multilingual-v2.0",
-    ]
-    | Any,
+    model: EmbedModel,
     input_type: cohere.types.embed_input_type.EmbedInputType,
     embedding_type: cohere.types.embedding_type.EmbeddingType,
     truncate: cohere.types.embed_request_truncate.EmbedRequestTruncate | None = None,
@@ -233,16 +214,7 @@ async def _generate_embedding(
 
 async def generate_query_embedding(
     query: str | list[str],
-    model: Literal[
-        "embed-english-v3.0",
-        "embed-multilingual-v3.0",
-        "embed-english-light-v3.0",
-        "embed-multilingual-light-v3.0",
-        "embed-english-v2.0",
-        "embed-english-light-v2.0",
-        "embed-multilingual-v2.0",
-    ]
-    | Any,
+    model: EmbedModel,
     embedding_type: cohere.types.embedding_type.EmbeddingType,
     truncate: cohere.types.embed_request_truncate.EmbedRequestTruncate | None = None,
 ) -> np.ndarray:
@@ -260,16 +232,7 @@ async def generate_query_embedding(
 
 async def generate_document_embeddings(
     documents: list[str],
-    model: Literal[
-        "embed-english-v3.0",
-        "embed-multilingual-v3.0",
-        "embed-english-light-v3.0",
-        "embed-multilingual-light-v3.0",
-        "embed-english-v2.0",
-        "embed-english-light-v2.0",
-        "embed-multilingual-v2.0",
-    ]
-    | Any,
+    model: EmbedModel,
     embedding_type: cohere.types.embedding_type.EmbeddingType,
     truncate: cohere.types.embed_request_truncate.EmbedRequestTruncate | None = None,
 ) -> np.ndarray:
@@ -295,16 +258,27 @@ class VectorRetrievalResult(NamedTuple):
     """The indices of the top-k most similar items in the index to the query."""
 
 
+def hamming_similarity(
+    X: npt.NDArray[Any],  # noqa: N803,
+    Y: npt.NDArray[Any] | None = None,  # noqa: N803
+    n_jobs: int | None = None,
+) -> npt.NDArray[Any]:
+    """Compute the Hamming similarity matrix from a vector array X and optional Y."""
+    # REF: https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.hamming.html
+    return 1 - pairwise_distances(X=X, Y=Y, metric="hamming", n_jobs=n_jobs, force_all_finite=True)
+
+
+# NOTE: Use "hamming" for packed binary embeddings (e.g. "ubinary" or "binary") and "cosine" for non-packed embeddings (e.g. "float", "int8", "uint8")
 async def vector_retreival(
     query: str,
     top_k: int = 5,
-    vector_index: npt.NDArray[np.uint8] | None = None,  # pyright: ignore[reportArgumentType]
+    vector_index: npt.NDArray[Any] | None = None,  # np.uint8
     embedding_type: cohere.types.embedding_type.EmbeddingType = "ubinary",
     *,
     verbose: bool = True,
 ) -> VectorRetrievalResult:
     """
-    Retrieve the top-k most similar items from an index based on a query, using cosine similarity.
+    Retrieve the top-k most similar items from an index based on a query, using a similarity metric.
 
     Args:
         query: The query string to search for.
@@ -322,7 +296,7 @@ async def vector_retreival(
     # query embeddings shape : (m, d) where m = 1
     # index embeddings shape : (n, d)
 
-    # the cosine similarity scores between the query and each item in the index
+    # the similarity scores between the query and each item in the index
     # similarity scores (m, n) where m = 1
 
     # indices of the top-k most similar items in the index to the query
@@ -333,19 +307,24 @@ async def vector_retreival(
         logger.error(_QUERY_MUST_BE_STRING_ERROR_MESSAGE)
         raise ValueError(_QUERY_MUST_BE_STRING_ERROR_MESSAGE)
 
+    similarity_metric: Literal["cosine", "hamming"] = "hamming" if embedding_type in {"binary", "ubinary"} else "cosine"
+
+    similarity_function = {
+        "cosine": functools.partial(cosine_similarity, dense_output=True),
+        "hamming": functools.partial(hamming_similarity, n_jobs=-1),
+    }[similarity_metric]
+
     query_embedding = await generate_query_embedding(
         query=query,
         model=EMBEDDING_MODEL,
         embedding_type=embedding_type,
     )
 
-    similarity_scores = cosine_similarity(
-        X=query_embedding,
-        Y=vector_index,
-        dense_output=True,
-    )
+    similarity_scores = similarity_function(X=query_embedding, Y=vector_index)
 
     if verbose:
+        print(f" similarity_metric: {similarity_metric} ".center(80, "*"))
+
         print()
         print()
         print("BEFORE: similarity_scores".center(80, "*"))
@@ -690,8 +669,11 @@ if 1:
 else:
     _tracked_files: list[str] = get_tracked_files()
 tracked_files: list[str] = [get_root_path().joinpath(path).as_posix() for path in _tracked_files]
-# print_tree(files=[Path(path) for path in tracked_files])
 
+# NOTE: IGNORE NOTEBOOKS DIRECTORY OR FILES FOR NOW
+tracked_files = [path for path in tracked_files if "notebooks" not in path]
+
+# print_tree(files=[Path(path) for path in tracked_files])
 
 # %%
 
@@ -1279,23 +1261,33 @@ for kwe_result in keyword_extraction_result_list:
 
 # %% [markdown] ## Dense Vector Search
 
-BATCH_SIZE = 32
-BATCH_SIZE = 64
-BATCH_SIZE = 128
+
+print()
+print()
+print()
+print()
+print()
+print()
+pprint("".center(80, "@"), flush=True)
+pprint("".center(80, "@"), flush=True)
+pprint("".center(80, "@"), flush=True)
+pprint("".center(80, "@"), flush=True)
+pprint("".center(80, "@"), flush=True)
+pprint("".center(80, "@"), flush=True)
+pprint("".center(80, "@"), flush=True)
+print()
+print()
+print()
+print()
+print()
+print()
+
+BATCH_SIZE = 92
 
 
 async def batch_generate_document_embeddings(
     documents: list[str],
-    model: Any
-    | Literal[
-        "embed-english-v3.0",
-        "embed-multilingual-v3.0",
-        "embed-english-light-v3.0",
-        "embed-multilingual-light-v3.0",
-        "embed-english-v2.0",
-        "embed-english-light-v2.0",
-        "embed-multilingual-v2.0",
-    ],
+    model: EmbedModel,
     embedding_type: cohere.types.embedding_type.EmbeddingType,
     truncate: cohere.types.embed_request_truncate.EmbedRequestTruncate | None = None,
     *,
@@ -1436,6 +1428,27 @@ for kwe_result in keyword_extraction_result_list:
     print("".center(80, "$"), flush=True)
     print("".center(80, "$"), flush=True)
     print("".center(80, "$"), flush=True)
+
+
+print()
+print()
+print()
+print()
+print()
+print()
+pprint("".center(80, "@"), flush=True)
+pprint("".center(80, "@"), flush=True)
+pprint("".center(80, "@"), flush=True)
+pprint("".center(80, "@"), flush=True)
+pprint("".center(80, "@"), flush=True)
+pprint("".center(80, "@"), flush=True)
+pprint("".center(80, "@"), flush=True)
+print()
+print()
+print()
+print()
+print()
+print()
 
 # %% [markdown] ## Hybrid Search
 
@@ -1585,5 +1598,59 @@ for kwe_result in keyword_extraction_result_list:
 
     break
 
+
+# %%
+
+# REF: https://github.com/cohere-ai/DiskVectorIndex
+# REF: https://github.com/togethercomputer/together-cookbook/blob/9c7ab7cf281eed884e5689e8ec88e7ae3a00f724/Open_Contextual_RAG.ipynb
+
+# %%
+
+
+settings = config
+
+project_id = os.getenv(
+    key="PROJECT_ID",
+    default=getattr(settings, "PROJECT_ID", None) or "",
+)
+
+
+client = discoveryengine.RankServiceClient()
+
+# The full resource name of the ranking config.
+# Format: projects/{project_id}/locations/{location}/rankingConfigs/default_ranking_config
+ranking_config = client.ranking_config_path(
+    project=project_id,
+    location="global",
+    ranking_config="default_ranking_config",
+)
+request = discoveryengine.RankRequest(
+    ranking_config=ranking_config,
+    model="semantic-ranker-512@latest",
+    top_n=10,
+    query="What is Google Gemini?",
+    records=[
+        discoveryengine.RankingRecord(
+            id="1",
+            title="Gemini",
+            content="The Gemini zodiac symbol often depicts two figures standing side-by-side.",
+        ),
+        discoveryengine.RankingRecord(
+            id="2",
+            title="Gemini",
+            content="Gemini is a cutting edge large language model created by Google.",
+        ),
+        discoveryengine.RankingRecord(
+            id="3",
+            title="Gemini Constellation",
+            content="Gemini is a constellation that can be seen in the night sky.",
+        ),
+    ],
+)
+
+response = client.rank(request=request)
+
+# Handle the response
+print(response)
 
 # %%
