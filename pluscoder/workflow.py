@@ -12,9 +12,7 @@ from rich.rule import Rule
 from pluscoder import tools
 from pluscoder.agents.base import Agent
 from pluscoder.agents.core import DeveloperAgent
-from pluscoder.agents.core import DomainExpertAgent
 from pluscoder.agents.core import DomainStakeholderAgent
-from pluscoder.agents.core import PlanningAgent
 from pluscoder.agents.event.config import event_emitter
 from pluscoder.agents.orchestrator import OrchestratorAgent
 from pluscoder.agents.output_handlers.action_handlers import ActionProcessHandler
@@ -79,28 +77,6 @@ def build_agents() -> dict[str, AgentConfig]:
             name="Domain Stakeholder",
             description=DomainStakeholderAgent.description,
             prompt=DomainStakeholderAgent.specialization_prompt,
-            reminder="",
-            tools=[tool.name for tool in tools.base_tools],
-            default_context_files=default_context_files,
-            repository_interaction=True,
-            read_only=False,
-        ),
-        "planning": AgentConfig(
-            id=PlanningAgent.id,
-            name="Planning",
-            description=PlanningAgent.description,
-            prompt=PlanningAgent.specialization_prompt,
-            reminder="",
-            tools=[tool.name for tool in tools.base_tools],
-            default_context_files=default_context_files,
-            repository_interaction=True,
-            read_only=False,
-        ),
-        "domain_expert": AgentConfig(
-            id=DomainExpertAgent.id,
-            name="Domain Expert",
-            description=DomainExpertAgent.description,
-            prompt=DomainExpertAgent.specialization_prompt,
             reminder="",
             tools=[tool.name for tool in tools.base_tools],
             default_context_files=default_context_files,
