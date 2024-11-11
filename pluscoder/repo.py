@@ -2,7 +2,6 @@ import os
 import pprint
 import re
 import subprocess
-import tempfile
 import traceback
 from typing import List
 from typing import Optional
@@ -53,7 +52,7 @@ class Repository:
         return any(re.match(pattern, url) for pattern in patterns)
 
     def clone_repository(self, url: str) -> str:
-        """Clone a git repository from URL into a temporary directory.
+        """Clone a git repository from URL into a new directory inside current directory.
         Args:
             url: Git repository URL
         Returns:
@@ -61,14 +60,15 @@ class Repository:
         Raises:
             GitCommandError: If cloning fails"""
         try:
-            # Create temporary directory
-            temp_dir = tempfile.mkdtemp(prefix="pluscoder_")
+            # Extract repository name from URL removing .git extension
+            repo_name = url.rsplit("/", 1)[-1].replace(".git", "")
+            target_dir = os.path.join(os.getcwd(), repo_name)
 
             # Clone repository
             if self.io:
                 self.io.event(f"> Cloning repository from {url}...")
 
-            repo = Repo.clone_from(url, temp_dir)
+            repo = Repo.clone_from(url, target_dir)
 
             if config.source_branch:
                 if self.io:
@@ -76,9 +76,9 @@ class Repository:
                 repo.git.checkout(config.source_branch)
 
             if self.io:
-                self.io.event(f"> Repository cloned to {temp_dir}")
+                self.io.event(f"> Repository cloned to {target_dir}")
 
-            return temp_dir
+            return target_dir
 
         except GitCommandError as e:
             if self.io:

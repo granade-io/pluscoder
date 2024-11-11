@@ -152,7 +152,6 @@ Display current configuration settings using command `/show_config` or cmd line 
 ### Git Settings
 - `AUTO_COMMITS`: Enable/disable automatic Git commits (default: `True`)
 - `ALLOW_DIRTY_COMMITS`: Allow commits in a dirty repository (default: `True`)
-- `SOURCE_BRANCH`: Specify source branch to checkout when cloning repository (default: `None`)
 
 ### Test and Lint Settings
 - `RUN_TESTS_AFTER_EDIT`: Run tests after file edits (default: `False`)
@@ -164,7 +163,7 @@ Display current configuration settings using command `/show_config` or cmd line 
 
 ### Repository Settings
 - `REPOSITORY`: Git repository path or URL to clone and process (default: `None`)
-- `SOURCE_BRANCH`: Branch to checkout when cloning repository (default: `None`)
+- `SOURCE_BRANCH`: Specify source branch to checkout when cloning repository (default: `None`)
 
 ### Repomap Settings
 - `USE_REPOMAP`: Enable/disable repomap feature (default: `False`)
@@ -297,10 +296,3 @@ You can set these options using environment variables, command-line arguments (e
    pytest
    ```
 
-Demo:
-1. Chat with agent: any interaction with repo
-2. Automated run with git repo + remote guidelines
-3. Custom agent: company expert
-4. Task based mass update repository 
-5. Help for generating workflows
-6. Other features: 
