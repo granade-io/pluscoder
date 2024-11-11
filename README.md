@@ -11,7 +11,7 @@ PlusCoder is an AI-assisted software development tool designed to enhance and st
 5. Auto-commit on editions
 6. Cost and token tracking for LLM interactions
 7. Flexible configuration system supporting command-line arguments, environment variables, and default values
-8. Support for multiple LLM models (LLMLite, OpenAI, AWS Bedrock, Anthropic, VertexAI)
+8. Support for multiple LLM models (LLMLite, OpenAI, AWS Bedrock, Anthropic)
 9. Enhanced user interaction with rich console output and auto-completion
 10. Real-time task execution progress display
 11. File downloading and context addition during agent interactions
@@ -19,7 +19,7 @@ PlusCoder is an AI-assisted software development tool designed to enhance and st
 
 ## Requirements
 - Requires python 3.12 or Docker
-- Credentials for AWS Bedrock, Anthropic, OpenAI, VertexAI or other providers through LLMLite
+- Credentials for AWS Bedrock, Anthropic, OpenAI or other providers throught LLMLite
 
 ## Usage:
 
@@ -128,12 +128,12 @@ Display current configuration settings using command `/show_config` or cmd line 
 ### Models and Providers
 
 *Models*:
-- `MODEL`: LLM model to use (default: `None`)
+- `MODEL`: LLM model to use (default: `"anthropic.claude-3-5-sonnet-20240620-v1:0"`)
 - `ORCHESTRATOR_MODEL`: LLM model to use for orchestrator (default: same as `MODEL`)
 - `WEAK_MODEL`: Weaker LLM model to use for less complex tasks (default: same as `MODEL`). (CURRENLY NOT BEING USED)
 
 *Provider*:
-- `PROVIDER`: Provider to use. If `None`, provider will be selected based on available credentaial variables. Options: aws_bedrock, openai, litellm, anthropic, vertexai (default: `None`)
+- `PROVIDER`: Provider to use. If `None`, provider will be selected based on available credentaial variables. Options: aws_bedrock, openai, litellm, anthropic (default: `None`)
 - `ORCHESTRATOR_MODEL_PROVIDER`: Provider to use for orchestrator model (default: same as `PROVIDER`)
 - `WEAK_MODEL_PROVIDER`: Provider to use for weak model (default: same as `PROVIDER`). (CURRENLY NOT BEING USED)
 
@@ -152,6 +152,7 @@ Display current configuration settings using command `/show_config` or cmd line 
 ### Git Settings
 - `AUTO_COMMITS`: Enable/disable automatic Git commits (default: `True`)
 - `ALLOW_DIRTY_COMMITS`: Allow commits in a dirty repository (default: `True`)
+- `SOURCE_BRANCH`: Specify source branch to checkout when cloning repository (default: `None`)
 
 ### Test and Lint Settings
 - `RUN_TESTS_AFTER_EDIT`: Run tests after file edits (default: `False`)
@@ -160,6 +161,10 @@ Display current configuration settings using command `/show_config` or cmd line 
 - `LINT_COMMAND`: Command to run linter (default: `None`)
 - `AUTO_RUN_LINTER_FIX`: Automatically run linter fix before linting (default: `False`)
 - `LINT_FIX_COMMAND`: Command to run linter fix (default: `None`)
+
+### Repository Settings
+- `REPOSITORY`: Git repository path or URL to clone and process (default: `None`)
+- `SOURCE_BRANCH`: Branch to checkout when cloning repository (default: `None`)
 
 ### Repomap Settings
 - `USE_REPOMAP`: Enable/disable repomap feature (default: `False`)
@@ -291,3 +296,11 @@ You can set these options using environment variables, command-line arguments (e
    ```bash
    pytest
    ```
+
+Demo:
+1. Chat with agent: any interaction with repo
+2. Automated run with git repo + remote guidelines
+3. Custom agent: company expert
+4. Task based mass update repository 
+5. Help for generating workflows
+6. Other features: 

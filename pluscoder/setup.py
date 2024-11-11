@@ -8,6 +8,8 @@ from rich.prompt import Prompt
 from pluscoder import tools
 from pluscoder.config import Settings
 from pluscoder.config import config
+from pluscoder.exceptions import GitCloneException
+from pluscoder.exceptions import NotGitRepositoryException
 from pluscoder.io_utils import io
 from pluscoder.model import get_default_model_for_provider
 from pluscoder.model import get_inferred_provider
@@ -402,7 +404,19 @@ def initialize_repository():
 
 def setup() -> bool:
     # TODO: Get repository path from config
-    repo = Repository(io=io)
+    try:
+        repo = Repository(io=io, repository_path=config.repository, validate=True)
+        repo.change_repository(repo.repository_path)
+        config.reconfigure()
+    except GitCloneException as e:
+        io.console.print(str(e), style="bold red")
+        return False
+    except NotGitRepositoryException as e:
+        io.console.print(str(e), style="bold red")
+        return False
+    except ValueError as e:
+        io.console.print(f"Invalid repository path: {e}", style="bold red")
+        return False
 
     if (not Path(CONFIG_FILE).exists() or not config.initialized) and config.init:
         io.console.print(

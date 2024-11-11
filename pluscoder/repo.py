@@ -2,6 +2,7 @@ import os
 import pprint
 import re
 import subprocess
+import tempfile
 import traceback
 from typing import List
 from typing import Optional
@@ -12,21 +13,77 @@ from git import Repo
 from git.exc import HookExecutionError
 
 from pluscoder.config import config
+from pluscoder.exceptions import GitCloneException
 from pluscoder.exceptions import NotGitRepositoryException
 
 
 class Repository:
-    def __init__(self, io=None, repository_path=None):
+    def __init__(self, io=None, repository_path=None, validate=False):
         self.repository_path = repository_path or os.getcwd()
+        self.io = io
+        self.validate = validate
+        self._init_repository()
+
+    def _init_repository(self):
+        if self.is_git_url(self.repository_path):
+            self.repository_path = self.clone_repository(self.repository_path)
+
+        self.repository_path = os.path.abspath(self.repository_path)
+        self.repository_path = os.path.abspath(self.repository_path)
         if not os.path.isdir(self.repository_path):
             msg = f"Invalid repository path: {self.repository_path}"
-            raise ValueError(msg)
-
+            if self.validate:
+                raise ValueError(msg)
+            return
         if not os.path.isdir(os.path.join(self.repository_path, ".git")):
-            raise NotGitRepositoryException(self.repository_path)
-
+            if self.validate:
+                raise NotGitRepositoryException(self.repository_path)
+            return
+        os.chdir(self.repository_path)
         self.repo = Repo(self.repository_path, search_parent_directories=True)
-        self.io = io
+
+    @staticmethod
+    def is_git_url(url: str) -> bool:
+        """Validate if the given string is a git repository URL.
+        Supports formats:
+        - HTTPS: https://github.com/user/repo.git
+        - SSH: git@github.com:user/repo.git
+        - Git: git://github.com/user/repo.git"""
+        patterns = [r"^https?://.*\.git$", r"^git@.*:.*\.git$", r"^git://.*\.git$"]
+        return any(re.match(pattern, url) for pattern in patterns)
+
+    def clone_repository(self, url: str) -> str:
+        """Clone a git repository from URL into a temporary directory.
+        Args:
+            url: Git repository URL
+        Returns:
+            str: Path to the cloned repository
+        Raises:
+            GitCommandError: If cloning fails"""
+        try:
+            # Create temporary directory
+            temp_dir = tempfile.mkdtemp(prefix="pluscoder_")
+
+            # Clone repository
+            if self.io:
+                self.io.event(f"> Cloning repository from {url}...")
+
+            repo = Repo.clone_from(url, temp_dir)
+
+            if config.source_branch:
+                if self.io:
+                    self.io.event(f"> Checking out branch {config.source_branch}...")
+                repo.git.checkout(config.source_branch)
+
+            if self.io:
+                self.io.event(f"> Repository cloned to {temp_dir}")
+
+            return temp_dir
+
+        except GitCommandError as e:
+            if self.io:
+                self.io.console.print(f"Error cloning repository: {e}", style="bold red")
+            raise GitCloneException(url, str(e)) from e
 
     def commit(self, message="Auto-commit", updated_files=None):
         """Create a new commit from specified updated files."""
@@ -219,14 +276,21 @@ class Repository:
             error_message += e.stderr if e.stderr else ""  # Append stderr to error message
             return f"Tests failed:\n\n{error_message}"
 
-    def generate_repomap(self) -> Optional[str]:
-        """
-        Generate a repository map using the logic from repomap2.py.
+    def change_repository(self, path: str) -> None:
+        """Change the current repository path or clone if URL is provided.
+        Args:
+            path: Repository path or git URL
+        Raises:
+            ValueError: If path is invalid
+            GitCloneException: If clone operation fails
+            NotGitRepositoryException: If path is not a git repository"""
+        self.repository_path = os.path.abspath(path)
+        self._init_repository()
 
+    def generate_repomap(self) -> Optional[str]:
+        """Generate a repository map.
         Returns:
-            Optional[str]: The generated repomap as a string if use_repomap is True,
-                           None otherwise.
-        """
+            Optional[str]: Generated repomap string if use_repomap is True, None otherwise"""
         if not config.use_repomap:
             return None
 

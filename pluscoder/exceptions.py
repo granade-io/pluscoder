@@ -11,3 +11,8 @@ class NotGitRepositoryException(Exception):
 class TokenValidationException(Exception):
     def __init__(self, message: str):
         super().__init__(f"Token error: {message}")
+
+
+class GitCloneException(Exception):
+    def __init__(self, url: str, error: str):
+        super().__init__(f"Failed to clone repository from {url}: {error}")

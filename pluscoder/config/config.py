@@ -78,6 +78,9 @@ class Settings(BaseSettings):
             cls._instance = super().__new__(cls)
         return cls._instance
 
+    def reconfigure(self):
+        self.__init__(**{})
+
     custom_agents: List[Dict[str, Any]] = Field(
         default=[],
         description="List of custom agents with properties: name, description, prompt, and read_only",
@@ -107,7 +110,6 @@ class Settings(BaseSettings):
 
     # Model and API settings
     model: Optional[str] = Field(None, description="LLM model to use")
-    repository: Optional[str] = Field(None, description="Git repository URL to clone and process")
     provider: Optional[str] = Field(
         "openai",
         description="Provider to use. Options: bedrock, openai, anthropic, litellm, vertexai, null",
@@ -146,6 +148,10 @@ class Settings(BaseSettings):
     lint_command: Optional[str] = Field(None, description="Command to run linter")
     auto_run_linter_fix: bool = Field(False, description="Automatically run linter fix before linting")
     lint_fix_command: Optional[str] = Field(None, description="Command to run linter fix")
+
+    # Repository settings
+    repository: Optional[str] = Field(None, description="Git repository path or URL to clone and process")
+    source_branch: Optional[str] = Field(None, description="Source branch to checkout when cloning repository")
 
     # Repomap settings
     use_repomap: bool = Field(False, description="Enable/disable repomap feature")
@@ -196,12 +202,13 @@ class Settings(BaseSettings):
         dotenv_settings: PydanticBaseSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> Tuple[PydanticBaseSettingsSource, ...]:
-        global_config = YamlConfigSettingsSource(settings_cls, yaml_file=get_global_config())
-        if not init_settings.init_kwargs.get("ignore_yaml", False):
+        if not init_settings.init_kwargs.get("ignore_instances", False):
+            global_config = YamlConfigSettingsSource(settings_cls, yaml_file=get_global_config())
             yaml_config = YamlConfigSettingsSource(settings_cls)
             # Priority: init_settings > dotenv > project yaml > env > global yaml
             return init_settings, dotenv_settings, yaml_config, env_settings, global_config
-        return init_settings, dotenv_settings, env_settings, global_config
+        init_settings.config["yaml_file"] = None
+        return init_settings, dotenv_settings, env_settings
 
     def update(self, persist: bool = False, **kwargs):
         for key, value in kwargs.items():

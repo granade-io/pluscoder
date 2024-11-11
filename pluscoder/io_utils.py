@@ -65,7 +65,7 @@ class CommandCompleter(Completer):
                         yield Completion(
                             command["name"], start_position=-len(text), display_meta=command["description"]
                         )
-            elif len(words) == 2 and words[0] == "/custom" or len(words) == 1 and text.endswith(" "):
+            elif words[0] == "/custom" and (len(words) == 2 or len(words) == 1 and text.endswith(" ")):
                 # Complete custom prompt names
                 prompt_name = words[1] if len(words) == 2 else ""
                 for prompt in config.custom_prompt_commands:
