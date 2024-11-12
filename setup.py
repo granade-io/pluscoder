@@ -4,16 +4,11 @@ from setuptools import setup
 with open("requirements.txt") as f:
     required = f.read().splitlines()
 
-# with open("requirements-dev.txt") as f:
-#     dev_requirements = f.read().splitlines()
-
 setup(
     name="plus-coder",
     version="2.3.0",
     install_requires=required,
-    # extras_require={
-    #     "dev": dev_requirements,
-    # },
+    package_data={"pluscoder": ["*.py", "*.so"]},
     packages=find_packages(include=["pluscoder", "pluscoder*"]),
     entry_points={
         "console_scripts": [

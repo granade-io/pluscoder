@@ -192,3 +192,36 @@ help:
 		'^.PHONY: .*?## .*$$' $(MAKEFILE_LIST) | \
 		sort | \
 		awk 'BEGIN {FS = ".PHONY: |## "}; {printf "\033[36m%-30s\033[0m %s\n", $$2, $$3}'
+
+
+.PHONY: artifact-compile
+artifact-compile:
+		@echo "[$(DATETIME)] Building distribution artifacts..."
+		# python -m compileall pluscoder/
+		# Remove .py files keeping only .pyc
+		# find pluscoder/ -type f -name "*.py" ! -name "__init__.py" ! -name "__main__.py" -delete
+		sh pre-build.sh
+		# Build wheel
+		python setup.py bdist_wheel
+		python setup.py sdist
+		@echo "[$(DATETIME)] Done building artifacts."
+
+.PHONY: artifact-install
+artifact-install:
+		@echo "[$(DATETIME)] Installing wheel artifact..."  
+		pip install dist/*.whl
+		@echo "[$(DATETIME)] Installation complete"
+
+.PHONY: artifact-upload
+artifact-upload:
+		@echo "[$(DATETIME)] Uploading artifacts to PyPI..."
+		twine upload dist/*
+		@echo "[$(DATETIME)] Done uploading artifacts."
+
+.PHONY: artifact-purge
+artifact-purge:
+		@echo "[$(DATETIME)] Purging artifacts..."
+		pip cache purge
+		rm -rf build/ dist/ *.egg-info
+		find . -name "__pycache__" -type d -exec rm -rf {} +
+

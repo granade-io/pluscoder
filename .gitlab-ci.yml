@@ -3,6 +3,7 @@ image: node:latest
 stages:
   - prepare
   - test
+  - build
   - docker-build-push
   - release
 
@@ -31,7 +32,7 @@ prepare:
     reports:
       dotenv: build.env
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH == "develop"
       changes:
         - pluscoder/**/*
         - requirements.txt
@@ -50,8 +51,8 @@ test:
   before_script:
     - python --version
     - pip install --upgrade pip
-    # TODO: add requirements-dev.txt and requirements-test.txt
     - pip install -r requirements.txt
+    - pip install -r requirements-dev.txt
   script:
     - pytest
   rules:
@@ -61,23 +62,45 @@ test:
         - tests/**/*
         - requirements.txt
 
-docker-build:
-  stage: docker-build-push
-  image: docker:latest
-  services:
-    - docker:dind
-  before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  script:
-    - docker build -t $CI_REGISTRY_IMAGE:$NEXT_VERSION -t $CI_REGISTRY_IMAGE:latest .
-    - docker push $CI_REGISTRY_IMAGE:$NEXT_VERSION
-    - docker push $CI_REGISTRY_IMAGE:latest
+
+build:
+  image: python:3.12
+  stage: build
+  run:
+    variables:
+      TWINE_USERNAME: gitlab-ci-token
+      TWINE_PASSWORD: $CI_JOB_TOKEN
+    before_script:
+      - pip install --upgrade pip
+      - pip install -r requirements-dev.txt
+    script:
+      - make artifact-compile
+      - python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/* --skip-existing --version $NEXT_VERSION
   rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH == "develop"
       changes:
         - pluscoder/**/*
+        - tests/**/*
         - requirements.txt
-        - Dockerfile
+
+
+# docker-build:
+#   stage: docker-build-push
+#   image: docker:latest
+#   services:
+#     - docker:dind
+#   before_script:
+#     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+#   script:
+#     - docker build -t $CI_REGISTRY_IMAGE:$NEXT_VERSION -t $CI_REGISTRY_IMAGE:latest .
+#     - docker push $CI_REGISTRY_IMAGE:$NEXT_VERSION
+#     - docker push $CI_REGISTRY_IMAGE:latest
+#   rules:
+#     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+#       changes:
+#         - pluscoder/**/*
+#         - requirements.txt
+#         - Dockerfile
 
 release:
   image: node:latest
