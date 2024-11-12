@@ -74,7 +74,7 @@ build:
     - pip install -r requirements-dev.txt
   script:
     - make artifact-compile
-    - python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/* --skip-existing --version $NEXT_VERSION
+    - python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/* --skip-existing
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH == "develop"
       changes:
