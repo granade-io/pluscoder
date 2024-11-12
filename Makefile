@@ -197,11 +197,6 @@ help:
 .PHONY: artifact-compile
 artifact-compile:
 		@echo "[$(DATETIME)] Building distribution artifacts..."
-		# python -m compileall pluscoder/
-		# Remove .py files keeping only .pyc
-		# find pluscoder/ -type f -name "*.py" ! -name "__init__.py" ! -name "__main__.py" -delete
-		sh pre-build.sh
-		# Build wheel
 		python setup.py bdist_wheel
 		python setup.py sdist
 		@echo "[$(DATETIME)] Done building artifacts."

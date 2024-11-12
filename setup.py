@@ -10,7 +10,7 @@ setup(
     name="plus-coder",
     version=os.getenv("NEXT_VERSION", "0.1.0"),
     install_requires=required,
-    package_data={"pluscoder": ["*.py", "*.so"]},
+    package_data={"pluscoder": ["*.py"]},
     packages=find_packages(include=["pluscoder", "pluscoder*"]),
     entry_points={
         "console_scripts": [
