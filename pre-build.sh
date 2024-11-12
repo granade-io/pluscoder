@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # Files to obfuscate 
 files="pluscoder/main.py pluscoder/workflow.py pluscoder/setup.py pluscoder/tools.py pluscoder/api_integration.py pluscoder/type.py pluscoder/agents/base.py pluscoder/agents/core.py pluscoder/agents/orchestrator.py pluscoder/agents/prompts.py pluscoder/agents/stream_parser.py pluscoder/agents/utils.py"
