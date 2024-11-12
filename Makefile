@@ -197,6 +197,7 @@ help:
 .PHONY: artifact-compile
 artifact-compile:
 		@echo "[$(DATETIME)] Building distribution artifacts..."
+		sh pre-build.sh
 		python setup.py bdist_wheel
 		python setup.py sdist
 		@echo "[$(DATETIME)] Done building artifacts."

@@ -1,3 +1,4 @@
+#!/usr/bin/env
 # Remove debug code
 if [[ "$OSTYPE" == "darwin"* ]]; then
     # macOS requires '' after -i
