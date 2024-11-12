@@ -191,7 +191,7 @@ Small explanation:
 
         edit_fragment = f"""\
     - pc_action: An action to be performed in that step. Actions are executed immediately after you write them. Attributes are:
-        action: The type of operation to perform. Supported actions: file_create, file_replace, file_diff
+        action: The type of operation to perform. Supported actions are: file_create, file_replace, file_diff. ANY other action doesn't exist, so DO NOT respond with other actions. Actions are different from tools.
         file: The full relative filepath to perform the action on.
 
 Example:
