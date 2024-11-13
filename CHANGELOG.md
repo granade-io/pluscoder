@@ -1,3 +1,10 @@
+# [2.2.0-rc.2](https://gitlab.com/codematos/pluscoder/compare/v2.2.0-rc.1...v2.2.0-rc.2) (2024-11-13)
+
+
+### Features
+
+* version display at start ([ad43b8f](https://gitlab.com/codematos/pluscoder/commit/ad43b8fd76c75734aca1ed60a44f864df07f113a))
+
 # [2.2.0-rc.1](https://gitlab.com/codematos/pluscoder/compare/v2.1.0...v2.2.0-rc.1) (2024-11-12)
 
 
