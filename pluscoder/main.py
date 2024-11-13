@@ -8,6 +8,7 @@ from pathlib import Path
 
 from rich.prompt import Prompt
 
+from pluscoder.__version__ import __version__
 from pluscoder.commands import show_config
 from pluscoder.commands import show_repo
 from pluscoder.commands import show_repomap
@@ -49,7 +50,9 @@ def banner() -> None:
 
 {'https://gitlab.com/codematos/pluscoder-repository/-/blob/main/README.md'.center(80)}
 
-{'or type ´help´ to get started'.center(80)}
+{'or type ´/help´ to get started'.center(80)}
+
+{f"PlusCoder version: {__version__}".center(80)}
 
 -------------------------------------------------------------------------------
 [/bold green]
@@ -227,6 +230,10 @@ def main() -> None:
     """
     try:
         # Check for new command-line arguments
+        if config.version:
+            io.console.print(f"{__version__}")
+            return
+
         if config.show_repo:
             show_repo()
             return
