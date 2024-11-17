@@ -204,8 +204,6 @@ async def validate_token() -> bool:
 
     try:
         token_info = await verify_token()
-        io.event(f"> Authenticated as {token_info['user']}")
-        print(token_info)
         if token_info.get("expired"):
             io.console.print(token_info.get("expiration_message", "Token has expired"), style="bold red")
             return False
