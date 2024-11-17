@@ -1,3 +1,10 @@
+# [2.2.0-rc.3](https://gitlab.com/codematos/pluscoder/compare/v2.2.0-rc.2...v2.2.0-rc.3) (2024-11-17)
+
+
+### Bug Fixes
+
+* token validation at start and backend api ([99e5630](https://gitlab.com/codematos/pluscoder/commit/99e5630067144a45bf11ca7b03a2b237483cece9))
+
 # [2.2.0-rc.2](https://gitlab.com/codematos/pluscoder/compare/v2.2.0-rc.1...v2.2.0-rc.2) (2024-11-13)
 
 
