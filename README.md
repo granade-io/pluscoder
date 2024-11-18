@@ -18,17 +18,19 @@ PlusCoder is an AI-assisted software development tool designed to enhance and st
 12. Custom agent creation for specialized tasks
 
 ## Requirements
-- Requires python 3.12 or Docker
-- Credentials for AWS Bedrock, Anthropic, OpenAI or other providers throught LLMLite
+- `uv` python package manager
+- Credentials for AWS Bedrock, Anthropic, OpenAI, VertexAI or other providers through LLMLite
 
 ## Usage:
 
-First, ensure you have set your PlusCoder API token:
+First, ensure you have set your PlusCoder API token (installer configures it automatically):
 ```bash
-export PLUSCODER_TOKEN=your_token_here
+export PLUSCODER_TOKEN=<your_token_here>
 ```
 
 **Docker**:
+
+> **Note:** Image pasting (ctrl+v) is not supported through Docker
 
 ```bash
 # Pass required tokens through environment
@@ -87,7 +89,7 @@ PlusCoder supports the following commands during interaction:
 - `/config <key> <value>`: Override any pluscoder configuration. e.g., `/config auto-commits false`
 - `/undo`: Revert last commit and remove last message from chat history.
 - `/agent`: Start a conversation with a new agent from scratch.
-- `/agent_create`: Creates a persistent specialized agent to chat with.
+- `/agent_create`: Creates a persistent specialized agent to work with.
 - `/help`: Display help information for available commands.
 - `/init`: (Re)Initialize repository understanding the code base to generate project overview and code guidelines md files.
 - `/show_repo`: Display information about the current repository.
@@ -97,45 +99,52 @@ PlusCoder supports the following commands during interaction:
 
 ## Configuration
 
-PlusCoder can be configured using several methods (using this priotity):
+PlusCoder can be configured using several methods (using this priority):
 1. The `/config` command during runtime
 2. Command-line arguments
 3. Dot env variables ( `.env` file)
 4. A `.pluscoder-config.yml` file for persistent configuration
 5. Environment variables
+6. Global pluscoder yaml config file (`~/.config/pluscoder/config.yml` or `AppData/Local/pluscoder/config.yml`)
+
+> **Note**: Credentials must be provided as environment variables, or using `.env` or global `~/.config/pluscoder/var.env` file. Passing credentials in other files won't work.
 
 Display current configuration settings using command `/show_config` or cmd line arg `--show_config`.
 
 ### Application Behavior
-- `PLUSCODER_TOKEN`: Your PlusCoder API authentication token
-- `READ_ONLY`: Enable/disable read-only mode to avoid file editions (default: `False`)
-- `STREAMING`: Enable/disable LLM streaming (default: `True`)
-- `USER_FEEDBACK`: Enable/disable user feedback (default: `True`)
-- `DISPLAY_INTERNAL_OUTPUTS`: Display internal agent outputs (default: `False`)
-- `AUTO_CONFIRM`: Enable/disable auto confirmation of pluscoder execution (default: `False`)
-- `HIDE_THINKING_BLOCKS`: Hide thinking blocks in LLM output (default: `True`)
-- `HIDE_OUTPUT_BLOCKS`: Hide output blocks in LLM output (default: `False`)
-- `HIDE_SOURCE_BLOCKS`: Hide source blocks in LLM output (default: `False`)
-- `SHOW_TOKEN_USAGE`: Show token usage/cost (default: `True`)
-- `DEFAULT_AGENT`: Specify the name/number of the default agent to use. If not specified selection is interactive (default: `None`)
+- `pluscoder_token`: Your PlusCoder API authentication token
+- `read_only`: Enable/disable read-only mode to avoid file editions (default: `False`)
+- `streaming`: Enable/disable LLM streaming (default: `True`)
+- `user_feedback`: Enable/disable user feedback (default: `True`)
+- `display_internal_outputs`: Display internal agent outputs (default: `False`)
+- `auto_confirm`: Enable/disable auto confirmation of pluscoder execution (default: `False`)
+- `hide_thinking_blocks`: Hide thinking blocks in LLM output (default: `True`)
+- `hide_output_blocks`: Hide output blocks in LLM output (default: `False`)
+- `hide_source_blocks`: Hide source blocks in LLM output (default: `False`)
+- `show_token_usage`: Show token usage/cost (default: `True`)
+- `default_agent`: Specify the name/number of the default agent to use. If not specified selection will be interactive (default: `None`)
 
 ### File Paths
-- `OVERVIEW_FILENAME`: Filename for project overview (default: `"PROJECT_OVERVIEW.md"`)
-- `LOG_FILENAME`: Filename for logs (default: `"pluscoder.log"`)
-- `OVERVIEW_FILE_PATH`: Path to the project overview file (default: `"PROJECT_OVERVIEW.md"`)
-- `GUIDELINES_FILE_PATH`: Path to the coding guidelines file (default: `"CODING_GUIDELINES.md"`)
+- `overview_filename`: Filename for project overview (default: `"PROJECT_OVERVIEW.md"`)
+- `log_filename`: Filename for logs (default: `"pluscoder.log"`)
+- `overview_file_path`: Path to the project overview file (default: `"PROJECT_OVERVIEW.md"`)
+- `guidelines_file_path`: Path to the coding guidelines file (default: `"CODING_GUIDELINES.md"`)
 
 ### Models and Providers
 
 *Models*:
-- `MODEL`: LLM model to use (default: `"anthropic.claude-3-5-sonnet-20240620-v1:0"`)
-- `ORCHESTRATOR_MODEL`: LLM model to use for orchestrator (default: same as `MODEL`)
-- `WEAK_MODEL`: Weaker LLM model to use for less complex tasks (default: same as `MODEL`). (CURRENLY NOT BEING USED)
+- `model`: LLM model to use (default: `None`)
+- `orchestrator_model`: LLM model to use for orchestrator (default: same as `MODEL`)
+- `weak_model`: Weaker LLM model to use for less complex tasks (default: same as `MODEL`). (CURRENTLY NOT BEING USED)
 
 *Provider*:
-- `PROVIDER`: Provider to use. If `None`, provider will be selected based on available credentaial variables. Options: aws_bedrock, openai, litellm, anthropic (default: `None`)
-- `ORCHESTRATOR_MODEL_PROVIDER`: Provider to use for orchestrator model (default: same as `PROVIDER`)
-- `WEAK_MODEL_PROVIDER`: Provider to use for weak model (default: same as `PROVIDER`). (CURRENLY NOT BEING USED)
+- `provider`: Provider to use. If `None`, provider will be selected based on available credential variables. Options: aws_bedrock, openai, litellm, anthropic, vertexai (default: `None`)
+- `orchestrator_model_provider`: Provider to use for orchestrator model (default: same as `PROVIDER`)
+- `weak_model_provider`: Provider to use for weak model (default: same as `PROVIDER`). (CURRENTLY NOT BEING USED)
+
+### Model Credentials
+
+Define these at `.env`, `~/.config/pluscoder/vars.env` or using `export VAR=value`:
 
 *OpenAI*:
 - `OPENAI_API_KEY`: OpenAI API key. (default: `None`)
@@ -150,27 +159,33 @@ Display current configuration settings using command `/show_config` or cmd line 
 - `AWS_PROFILE`: AWS profile name (default: `"default"`)
 
 ### Git Settings
-- `AUTO_COMMITS`: Enable/disable automatic Git commits (default: `True`)
-- `ALLOW_DIRTY_COMMITS`: Allow commits in a dirty repository (default: `True`)
+- `auto_commits`: Enable/disable automatic Git commits (default: `True`)
+- `allow_dirty_commits`: Allow commits in a dirty repository (default: `True`)
 
 ### Test and Lint Settings
-- `RUN_TESTS_AFTER_EDIT`: Run tests after file edits (default: `False`)
-- `RUN_LINT_AFTER_EDIT`: Run linter after file edits (default: `False`)
-- `TEST_COMMAND`: Command to run tests (default: `None`)
-- `LINT_COMMAND`: Command to run linter (default: `None`)
-- `AUTO_RUN_LINTER_FIX`: Automatically run linter fix before linting (default: `False`)
-- `LINT_FIX_COMMAND`: Command to run linter fix (default: `None`)
+Configure any lint/test command. Agents will try to fix any error found automatically.
+
+- `run_tests_after_edit`: Run tests after file edits (default: `False`)
+- `run_lint_after_edit`: Run linter after file edits (default: `False`)
+- `test_command`: Command to run tests (default: `None`)
+- `lint_command`: Command to run linter (default: `None`)
+- `auto_run_linter_fix`: Automatically run linter fix before linting (default: `False`)
+- `lint_fix_command`: Command to run linter fix (default: `None`)
 
 ### Repository Settings
-- `REPOSITORY`: Git repository path or URL to clone and process (default: `None`)
-- `SOURCE_BRANCH`: Specify source branch to checkout when cloning repository (default: `None`)
+Use these when running pluscoder in remote repositories for automated runs.
+
+- `repository`: Git repository path or URL to clone and process (default: `None`)
+- `source_branch`: Specify source branch to checkout when cloning repository (default: `None`)
 
 ### Repomap Settings
-- `USE_REPOMAP`: Enable/disable repomap feature (default: `False`)
-- `REPOMAP_LEVEL`: Set the level of detail for repomap (default: `2`)
-- `REPOMAP_INCLUDE_FILES`: Comma-separated list of files to include in repomap (default: `[]`)
-- `REPOMAP_EXCLUDE_FILES`: Comma-separated list of files to exclude from repomap (default: `[]`)
-- `REPO_EXCLUDE_FILES`: Json list with list of custom prompts configs (default: `[]`)
+Currently these are deprecated and not being used anymore.
+
+- `use_repomap`: Enable/disable repomap feature (default: `False`)
+- `repomap_level`: Set the level of detail for repomap (default: `2`)
+- `repomap_include_files`: Comma-separated list of files to include in repomap (default: `[]`)
+- `repomap_exclude_files`: Comma-separated list of files to exclude from repomap (default: `[]`)
+- `repo_exclude_files`: Json list with list of custom prompts configs (default: `[]`)
 
 ### Custom Prompt Commands
 
@@ -182,31 +197,37 @@ To configure custom prompt commands:
 2. Add a `custom_prompt_commands` section with a list of custom prompts, each containing:
    - `prompt_name`: A unique name for the command
    - `description`: A brief description of what the command does
-   - `prompt`: The actual prompt text to be sent to the AI
+   - `prompt`: The prompt suffix text to be sent to the AI along a custom message
 
 Example:
 
 ```yaml
 custom_prompt_commands:
-  - prompt_name: "docstring"
-    prompt: "Please add docstring to these files"
-    description: "Generate docstring for specified files"
-  - prompt_name: "feature"
+  - prompt_name: docstring
     prompt: |
-      New feature:
-      1. Load relevant files related to this request
-      2. Ask me key questions to understand better the requirements
-      3. Implement the feature
-      4. Update README.md with proper documentation
-      feature request: 
-    description: "Generate a new feature and documentation"
+      Please add docstring to these files above
+    description: "Generate docstring for specified files"
+  - prompt_name: brainstorm
+    description: Propose ideas for implementation without editing code base.
+    prompt: |
+      Based on the previous request, please perform a brainstorm of how could this achieved. 
+        1. Read key files, analyze them
+        2. Tell me with a bullet point list, the role of each involved file
+        3. Tell me a proposed plan in natural language
+      Remember; DO NOT edit files yet.
 ```
 
+Usage: 
+
+```bash
+/custom docstring
+/custom brainstorm i want a new api endpoints to register users and authenticate them
+```
 ### Custom Agents
 
 PlusCoder supports the creation of custom agents for specialized tasks. These agents can be defined in the configuration and used alongside the predefined agents.
 
-**Create a new agent helped by an llm using `/agent_create`command.**
+**Create a new agent helped by an llm using `/agent_create` command.**
 
 To configure custom agents manually:
 
@@ -237,7 +258,7 @@ custom_agents:
 Custom agents can be selected and used in the same way as predefined agents during the PlusCoder workflow. They will appear in the agent selection menu and can be assigned tasks by the Orchestrator agent.
 
 
-## Command-line Arguments
+## Command-line arguments
 
 You can specify any configuration using command-line arguments:
 
@@ -264,14 +285,9 @@ You can set these options using environment variables, command-line arguments (e
    # pip install -e .
    ```
 
-3. Create a `.env` file from the example:
-   ```bash
-   cp .env.example .env
-   ```
+3. Edit the `.env` file and set the appropriate values for your environment.
 
-4. Edit the `.env` file and set the appropriate values for your environment.
-
-5. Set up pre-commit hooks:
+4. Set up pre-commit hooks:
    ```bash
    # Install pre-commit
    pip install pre-commit
@@ -280,7 +296,7 @@ You can set these options using environment variables, command-line arguments (e
    pre-commit install
    ```
 
-6. Run:
+5. Run:
 
    ```bash
    # as python module
@@ -290,7 +306,7 @@ You can set these options using environment variables, command-line arguments (e
    pluscoder [options]
    ```
 
-7. Test:
+6. Test:
 
    ```bash
    pytest

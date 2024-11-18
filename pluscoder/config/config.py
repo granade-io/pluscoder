@@ -121,19 +121,6 @@ class Settings(BaseSettings):
     weak_model: Optional[str] = Field(None, description="Weaker LLM model to use for less complex tasks")
     weak_model_provider: Optional[str] = Field(None, description="Provider to use for weak model")
 
-    # Providers API keys
-    # OpenAI API keys
-    openai_api_key: Optional[str] = Field(None, description="OpenAI API key")
-    openai_api_base: Optional[str] = Field(None, description="OpenAI API base URL")
-
-    # Anthropic API keys
-    anthropic_api_key: Optional[str] = Field(None, description="Anthropic API key")
-
-    # AWS IAM keys
-    aws_access_key_id: Optional[str] = Field(None, description="AWS Access Key ID")
-    aws_secret_access_key: Optional[str] = Field(None, description="AWS Secret Access Key")
-    aws_profile: str = Field("default", description="AWS profile name")
-
     # PlusCoder API
     pluscoder_token: Optional[str] = Field(None, description="PlusCoder API token for authentication")
 

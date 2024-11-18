@@ -5,6 +5,7 @@ from typing import Dict
 import httpx
 
 from pluscoder.config import config
+from pluscoder.config.utils import get_global_config
 from pluscoder.exceptions import TokenValidationException
 
 API_BASE_URL = "https://api.pluscoder.cl/api"
@@ -19,13 +20,16 @@ async def verify_token() -> Dict:
                 headers={"Authorization": f"Token {config.pluscoder_token}", "Content-Type": "application/json"},
             )
             if response.status_code != 200:
-                raise TokenValidationException(response.json()["detail"])
+                raise TokenValidationException(
+                    response.json()["detail"] + f" Check your config at {get_global_config()}"
+                )
             return response.json()
         except httpx.RequestError as err:
             error_msg = "Failed to connect to API: " + str(err)
             raise TokenValidationException(error_msg) from err
         except JSONDecodeError:
-            raise TokenValidationException("Invalid token")  # noqa: B904
+            msg = f"Invalid token. Check your config at {get_global_config()}"
+            raise TokenValidationException(msg)  # noqa: B904
 
 
 async def register_call() -> None:

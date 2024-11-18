@@ -56,18 +56,6 @@ CONFIG_TEMPLATE = """
 # provider: null                      # Provider (aws_bedrock, openai, litellm, anthropic, vertexai)
 # orchestrator_model_provider: null   # Provider for orchestrator model (default: same as provider)
 # weak_model_provider: null           # Provider for weak model (default: same as provider)
-# TODO: remove these keys
-# openai_api_key:                     # OpenAI API key
-# openai_api_base:                    # OpenAI API base URL
-# anthropic_api_key:                  # Anthropic API key
-
-#------------------------------------------------------------------------------
-# AWS Settings
-#------------------------------------------------------------------------------
-# TODO: remove these keys
-# aws_access_key_id:       # AWS Access Key ID
-# aws_secret_access_key:   # AWS Secret Access Key
-# aws_profile: default     # AWS profile name
 
 #------------------------------------------------------------------------------
 # Git Settings
