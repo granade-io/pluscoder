@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-import re
 import sys
 import tempfile
 from pathlib import Path
@@ -16,15 +15,12 @@ from prompt_toolkit.key_binding import KeyBindings
 from rich.console import Console
 from rich.console import ConsoleRenderable
 from rich.console import Group
-from rich.console import RichCast
-from rich.live import Live
 from rich.progress import Progress
 from rich.prompt import Confirm
 from rich.rule import Rule
 from rich.text import Text
 
 from pluscoder.config import config
-from pluscoder.display_utils import display_file_diff
 from pluscoder.repo import Repository
 
 logging.getLogger().setLevel(logging.ERROR)  # hide warning log
@@ -62,16 +58,16 @@ class CommandCompleter(Completer):
         text = document.text_before_cursor
         if text.startswith("/"):
             words = text.split()
-            if len(words) == 1:
+            if len(words) == 1 and not text.endswith(" "):
                 # Complete command names
                 for command in self.commands:
                     if command["name"].startswith(text):
                         yield Completion(
                             command["name"], start_position=-len(text), display_meta=command["description"]
                         )
-            elif len(words) == 2 and words[0] == "/custom":
+            elif words[0] == "/custom" and (len(words) == 2 or len(words) == 1 and text.endswith(" ")):
                 # Complete custom prompt names
-                prompt_name = words[1]
+                prompt_name = words[1] if len(words) == 2 else ""
                 for prompt in config.custom_prompt_commands:
                     if prompt["prompt_name"].startswith(prompt_name) and prompt_name != prompt["prompt_name"]:
                         yield Completion(
@@ -169,10 +165,10 @@ class CustomProgress(Progress):
             self.chunks.append(chunk)
         self.style = style
 
-    def get_stream_renderable(self) -> ConsoleRenderable | RichCast | str:
+    def get_stream_renderable(self) -> ConsoleRenderable:
         return Text("".join(self.chunks), style=self.style)
 
-    def get_renderable(self) -> ConsoleRenderable | RichCast | str:
+    def get_renderable(self) -> ConsoleRenderable:
         return Group(self.get_stream_renderable(), Rule(), *self.get_renderables())
 
 
@@ -190,26 +186,12 @@ class IO:
         self.progress = None
         self.ctrl_c_count = 0
         self.last_input = ""
-        self.buffer = ""  # Buffer para acumular los pequeños chunks
-        self.filepath_buffer = ""  # Buffer to store last 100 characters for filepath detection
-        self.in_block = False  # Indicador de si estamos dentro de un bloque
-        self.block_content = ""  # Contenido dentro de un bloque
-        self.block_type = ""
-        self.current_filepath = ""  # New attribute to store the current filepath
-        self.buffer_size = 20  # Buffer size to hold before display to look for blocks
-        self.valid_blocks = {"thinking", "source"}
         self.completer = CombinedCompleter()
 
     def register_command(self, command_name: str, command_description: str):
         """Register a new command for autocompletion"""
         if self.completer.command_completer:
             self.completer.command_completer.register_command(command_name, command_description)
-
-    def _check_block_start(self, text):
-        return re.match(r"^<(thinking|step|source)>", text.strip())  # Detectar inicio de bloque
-
-    def _check_block_end(self, text):
-        return re.match(f"^</{self.block_type}>", text.strip())  # Detectar fin de bloque
 
     def event(self, string: str):
         return self.console.print(string, style="yellow")
@@ -303,158 +285,14 @@ class IO:
         with open(self.DEBUG_FILE, "a") as f:
             f.write(f"{indented_content}\n")
 
-    def set_progress(self, progress: Progress | Live) -> None:
+    def set_progress(self, progress: Progress) -> None:
         self.progress = progress
 
-    def start_stream(self):
-        self.in_block = False
-        self.seen_nl = False
-        if self.progress and not self.progress.started:
-            self.progress.start()
-
-    def stop_stream(self):
-        if not self.progress:
-            self.console.print(self.buffer, style="blue")
-            self.console.print("")
-            self.buffer = ""
-            self.filepath_buffer = ""
-            return
-        if self.progress.started:
-            self.console.print(self.buffer, style="blue")
-            self.buffer = ""
-            self.filepath_buffer = ""
-
-            self.console.print(self.progress.get_stream_renderable())
-            self.progress.chunks = []
-            self.progress.stop()
-
-    def _stream_to_user(self, chunk: str, style=None) -> None:
-        style = style or self.get_block_color()
+    def stream(self, chunk: str, style=None) -> None:
         if not self.progress:
             self.console.print(chunk, style=style, end="")
         else:
             self.progress.stream(chunk, style)
-
-    def get_block_color(self) -> str:
-        return "light_salmon3" if self.block_type == "thinking" else "blue" if self.block_type == "step" else "blue"
-
-    def start_block(self, block_type: str) -> None:
-        # starts new block
-        self.block_type = block_type
-        self.in_block = True
-
-        # Display block header
-        if block_type == "thinking":
-            if self.progress:
-                self.progress.flush(self.get_block_color())
-            self.console.print(f"::{block_type}::", style=self.get_block_color())
-
-    def end_block(self) -> None:
-        if self.block_type == "source":
-            self.flush()
-            displayed = display_file_diff(self.block_content, self.current_filepath, self.console)
-
-            # Fall back to display raw code if fails to display diff
-            if not displayed and not config.hide_source_blocks:
-                self._stream_to_user(self.block_content, style=self.get_block_color())
-                self._stream_to_user("\n")
-
-        if self.buffer:
-            # Clean leftovers from buffer if external end of blocks are called
-            self._stream_to_user(self.buffer, style=self.get_block_color())
-            self.buffer = ""
-        self.in_block = False
-        self.block_type = None
-        self.current_filepath = None
-        self.block_content = ""
-
-    def stream_block_chunk(self, chunk: str) -> None:
-        self.block_content += chunk
-        if (
-            config.hide_thinking_blocks
-            and self.block_type == "thinking"
-            or config.hide_output_blocks
-            and self.block_type == "step"
-            or config.hide_source_blocks
-            and self.block_type == "source"
-        ):
-            return
-
-        self._stream_to_user(chunk, style=self.get_block_color())
-
-    def flush(self):
-        pass
-        # if self.buffer:
-        #     self.console.print(self.buffer, style=self.get_block_color())
-        #     self.buffer = ""
-
-    def stream(self, chunk: str):
-        self.seen_nl = self.seen_nl or "\n<" in chunk
-
-        if isinstance(chunk, list) and len(chunk) >= 0:
-            chunk = "".join([c["text"] for c in chunk if c["type"] == "text"])
-        elif isinstance(chunk, str):
-            pass
-        else:
-            error = "Not chunk type"
-            raise ValueError(error)
-
-        # Update filepath_buffer
-        self.filepath_buffer += chunk
-        self.filepath_buffer = self.filepath_buffer[-100:]  # Keep only last 100 characters
-
-        # Update main buffer
-        self.buffer += chunk
-
-        # Look for block start/end with capturing group for block type
-        start_match = re.search(
-            r"\n<(thinking|step|source)>" if self.seen_nl else r"\n?<(thinking|step|source)>",
-            self.buffer,
-        )
-        end_match = re.search(r"\n</(thinking|step|source)>", self.buffer)
-
-        if "<" in self.buffer:
-            pass
-
-        if self.in_block:
-            if end_match and end_match.group(1) == self.block_type:
-                # Found matching end of block
-                end_pos = end_match.end()
-
-                # Print anything after the block
-                self._stream_to_user(self.buffer[end_pos:])
-                self.block_content += self.buffer[: end_match.start()]
-
-                # Reset buffer must be before end of block because end of block also prints buffer when be called from
-                # other sources
-                self.buffer = ""
-                self.end_block()
-            else:
-                # Still in block, add everything except last 20 chars to block_content
-                self.stream_block_chunk(self.buffer[: -self.buffer_size])
-                self.buffer = self.buffer[-self.buffer_size :]
-
-        elif start_match:
-            # Found start of block
-            block_type = start_match.group(1)
-            if block_type in self.valid_blocks:
-                # Check for filepath pattern in filepath_buffer
-                filepath_match = re.search(r"`([^`\n]+):?`\n{1,2}^<source>", self.buffer, re.MULTILINE)
-                if filepath_match:
-                    self.current_filepath = filepath_match.group(1)
-                    self.filepath_buffer = self.filepath_buffer.replace(filepath_match.group(0), "<source>")
-
-                start_pos = start_match.start()
-                self._stream_to_user(self.buffer[:start_pos])
-                self.start_block(block_type)
-                self.block_content = self.buffer[start_match.end() :]
-                self.buffer = ""
-            else:
-                self._stream_to_user(self.buffer[: -self.buffer_size])
-                self.buffer = self.buffer[-self.buffer_size :]
-        elif len(self.buffer) > self.buffer_size:
-            self._stream_to_user(self.buffer[: -self.buffer_size])
-            self.buffer = self.buffer[-self.buffer_size :]
 
 
 io = IO()

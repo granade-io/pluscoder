@@ -7,8 +7,8 @@ from typing import Optional
 
 from langchain_core.messages import AnyMessage
 from langchain_core.messages import BaseMessage
-from langchain_core.pydantic_v1 import BaseModel
 from langgraph.graph import add_messages
+from pydantic import BaseModel
 from typing_extensions import TypedDict
 
 

@@ -16,6 +16,7 @@ from rich.tree import Tree
 from pluscoder import tools
 from pluscoder.config import config
 from pluscoder.config.utils import append_custom_agent_to_config
+from pluscoder.config.utils import get_config_paths
 from pluscoder.display_utils import display_agent
 from pluscoder.io_utils import io
 from pluscoder.message_utils import HumanMessage
@@ -225,8 +226,11 @@ def show_repomap(state: OrchestrationState = None):
 
 @command_registry.register("show_config")
 def show_config(state: OrchestrationState = None):
-    """Display Pluscoder configuration"""
-    table = Table(title="Current Configuration")
+    """Display Pluscoder configuration and config file locations"""
+
+    # Show current values
+    io.console.print("")
+    table = Table(title="Current Configuration Values")
     table.add_column("Setting", style="cyan")
     table.add_column("Value", style="magenta")
 
@@ -236,6 +240,15 @@ def show_config(state: OrchestrationState = None):
         table.add_row(key, str(value))
 
     io.console.print(table)
+
+    # Show config locations
+    paths = get_config_paths()
+    locations = Table(title="Configuration File Locations")
+    locations.add_column("Scope", style="cyan")
+    locations.add_column("Path", style="green")
+    locations.add_row("Local (Repository)", paths.local)
+    locations.add_row("User Global", paths.global_config)
+    io.console.print(locations)
     return state
 
 
@@ -265,7 +278,7 @@ def create_agent(state: OrchestrationState, *args):
     try:
         new_agent = generate_agent(description, repository_interaction)
         io.console.print(Rule("Generated Agent"))
-        io.console.print(f"[bold green]{new_agent["name"]}[/bold green]: {new_agent["description"]}\n")
+        io.console.print(f"[bold green]{new_agent['name']}[/bold green]: {new_agent['description']}\n")
         io.console.print(new_agent["prompt"], style="bold green")
         io.console.print(Rule())
         if not io.confirm("Do you to proceed with this agent?"):
@@ -286,7 +299,7 @@ def create_agent(state: OrchestrationState, *args):
             new_agent["name"] = name.lower().replace(" ", "")
 
         # Adds agent to config
-        io.event(f"> Agent '{new_agent["name"]}' saved to .pluscoder-config.yml")
+        io.event(f"> Agent '{new_agent['name']}' saved to .pluscoder-config.yml")
         append_custom_agent_to_config(new_agent)
 
         # Reloads config to apply changes
@@ -335,7 +348,7 @@ def custom_command(state: OrchestrationState, prompt_name: str = "", *args):
         return state
 
     user_input = " ".join(args)
-    combined_prompt = f"{custom_prompt['prompt']} {user_input}"
+    combined_prompt = f"{user_input} {custom_prompt['prompt']}"
 
     current_agent = state["chat_agent"]
 

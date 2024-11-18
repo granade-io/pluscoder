@@ -1,5 +1,6 @@
+import os
 from functools import lru_cache
-from typing import LiteralString
+from typing import Optional
 
 from langchain_anthropic import ChatAnthropic
 from langchain_aws import ChatBedrock
@@ -55,7 +56,6 @@ def _get_provider_model() -> dict:
 
     def get_from_json():
         import json
-        import os
         import pkgutil
 
         file = pkgutil.get_data("assets", "model_default.json")
@@ -96,42 +96,44 @@ def get_model_token_info(model_name: str) -> dict:
         return model_cost[model_name]
     if model_name.split("/")[-1] in model_cost:
         return model_cost[model_name.split("/")[-1]]
+    for key in model_cost:
+        if model_name in key:
+            return model_cost[key]
     return None
 
 
 @lru_cache
-def get_default_model_for_provider(provider_name: str) -> str | None:
+def get_default_model_for_provider(provider_name: str) -> Optional[str]:
     default_models = _get_provider_model()
     return default_models.get(provider_name, None)
 
 
-def get_model_validation_message(provider) -> None | LiteralString:
+def get_model_validation_message(provider) -> Optional[str]:
     # Check AWS Bedrock
-    if provider == "aws_bedrock" and not config.aws_access_key_id:
+    if provider == "aws_bedrock" and not os.getenv("AWS_ACCESS_KEY_ID", None):
         return "AWS Bedrock provider defined but AWS access key ID is not configured or empty."
 
     # Check Anthropic
-    if provider == "anthropic" and not config.anthropic_api_key:
+    if provider == "anthropic" and not os.getenv("ANTHROPIC_API_KEY", None):
         return "Anthropic provider defined but Anthropic API key is not configured or empty."
 
     # Check OpenAI
-    if provider == "openai" and not config.openai_api_key:
+    if provider == "openai" and not os.getenv("OPENAI_API_KEY", None):
         return "OpenAI provider defined but OpenAI API key is not configured or empty."
     return None
 
 
 def get_llm_base(model_id, provider):
     # Uses aws bedrock if available
-    if config.aws_access_key_id and provider == "aws_bedrock":
+    if os.getenv("AWS_ACCESS_KEY_ID", None) and provider == "aws_bedrock":
         return ChatBedrock(
             model_id=model_id,
             model_kwargs={"temperature": 0.0, "max_tokens": 4096},
             streaming=config.streaming,
-            credentials_profile_name=config.aws_profile,
         )
 
     # Uses Anthropic if available
-    if config.anthropic_api_key and provider == "anthropic":
+    if os.getenv("ANTHROPIC_API_KEY", None) and provider == "anthropic":
         return ChatAnthropic(
             model_name=model_id,
             temperature=0.0,
@@ -140,18 +142,43 @@ def get_llm_base(model_id, provider):
         )
 
     # Uses OpenAI if available
-    if config.openai_api_key and provider == "openai":
+    if os.getenv("OPENAI_API_KEY", None) and provider == "openai":
         return ChatOpenAI(
             model=model_id.replace("openai/", ""),
-            base_url=config.openai_api_base or None,
-            api_key=config.openai_api_key,
             max_tokens=4096,
             streaming=config.streaming,
             stream_usage=True,
         )
 
+    if provider == "vertexai":
+        from langchain_google_vertexai.model_garden import ChatAnthropicVertex
+
+        # https://cloud.google.com/vertex-ai/generative-ai/docs/partner-models/use-claude#regions
+        # https://github.com/GoogleCloudPlatform/vertex-ai-samples/blob/439a686f16830a035e4b478223a9b5197496616d/notebooks/official/generative_ai/anthropic_claude_3_intro.ipynb
+        if model_id == "claude-3-5-sonnet-v2@20241022":
+            available_regions = ["us-east5", "europe-west1"]
+        elif model_id == "claude-3-5-haiku@20241022":
+            available_regions = ["us-east5"]
+        elif model_id == "claude-3-5-sonnet@20240620":
+            available_regions = ["us-east5", "europe-west1", "asia-southeast1"]
+        elif model_id == "claude-3-opus@20240229":
+            available_regions = ["us-east5"]
+        elif model_id == "claude-3-haiku@20240307":
+            available_regions = ["us-east5", "europe-west1", "asia-southeast1"]
+        elif model_id == "claude-3-sonnet@20240229":
+            available_regions = ["us-east5"]
+        else:
+            available_regions = ["us-east5"]
+        return ChatAnthropicVertex(
+            model=model_id,
+            max_tokens=4096,
+            max_retries=3,
+            streaming=config.streaming,
+            location=available_regions[0],
+        )
+
     # Uses Litellm
-    if config.openai_api_key and provider == "litellm":
+    if provider == "litellm":
         return ChatLiteLLM(model=model_id)
 
     # Return no model
@@ -179,30 +206,17 @@ def get_inferred_provider():
         return config.provider
 
     # Uses aws bedrock if available
-    if config.aws_access_key_id:
+    if os.getenv("AWS_ACCESS_KEY_ID", None):
         return "aws_bedrock"
 
     # Uses Anthropic if available
-    if config.anthropic_api_key:
+    if os.getenv("ANTHROPIC_API_KEY", None):
         return "anthropic"
 
     # Prefer using OpenAI if available
-    if config.openai_api_key:
+    if os.getenv("OPENAI_API_KEY", None):
         return "openai"
 
+    # There is no variable for detecting vertexai
+
     return "litellm"
-
-
-# Commented out Bedrock LLM configuration
-# def get_llm():
-#     model_id = os.getenv('model', None)
-
-#     # Raise if no model found
-#     if model_id is None:
-#         raise ValueError("No 'model' specified. Please set the 'model' environment variable or .env.")
-
-#     return ChatBedrock(
-#         model_id=model_id,
-#         model_kwargs={"temperature": 0.0, "max_tokens": 4096},
-#         streaming=True,
-#     )

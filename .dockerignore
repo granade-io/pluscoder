@@ -8,3 +8,4 @@ build/*
 .ruff_cache
 .vscode
 *.egg-info
+.venv

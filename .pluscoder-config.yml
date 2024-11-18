@@ -14,6 +14,7 @@ initialized: true                      # Enable/disable initial setup
 # read_only: false                # Enable/disable read-only mode
 # user_input: ""                  # Predefined user input
 debug: true
+dev: true
 
 #------------------------------------------------------------------------------
 # File Paths
@@ -26,9 +27,10 @@ debug: true
 #------------------------------------------------------------------------------
 # Model and API Settings
 #------------------------------------------------------------------------------
-model: openai/claude-3-5-sonnet-20240620 # LLM model to use
+# model: openai/claude-3-5-sonnet-20240620 # LLM model to use
+# model: claude-3-5-sonnet-v2@20241022
 # model: anthropic.claude-3-5-sonnet-20240620-v1:0 # LLM model to use
-provider: openai           # Provider (aws_bedrock, openai, litellm, anthropic)
+# provider: vertexai           # Provider (aws_bedrock, openai, litellm, anthropic)
 # openai_api_key:          # OpenAI API key
 # openai_api_base:         # OpenAI API base URL
 

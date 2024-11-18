@@ -8,10 +8,11 @@ from rich.prompt import Prompt
 from pluscoder import tools
 from pluscoder.config import Settings
 from pluscoder.config import config
+from pluscoder.exceptions import GitCloneException
+from pluscoder.exceptions import NotGitRepositoryException
 from pluscoder.io_utils import io
 from pluscoder.model import get_default_model_for_provider
 from pluscoder.model import get_inferred_provider
-from pluscoder.model import get_model_token_info
 from pluscoder.model import get_model_validation_message
 from pluscoder.repo import Repository
 from pluscoder.type import AgentInstructions
@@ -52,21 +53,9 @@ CONFIG_TEMPLATE = """
 # model: anthropic.claude-3-5-sonnet-20240620-v1:0 # LLM model to use
 # orchestrator_model: null            # Model to use for the orchestrator agent (default: same as model)
 # weak_model: null                    # Weaker LLM model for less complex tasks (default: same as model)
-# provider: null                      # Provider (aws_bedrock, openai, litellm, anthropic, azure)
+# provider: null                      # Provider (aws_bedrock, openai, litellm, anthropic, vertexai)
 # orchestrator_model_provider: null   # Provider for orchestrator model (default: same as provider)
 # weak_model_provider: null           # Provider for weak model (default: same as provider)
-# TODO: remove these keys
-# openai_api_key:                     # OpenAI API key
-# openai_api_base:                    # OpenAI API base URL
-# anthropic_api_key:                  # Anthropic API key
-
-#------------------------------------------------------------------------------
-# AWS Settings
-#------------------------------------------------------------------------------
-# TODO: remove these keys
-# aws_access_key_id:       # AWS Access Key ID
-# aws_secret_access_key:   # AWS Secret Access Key
-# aws_profile: default     # AWS profile name
 
 #------------------------------------------------------------------------------
 # Git Settings
@@ -130,25 +119,6 @@ CONFIG_TEMPLATE = """
 #     description: "Security Auditor Description"
 #     read_only: true
 """
-
-
-def required_setup():
-    git_dir = Path(".git")
-    if not git_dir.is_dir():
-        io.event("> .git directory not found. Make sure you're in a Git repository.")
-        return False
-
-    exclude_file = git_dir / "info" / "exclude"
-    exclude_file.parent.mkdir(parents=True, exist_ok=True)
-
-    with open(exclude_file, "a+") as f:
-        f.seek(0)
-        content = f.read()
-        if ".pluscoder/" not in content:
-            f.write("\n.pluscoder/")
-            # io.event("> Added 'pluscoder/' to .git/info/exclude")
-
-    return True
 
 
 def get_config_descriptions():
@@ -249,6 +219,17 @@ def additional_config():
         io.event("> Created .gitignore with PROJECT_OVERVIEW.md and CODING_GUIDELINES.md")
     else:
         io.event("> Skipped creating .gitignore")
+
+    # DEfault ignore files
+    git_dir = Path(".git")
+    exclude_file = git_dir / "info" / "exclude"
+    exclude_file.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(exclude_file, "a+") as f:
+        f.seek(0)
+        content = f.read()
+        if ".pluscoder/" not in content:
+            f.write("\n.pluscoder/")
 
 
 TASK_LIST = [
@@ -410,11 +391,20 @@ def initialize_repository():
 
 
 def setup() -> bool:
-    if not required_setup():
-        return False
-
     # TODO: Get repository path from config
-    repo = Repository(io=io)
+    try:
+        repo = Repository(io=io, repository_path=config.repository, validate=True)
+        repo.change_repository(repo.repository_path)
+        config.reconfigure()
+    except GitCloneException as e:
+        io.console.print(str(e), style="bold red")
+        return False
+    except NotGitRepositoryException as e:
+        io.console.print(str(e), style="bold red")
+        return False
+    except ValueError as e:
+        io.console.print(f"Invalid repository path: {e}", style="bold red")
+        return False
 
     if (not Path(CONFIG_FILE).exists() or not config.initialized) and config.init:
         io.console.print(
@@ -451,12 +441,4 @@ def setup() -> bool:
     if not repo.setup():
         io.event("> Exiting pluscoder")
         return False
-
-    # Warns token cost
-    if not get_model_token_info(config.model):
-        io.console.print(
-            f"Token usage info not available for model `{config.model}`. Cost calculation can be unaccurate.",
-            style="bold dark_goldenrod",
-        )
-
     return True

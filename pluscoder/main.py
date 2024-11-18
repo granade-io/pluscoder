@@ -2,16 +2,23 @@
 import asyncio
 import sys
 import traceback
+from datetime import datetime
+from datetime import timezone
+from pathlib import Path
 
+from dotenv import load_dotenv
 from rich.prompt import Prompt
 
+from pluscoder.__version__ import __version__
 from pluscoder.commands import show_config
 from pluscoder.commands import show_repo
 from pluscoder.commands import show_repomap
 from pluscoder.config import config
+from pluscoder.config.utils import get_global_env_filepath
 from pluscoder.display_utils import display_agent
 from pluscoder.io_utils import io
 from pluscoder.model import get_inferred_provider
+from pluscoder.model import get_model_token_info
 from pluscoder.model import get_model_validation_message
 from pluscoder.repo import Repository
 from pluscoder.setup import setup
@@ -19,6 +26,9 @@ from pluscoder.type import TokenUsage
 from pluscoder.workflow import build_agents
 from pluscoder.workflow import build_workflow
 from pluscoder.workflow import run_workflow
+
+load_dotenv()
+load_dotenv(dotenv_path=get_global_env_filepath())
 
 
 def banner() -> None:
@@ -45,7 +55,9 @@ def banner() -> None:
 
 {'https://gitlab.com/codematos/pluscoder-repository/-/blob/main/README.md'.center(80)}
 
-{'or type ´help´ to get started'.center(80)}
+{'or type ´/help´ to get started'.center(80)}
+
+{f"PlusCoder version: {__version__}".center(80)}
 
 -------------------------------------------------------------------------------
 [/bold green]
@@ -119,6 +131,13 @@ def display_initial_messages():
     if config.read_only:
         io.event("> Running on 'read-only' mode")
 
+    # Warns token cost
+    if not get_model_token_info(config.model):
+        io.console.print(
+            f"Token usage info not available for model `{config.model}`. Cost calculation can be unaccurate.",
+            style="bold dark_goldenrod",
+        )
+
 
 # Run the workflow
 def choose_chat_agent_node(agents: dict):
@@ -163,12 +182,61 @@ def explain_default_agent_usage():
     )
 
 
+def validate_run_requirements():
+    git_dir = Path(".git")
+    if not git_dir.is_dir():
+        io.event("> .git directory not found. Make sure you're in a Git repository.")
+        sys.exit(1)
+    if config.model is None:
+        io.console.print("Model is empty. Configure a model to run Pluscoder.", style="bold red")
+        io.console.print(
+            "Use [green]--config <your-model>[/green], the [green].pluscoder-config.yml[/green] config file or env vars to configure"
+        )
+        sys.exit(1)
+
+
+async def validate_token() -> bool:
+    """Validate the PlusCoder API token."""
+    from pluscoder.api_integration import verify_token
+    from pluscoder.exceptions import TokenValidationException
+
+    if not config.pluscoder_token:
+        io.console.print(
+            "PlusCoder token not configured. Please set PLUSCODER_TOKEN env var or use --pluscoder_token",
+            style="bold red",
+        )
+        return False
+
+    try:
+        token_info = await verify_token()
+        if token_info.get("expired"):
+            io.console.print(token_info.get("expiration_message", "Token has expired"), style="bold red")
+            return False
+
+        if token_info.get("expires_at"):
+            expires = datetime.fromisoformat(token_info["expires_at"].replace("Z", "+00:00"))
+            days_left = (expires - datetime.now(timezone.utc)).days
+            if days_left <= 7:
+                io.console.print(
+                    f"Warning: Your Pluscoder token will expire in {days_left} days. Contact us at support@pluscoder.cl if you think this is an error.",
+                    style="bold dark_goldenrod",
+                )
+        return True
+    except TokenValidationException as e:
+        io.console.print(str(e), style="bold red")
+        return False
+
+
 def main() -> None:
     """
     Main entry point for the Pluscoder application.
     """
     try:
         # Check for new command-line arguments
+        if config.version:
+            io.console.print(f"{__version__}")
+            return
+
         if config.show_repo:
             show_repo()
             return
@@ -181,9 +249,14 @@ def main() -> None:
             show_config()
             return
 
+        # Validate token before setup if not in dev mode
+        if not config.dev and not asyncio.run(validate_token()):
+            return
+
         if not setup():
             return
 
+        validate_run_requirements()
         display_initial_messages()
 
         # Check if the default_agent is valid
@@ -231,13 +304,13 @@ def main() -> None:
 
         app = build_workflow(agent_dict)
         asyncio.run(run_workflow(app, state))
+    except KeyboardInterrupt:
+        io.event("\nProgram interrupted. Exiting gracefully...")
+        return
     except Exception as err:
         if config.debug:
             io.console.print(traceback.format_exc(), style="bold red")
         io.event(f"An error occurred. {err} during workflow run.")
-        return
-    except KeyboardInterrupt:
-        io.event("\nProgram interrupted. Exiting gracefully...")
         return
 
 

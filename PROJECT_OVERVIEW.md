@@ -150,6 +150,11 @@ The project follows a well-organized structure:
      - `core.py`: Defines specific agent types
      - `orchestrator.py`: Implements the Orchestrator Agent
      - `prompts.py`: Contains agent prompts
+     - `utils.py`: Provides utility functions for generating agent prompts based on descriptions and roles.
+     - `stream_parser.py`: Implements an XML stream parser for handling tag-based streaming data.
+     - `output_handlers/`: Subdirectory for handling output Agents actions
+       - `action_handlers.py`: Defines strategies for handling file-related and bash command actions. It includes implementations for create, replace, diff operations on files, and simulates bash command execution.
+       - `tag_handlers.py`: Provides a framework for handling tags, validating, and processing tag-related actions. It includes the ConsoleDisplayHandler for displaying file actions using unified diffs.
      - `event/`: Subdirectory for event-related functionality
        - `base.py`: Defines AgentEvent enum, AgentEventBaseHandler, and EventEmitter classes
        - `config.py`: Configures event emitter and handlers

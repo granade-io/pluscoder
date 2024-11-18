@@ -21,7 +21,7 @@ def clear_env(monkeypatch):
 
 def test_config_default_values():
     with patch.object(sys, "argv", ["config.py"]):
-        config = Settings(_env_file=None, ignore_yaml=True)
+        config = Settings(_env_file=None, ignore_instances=True)
         assert config.streaming is True
         assert config.user_feedback is True
         assert config.display_internal_outputs is False
@@ -43,7 +43,7 @@ def test_update_from_env():
         clear=True,
     ):
         with patch.object(sys, "argv", ["config.py"]):
-            config = Settings(_env_file=None, ignore_yaml=True)
+            config = Settings(_env_file=None, ignore_instances=True)
             assert config.model == "my_model"
             assert config.streaming is True
             assert config.user_feedback is False
@@ -61,7 +61,7 @@ def test_update_from_args():
         "--log_filename=args.log",
     ]
     with patch.object(sys, "argv", [] + test_args):
-        config = Settings(_env_file=None, ignore_yaml=True)
+        config = Settings(_env_file=None, ignore_instances=True)
         assert config.streaming is True
         assert config.user_feedback is False
         assert config.display_internal_outputs is True
@@ -86,7 +86,7 @@ def test_config_precedence():
             "argv",
             ["config.py", "--streaming=true", "--display_internal_outputs=true"],
         ):
-            config = Settings(_env_file=None, ignore_yaml=True)
+            config = Settings(_env_file=None, ignore_instances=True)
 
             # Command-line args should take precedence over env vars
             assert config.streaming is True
@@ -103,7 +103,7 @@ def test_config_precedence_empty_configs(clear_env):
     # Test default values when neither env vars nor command-line args are provided
     with patch.dict(os.environ, {}, clear=True):
         with patch.object(sys, "argv", ["config.py"]):
-            config = Settings(_env_file=None, ignore_yaml=True)
+            config = Settings(_env_file=None, ignore_instances=True)
             assert config.streaming is True
             assert config.user_feedback is True
             assert config.display_internal_outputs is False
@@ -113,7 +113,7 @@ def test_config_precedence_empty_configs(clear_env):
 
 def test_update_method_non_persisting(clear_env):
     with patch.object(sys, "argv", ["config.py"]):
-        config = Settings(_env_file=None, ignore_yaml=True)
+        config = Settings(_env_file=None, ignore_instances=True)
 
         # Initial values
         assert config.streaming is True
@@ -133,6 +133,6 @@ def test_update_method_non_persisting(clear_env):
         assert "model: new-model" not in yaml_content
 
         # Re-initialize to check if changes persist
-        new_config = Settings(_env_file=None, ignore_yaml=True)
+        new_config = Settings(_env_file=None, ignore_instances=True)
         assert new_config.streaming is True
         assert new_config.model is None

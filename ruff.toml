@@ -132,7 +132,8 @@ ignore = [
   "S604",    # Function call with `shell=True` parameter identified, security issue
   "C405",    # Unnecessary `list` literal (rewrite as a `set` literal)
   "N818",    # Exception name `AgentException` should be named with an Error suffix
-  "EM101",   # Exception must not use a string literal, assign to variable first
+  "EM101",   # Exception must not use a string literal, assign to variable first,
+  "EXE001",  # Shebang is present but file is not executable
 ]
 
 explicit-preview-rules = true

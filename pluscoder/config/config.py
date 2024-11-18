@@ -15,6 +15,9 @@ from pydantic_settings import PydanticBaseSettingsSource
 from pydantic_settings import SettingsConfigDict
 from pydantic_settings import YamlConfigSettingsSource
 from rich.console import Console
+from yaml.scanner import ScannerError
+
+from pluscoder.config.utils import get_global_config
 
 
 def validate_custom_agents(custom_agents: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -75,6 +78,9 @@ class Settings(BaseSettings):
             cls._instance = super().__new__(cls)
         return cls._instance
 
+    def reconfigure(self):
+        self.__init__(**{})
+
     custom_agents: List[Dict[str, Any]] = Field(
         default=[],
         description="List of custom agents with properties: name, description, prompt, and read_only",
@@ -106,7 +112,7 @@ class Settings(BaseSettings):
     model: Optional[str] = Field(None, description="LLM model to use")
     provider: Optional[str] = Field(
         "openai",
-        description="Provider to use. Options: bedrock, openai, anthropic, litellm, null",
+        description="Provider to use. Options: bedrock, openai, anthropic, litellm, vertexai, null",
     )
 
     orchestrator_model: Optional[str] = Field(None, description="LLM model to use for orchestrator")
@@ -115,18 +121,8 @@ class Settings(BaseSettings):
     weak_model: Optional[str] = Field(None, description="Weaker LLM model to use for less complex tasks")
     weak_model_provider: Optional[str] = Field(None, description="Provider to use for weak model")
 
-    # Providers API keys
-    # OpenAI API keys
-    openai_api_key: Optional[str] = Field(None, description="OpenAI API key")
-    openai_api_base: Optional[str] = Field(None, description="OpenAI API base URL")
-
-    # Anthropic API keys
-    anthropic_api_key: Optional[str] = Field(None, description="Anthropic API key")
-
-    # AWS IAM keys
-    aws_access_key_id: Optional[str] = Field(None, description="AWS Access Key ID")
-    aws_secret_access_key: Optional[str] = Field(None, description="AWS Secret Access Key")
-    aws_profile: str = Field("default", description="AWS profile name")
+    # PlusCoder API
+    pluscoder_token: Optional[str] = Field(None, description="PlusCoder API token for authentication")
 
     # Git settings
     auto_commits: bool = Field(False, description="Enable/disable automatic Git commits")
@@ -140,6 +136,10 @@ class Settings(BaseSettings):
     auto_run_linter_fix: bool = Field(False, description="Automatically run linter fix before linting")
     lint_fix_command: Optional[str] = Field(None, description="Command to run linter fix")
 
+    # Repository settings
+    repository: Optional[str] = Field(None, description="Git repository path or URL to clone and process")
+    source_branch: Optional[str] = Field(None, description="Source branch to checkout when cloning repository")
+
     # Repomap settings
     use_repomap: bool = Field(False, description="Enable/disable repomap feature")
     repomap_level: int = Field(2, description="Set the level of detail for repomap")
@@ -152,6 +152,7 @@ class Settings(BaseSettings):
     show_repo: CliImplicitFlag[bool] = Field(False, description="Show repository information")
     show_repomap: CliImplicitFlag[bool] = Field(False, description="Show repository map")
     show_config: CliImplicitFlag[bool] = Field(False, description="Show repository information")
+    version: CliImplicitFlag[bool] = Field(False, description="Show pluscoder version")
     show_token_usage: CliImplicitFlag[bool] = Field(True, description="Show token usage/cost")
 
     # Output display settings
@@ -161,6 +162,7 @@ class Settings(BaseSettings):
 
     # Debug mode
     debug: CliImplicitFlag[bool] = Field(False, description="Enable debug mode")
+    dev: CliImplicitFlag[bool] = Field(False, description="Enable development mode (skips token validation)")
 
     # Custom prompt commands
     custom_prompt_commands: List[Dict[str, Any]] = Field(
@@ -173,6 +175,7 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         cli_parse_args=True,
+        cli_ignore_unknown_args=True,
         case_sensitive=False,
         yaml_file=".pluscoder-config.yml",
         yaml_file_encoding="utf-8",
@@ -187,9 +190,12 @@ class Settings(BaseSettings):
         dotenv_settings: PydanticBaseSettingsSource,
         file_secret_settings: PydanticBaseSettingsSource,
     ) -> Tuple[PydanticBaseSettingsSource, ...]:
-        if not init_settings.init_kwargs.get("ignore_yaml", False):
+        if not init_settings.init_kwargs.get("ignore_instances", False):
+            global_config = YamlConfigSettingsSource(settings_cls, yaml_file=get_global_config())
             yaml_config = YamlConfigSettingsSource(settings_cls)
-            return init_settings, dotenv_settings, yaml_config, env_settings
+            # Priority: init_settings > dotenv > project yaml > env > global yaml
+            return init_settings, dotenv_settings, yaml_config, env_settings, global_config
+        init_settings.config["yaml_file"] = None
         return init_settings, dotenv_settings, env_settings
 
     def update(self, persist: bool = False, **kwargs):
@@ -214,12 +220,16 @@ class Settings(BaseSettings):
                 f.write(config_text)
 
         # Re-execute initialization
-        new_config = {key: getattr(self, key) for key in self.__fields__}
+        new_config = {key: getattr(self, key) for key in self.model_fields}
         self.__init__(**new_config)
 
 
 def get_settings():
-    return Settings()
+    try:
+        return Settings()
+    except ScannerError:
+        print("Failed to parse .pluscoder-config.yml. Please check the configuration file.")
+        sys.exit(1)
 
 
 # Usage

@@ -1,9 +1,55 @@
-# [2.3.0](https://gitlab.com/codematos/pluscoder/compare/v2.2.0...v2.3.0) (2024-11-06)
+# [2.4.0-rc.1](https://gitlab.com/codematos/pluscoder/compare/v2.3.0...v2.4.0-rc.1) (2024-11-18)
 
 
 ### Bug Fixes
 
+* now cli extra args are being properly ignored ([d791932](https://gitlab.com/codematos/pluscoder/commit/d791932f34461c7480405d5a322b4c1a7b529a2e))
+* now environment variables are used for models instead of config values ([78778f9](https://gitlab.com/codematos/pluscoder/commit/78778f97d7d0ce9c57240d35968fb3ba10931b96))
+* token validation at start and backend api ([99e5630](https://gitlab.com/codematos/pluscoder/commit/99e5630067144a45bf11ca7b03a2b237483cece9))
+
+
+### Features
+
+* added ~/.config/pluscoder/vars.env to manage global credentials ([46f5f89](https://gitlab.com/codematos/pluscoder/commit/46f5f89ccd62bca0c067597105221f406fa91226))
+* added exponential backoff on errors related to llm endpoint ([299e861](https://gitlab.com/codematos/pluscoder/commit/299e861b1ba9c73299812f16ee6311e5fd6a0145))
+* added vertex ai support through gcloud cli ([cb94f0d](https://gitlab.com/codematos/pluscoder/commit/cb94f0df5fd9947dbe8638b593a4075001d9cf64))
+* new --repository and --source_branch configs to clone a repo before running pluscoder, --repository also accepts a git path ([80c5202](https://gitlab.com/codematos/pluscoder/commit/80c5202a0f41aa6476173fe3b9f9054d97430307))
+* new global configuration yaml for reusable configs cross project. Check --show_config to see where its located ([7b1447a](https://gitlab.com/codematos/pluscoder/commit/7b1447a45f4440b9ab4d9938c4c390cc02c750b6))
+* version display at start ([ad43b8f](https://gitlab.com/codematos/pluscoder/commit/ad43b8fd76c75734aca1ed60a44f864df07f113a))
+
+# [2.2.0-rc.4](https://gitlab.com/codematos/pluscoder/compare/v2.2.0-rc.3...v2.2.0-rc.4) (2024-11-18)
+
+
+### Bug Fixes
+
+* now environment variables are used for models instead of config values ([78778f9](https://gitlab.com/codematos/pluscoder/commit/78778f97d7d0ce9c57240d35968fb3ba10931b96))
+
+# [2.2.0-rc.3](https://gitlab.com/codematos/pluscoder/compare/v2.2.0-rc.2...v2.2.0-rc.3) (2024-11-17)
+
+
+### Bug Fixes
+
+* token validation at start and backend api ([99e5630](https://gitlab.com/codematos/pluscoder/commit/99e5630067144a45bf11ca7b03a2b237483cece9))
+
+# [2.2.0-rc.2](https://gitlab.com/codematos/pluscoder/compare/v2.2.0-rc.1...v2.2.0-rc.2) (2024-11-13)
+
+
+### Features
+
+* version display at start ([ad43b8f](https://gitlab.com/codematos/pluscoder/commit/ad43b8fd76c75734aca1ed60a44f864df07f113a))
+
+# [2.3.0](https://gitlab.com/codematos/pluscoder/compare/v2.2.0...v2.3.0) (2024-11-06)
+
+### Bug Fixes
+
 * broken --no-init flags now is working again ([070b943](https://gitlab.com/codematos/pluscoder/commit/070b94349d5fd64ef0bfce566fb0bb04c5d9abdc))
+* error handling when starting in a non-git folder ([418235c](https://gitlab.com/codematos/pluscoder/commit/418235c3b8436f38b2ff1014d971a45dfd1ddf2d))
+* fixed loop when invoking non-orchestrator agent using --user_input ([61cd427](https://gitlab.com/codematos/pluscoder/commit/61cd4274cde9d17b2147482d59110cf0fe7c1876))
+* fixed messages with dict and str content items when merged when using multimodal inputs ([1acce49](https://gitlab.com/codematos/pluscoder/commit/1acce49521e8b43f4a50dff9e1449d7ad5bcfacd))
+* improve streaming block parsing with 1 more usecase ([7ae9096](https://gitlab.com/codematos/pluscoder/commit/7ae9096ae2d15c773279d736c56dae60cf21adbf))
+* initialization process now works seamlessly when running pluscoder by the first time ([be0270f](https://gitlab.com/codematos/pluscoder/commit/be0270f5db6832d5050ee8385ccfd56920ec9aa0))
+* initialization target agents now points all to standard developer ([25b21b8](https://gitlab.com/codematos/pluscoder/commit/25b21b86ee58256a780ad6869e5bd633e81f2bbd))
+* now cli extra args are being properly ignored ([d791932](https://gitlab.com/codematos/pluscoder/commit/d791932f34461c7480405d5a322b4c1a7b529a2e))
 * fixed messages with dict and str content items when merged when using multimodal inputs ([1acce49](https://gitlab.com/codematos/pluscoder/commit/1acce49521e8b43f4a50dff9e1449d7ad5bcfacd))
 * now openAI endpoints stream token usage ([6db44df](https://gitlab.com/codematos/pluscoder/commit/6db44df2d53bc5367a222f15898ce2ddfe46ce7a))
 * required PROJECT_OVERVIEW.md and CODING_GUIDELINES.md can now be created using --auto_confirm flag ([5b96a71](https://gitlab.com/codematos/pluscoder/commit/5b96a714e3a03c4deab6e6bd46235eb39a07a083))
@@ -12,6 +58,16 @@
 
 ### Features
 
+* add system reminders for agent to improve its output consistency ([9952347](https://gitlab.com/codematos/pluscoder/commit/995234784e7260b9db6cd5e59e12593131c1e84e))
+* added /agent_create to create a persistent specialized agent and start a chat with it ([1ccad26](https://gitlab.com/codematos/pluscoder/commit/1ccad2616863e75a00627a75a12f78754c11e128))
+* added exponential backoff on errors related to llm endpoint ([299e861](https://gitlab.com/codematos/pluscoder/commit/299e861b1ba9c73299812f16ee6311e5fd6a0145))
+* added vertex ai support through gcloud cli ([cb94f0d](https://gitlab.com/codematos/pluscoder/commit/cb94f0df5fd9947dbe8638b593a4075001d9cf64))
+* auto-commits now commits only updated files ([f914dc3](https://gitlab.com/codematos/pluscoder/commit/f914dc3e0a76a1d72ac6c64e6a136b7ba25cecd0))
+* default models ([5eb9adc](https://gitlab.com/codematos/pluscoder/commit/5eb9adcea08383bf29a26962a6414b5769507457))
+* new --debug flag to display some relevant debug information ([d757a80](https://gitlab.com/codematos/pluscoder/commit/d757a80ba630dbb92efa0b902703d2f3e37647a1))
+* new --default_agent allow selection of a default agent to chat with ([883af57](https://gitlab.com/codematos/pluscoder/commit/883af576c468666921fe258a0c6d9cdc03298b8a))
+* new --repository and --source_branch configs to clone a repo before running pluscoder, --repository also accepts a git path ([80c5202](https://gitlab.com/codematos/pluscoder/commit/80c5202a0f41aa6476173fe3b9f9054d97430307))
+* new global configuration yaml for reusable configs cross project. Check --show_config to see where its located ([7b1447a](https://gitlab.com/codematos/pluscoder/commit/7b1447a45f4440b9ab4d9938c4c390cc02c750b6))
 * added /agent_create to create a persistent specialized agent and start a chat with it ([1ccad26](https://gitlab.com/codematos/pluscoder/commit/1ccad2616863e75a00627a75a12f78754c11e128))
 * default models ([5eb9adc](https://gitlab.com/codematos/pluscoder/commit/5eb9adcea08383bf29a26962a6414b5769507457))
 * new --debug flag to display some relevant debug information ([d757a80](https://gitlab.com/codematos/pluscoder/commit/d757a80ba630dbb92efa0b902703d2f3e37647a1))

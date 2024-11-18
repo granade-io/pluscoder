@@ -19,15 +19,14 @@ from pluscoder.agents.event.config import event_emitter
 from pluscoder.agents.prompts import REMINDER_PREFILL_FILE_OPERATIONS_PROMPT
 from pluscoder.agents.prompts import REMINDER_PREFILL_PROMPT
 from pluscoder.agents.prompts import build_system_prompt
+from pluscoder.agents.stream_parser import XMLStreamParser
 from pluscoder.config import config
 from pluscoder.exceptions import AgentException
-from pluscoder.fs import apply_block_update
 from pluscoder.fs import get_formatted_files_content
 from pluscoder.io_utils import io
 from pluscoder.logs import file_callback
 from pluscoder.message_utils import HumanMessage
 from pluscoder.message_utils import filter_messages
-from pluscoder.message_utils import get_message_content_str
 from pluscoder.message_utils import tag_messages
 from pluscoder.model import get_llm
 from pluscoder.repo import Repository
@@ -60,7 +59,9 @@ def parse_mentioned_files(text):
 class Agent:
     state_schema = OrchestrationState
 
-    def __init__(self, agent_config: AgentConfig, extraction_tools: list[Callable] = []):
+    def __init__(
+        self, agent_config: AgentConfig, stream_parser: XMLStreamParser, extraction_tools: list[Callable] = []
+    ):
         self.id = agent_config.id
         self.name = agent_config.name
         self.system_message = agent_config.prompt
@@ -77,6 +78,8 @@ class Agent:
         self.description = agent_config.description
         self.reminder = agent_config.reminder
         self.repository_interaction = agent_config.repository_interaction
+        self.stream_parser = stream_parser
+        self.updated_files = set()
 
     def get_context_files(self, state):
         state_files = state.get("context_files") or []
@@ -87,7 +90,7 @@ class Agent:
 
     def get_context_files_panel(self, files):
         if files:
-            files_context = f"{" ".join(files[0:5])}{f' (+{len(files) - 5} files)' if len(files) > 5 else ''}"
+            files_context = " ".join(files[0:5]) + (f" (+{len(files) - 5} files)" if len(files) > 5 else "")
         else:
             files_context = "<No files available>"
         return f"> Files context: {files_context}"
@@ -177,7 +180,7 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         return get_llm()
 
     def _stream_events(self, chain, state: OrchestrationState, deflection_messages: List[str]):
-        io.start_stream()
+        self.stream_parser.start_stream()
         first = True
         gathered = None
         try:
@@ -189,14 +192,17 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                 {"callbacks": [file_callback]},
             ):
                 if first:
-                    io.stream(chunk.content)
+                    self.stream_parser.stream(chunk.content)
                     gathered = chunk
                     first = False
                 else:
-                    io.stream(chunk.content)
+                    self.stream_parser.stream(chunk.content)
                     gathered = gathered + chunk
         finally:
-            io.stop_stream()
+            try:
+                self.stream_parser.close_stream()
+            except Exception as e:
+                print(f"Error in stream events: {e}")
         return gathered
 
     def _invoke_llm_chain(self, state: OrchestrationState, deflection_messages: List[str] = []):
@@ -229,12 +235,15 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         post_process_state = {}
 
         with get_openai_callback() as cb:
+            backoff_time = 2  # Start with 3 seconds
             while self.current_deflection <= self.max_deflections:
                 try:
                     llm_response = self._invoke_llm_chain(state, interaction_msgs)
                     llm_response.tags = [self.id]
+
                     interaction_msgs.append(llm_response)
                     post_process_state = self.process_agent_response(state, llm_response)
+                    backoff_time = 2  # Reset backoff time on success
                     break
                 except AgentException as e:
                     # Disable sysetem reminders when solving specific errors
@@ -247,9 +256,12 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                     io.console.print("::re-thinking due an issue:: ", style="bold dark_goldenrod")
                     if self.current_deflection <= self.max_deflections:
                         self.current_deflection += 1
-                        interaction_msgs.append(HumanMessage(content=f"An error ocurrred: {e!s}", tags=[self.id]))
-                except Exception:
+                        interaction_msgs.append(HumanMessage(content=f"An error ocurred: {e!s}", tags=[self.id]))
+                        sleep(backoff_time)
+                        backoff_time *= 2  # Exponential backoff
+                except Exception as e:
                     # Handles unknown exceptions, maybe caused by llm api or wrong state
+                    io.console.print(f"An error ocurred when calling model: {e!s}", style="bold red")
                     error_traceback = traceback.format_exc()
                     if config.debug:
                         io.console.log(f"Traceback:\n{error_traceback}", style="bold red")
@@ -258,12 +270,14 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                     io.log_to_debug_file(message=str(state), indent=4)
                     io.log_to_debug_file("Deflection messages:")
                     io.log_to_debug_file(message=str(interaction_msgs), indent=4)
-                    sleep(1)  # Wait a bit, some api calls need time to recover
+                    sleep(backoff_time)  # Wait a bit, some api calls need time to recover
                     interaction_msgs.append(
                         HumanMessage(content="An error occurred. Please try exactly the same again", tags=[self.id])
                     )
                     if self.current_deflection <= self.max_deflections:
                         self.current_deflection += 1
+                        sleep(backoff_time)
+                        backoff_time *= 2  # Exponential backoff
 
         # new_state
         return {
@@ -307,13 +321,6 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
             if tool_call["name"] in [tool.name for tool in self.extraction_tools]:
                 tool_data[tool_call["name"]] = tool_call["args"]
 
-            # Extract files if read_files were used
-            # This is a patch because tools can't read/edit agent state or call agent methods
-            # DEPRECATED: files body are inyected by the tool because performance decreases significantly using this method
-            # if tool_call['name'] in ["read_files"]:
-            #     loaded_files = tool_call["args"].get("file_paths", [])
-            #     io.event(f"> The latest version of these files were added to the chat: {', '.join(loaded_files)}")
-
         return {
             **state,
             "tool_data": tool_data,
@@ -356,45 +363,41 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         # Restart deflection counter
         self.current_deflection = 0
 
+        # Resets updated files of this call
+        self.updated_files = set()
+
         state_updates = self.graph.invoke(state, {"callbacks": [file_callback]})
 
         io.console.print("")
         return {**state, **state_updates, "messages": state_updates["messages"]}
 
     def process_agent_response(self, state, response: AIMessage):
-        if config.read_only or self.read_only or not self.repository_interaction:
-            # Ignore file editions when readonly
+        # Ignore process until all tools are executed
+        if response.tool_calls:
             return {}
 
-        content_text = get_message_content_str(response)
+        # Updated files of the call
+        call_updated_files = set()
+        call_updated_files.update(self.stream_parser.pop_updated_files())
 
-        found_blocks = parse_block(content_text)
-        self.process_blocks(found_blocks)
+        error_messages = self.stream_parser.pop_agent_errors()
 
-        return {}
-
-    def process_blocks(self, file_blocks):
-        # Process the blocks found in the response to replace/create files in the project
-        updated_files = []
-        error_messages = []
-        for block in file_blocks:
-            file_path = block["file_path"]
-            content = block["content"]
-
-            if file_path.startswith("/"):
-                file_path = file_path[1:]
-
-            # Apply the block update to the file
-            error_msg = apply_block_update(file_path, content)
-            if not error_msg:
-                updated_files.append(file_path)
-            else:
-                error_messages.append(error_msg)
+        # check if last message has tool calls to ignore lint/test when files were edited during tool call
 
         if error_messages:
-            raise AgentException("Some files couldn't be updated:\n" + "\n".join(error_messages))
+            updated_files_msg = (
+                f"You successfully updated these files: {', '.join(call_updated_files)}, but there are some issues.\n"
+                if call_updated_files
+                else ""
+            )
+            raise AgentException(
+                "Some errors occurred when executing your actions"
+                + "\n".join(error_messages)
+                + "\nPlease review all errors and solve the present issues if you can. Maybe you will need to read files again to understand what is missing or what happened."
+                + updated_files_msg
+            )
 
-        if updated_files:
+        if call_updated_files:
             # Run tests and linting if enabled
             lint_error = self.repo.run_lint()
             test_error = self.repo.run_test()
@@ -407,12 +410,18 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                     error_message += f"Tests: {test_error}\n"
                 raise AgentException(error_message)
 
-        if updated_files:
+        # Updated files during entire agent execution
+        self.updated_files.update(call_updated_files)
+        if self.updated_files:
             try:
+                if len(self.updated_files) > 1:
+                    io.event(f"> These files were successfully updated: {', '.join(self.updated_files)}")
                 # Try to get current event loop
                 loop = asyncio.get_running_loop()
                 # If exists, run in current loop
-                loop.create_task(event_emitter.emit("files_updated", updated_files=updated_files))  # noqa: RUF006
+                loop.create_task(event_emitter.emit("files_updated", updated_files=self.updated_files))  # noqa: RUF006
+                self.updated_files = set()
             except RuntimeError:
                 # If no loop exists, create new one
-                asyncio.run(event_emitter.emit("files_updated", updated_files=updated_files))
+                asyncio.run(event_emitter.emit("files_updated", updated_files=self.updated_files))
+        return {}

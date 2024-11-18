@@ -12,11 +12,12 @@ from rich.rule import Rule
 from pluscoder import tools
 from pluscoder.agents.base import Agent
 from pluscoder.agents.core import DeveloperAgent
-from pluscoder.agents.core import DomainExpertAgent
 from pluscoder.agents.core import DomainStakeholderAgent
-from pluscoder.agents.core import PlanningAgent
 from pluscoder.agents.event.config import event_emitter
 from pluscoder.agents.orchestrator import OrchestratorAgent
+from pluscoder.agents.output_handlers.action_handlers import ActionProcessHandler
+from pluscoder.agents.output_handlers.tag_handlers import ConsoleDisplayHandler
+from pluscoder.agents.stream_parser import XMLStreamParser
 from pluscoder.commands import handle_command
 from pluscoder.commands import is_command
 from pluscoder.config import config
@@ -36,6 +37,15 @@ warnings.filterwarnings("ignore")
 
 default_context_files = ["PROJECT_OVERVIEW.md", "CODING_GUIDELINES.md"]
 
+# Setup handlers to process llm outputs
+action_handler = ActionProcessHandler()
+display_handler = ConsoleDisplayHandler(io=io)
+
+# Setup parser and subscribe main handler
+parser = XMLStreamParser(io=io)
+parser.subscribe(display_handler)
+parser.subscribe(action_handler)
+
 
 def build_agents() -> dict[str, AgentConfig]:
     # Create agent configs
@@ -49,6 +59,7 @@ def build_agents() -> dict[str, AgentConfig]:
             tools=[tool.name for tool in tools.base_tools],
             default_context_files=default_context_files,
             repository_interaction=True,
+            read_only=True,
         ),
         "developer": AgentConfig(
             id=DeveloperAgent.id,
@@ -59,6 +70,7 @@ def build_agents() -> dict[str, AgentConfig]:
             tools=[tool.name for tool in tools.base_tools],
             default_context_files=default_context_files,
             repository_interaction=True,
+            read_only=False,
         ),
         "domain_stakeholder": AgentConfig(
             id=DomainStakeholderAgent.id,
@@ -69,26 +81,7 @@ def build_agents() -> dict[str, AgentConfig]:
             tools=[tool.name for tool in tools.base_tools],
             default_context_files=default_context_files,
             repository_interaction=True,
-        ),
-        "planning": AgentConfig(
-            id=PlanningAgent.id,
-            name="Planning",
-            description=PlanningAgent.description,
-            prompt=PlanningAgent.specialization_prompt,
-            reminder="",
-            tools=[tool.name for tool in tools.base_tools],
-            default_context_files=default_context_files,
-            repository_interaction=True,
-        ),
-        "domain_expert": AgentConfig(
-            id=DomainExpertAgent.id,
-            name="Domain Expert",
-            description=DomainExpertAgent.description,
-            prompt=DomainExpertAgent.specialization_prompt,
-            reminder="",
-            tools=[tool.name for tool in tools.base_tools],
-            default_context_files=default_context_files,
-            repository_interaction=True,
+            read_only=False,
         ),
     }
 
@@ -229,7 +222,7 @@ async def _agent_node(state: OrchestrationState) -> OrchestrationState:
     # Execute the agent's graph node and get a its modified state
     messages = filter_messages(state["messages"], include_tags=[agent_config.id])
 
-    agent = Agent(agent_config)
+    agent = Agent(agent_config, stream_parser=parser)
     updated_state = await agent.graph_node({**state, "messages": messages})
 
     # Update token usage
@@ -353,7 +346,7 @@ async def _orchestrator_agent_node(
     if OrchestratorAgent.validate_current_task_completed(validation_response) or (
         # Manual validation when max reflections are reached
         global_state["current_agent_deflections"] >= global_state["max_agent_deflections"]
-        and io.confirm(f"Was the task `{task["objective"]}` completed by the agent?")
+        and io.confirm("Was the task `" + task["objective"] + "` completed by the agent?")
     ):
         # Task has been completed. Move to next task
 
@@ -376,7 +369,7 @@ async def _orchestrator_agent_node(
             # Generate a final summarized answer to the user
             task_results = "\n---\n".join(
                 [
-                    f"Task: {task["objective"]}\nDetails: {task["details"]}\nResponse: {task["response"]}"
+                    f"Task: {task['objective']}\nDetails: {task['details']}\nResponse: {task['response']}"
                     for task in OrchestratorAgent.get_task_list(state_update)
                 ]
             )
@@ -496,7 +489,7 @@ async def _orchestrator_agent_node(
 
 def build_workflow(agents_config: dict[str, AgentConfig]):
     # Create orchestrator instance for router functions
-    orchestrator_agent = OrchestratorAgent(agents_config[OrchestratorAgent.id])
+    orchestrator_agent = OrchestratorAgent(agents_config[OrchestratorAgent.id], stream_parser=parser)
 
     # Create the graph
     workflow = StateGraph(OrchestrationState)

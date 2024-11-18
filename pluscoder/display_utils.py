@@ -11,7 +11,6 @@ def display_diff(diff_text, filepath, console):
     # Display using rich syntax highlighting
     # console.print(Text(f"`{filepath}`", style="bold"))
     syntax = Syntax(diff_text, "diff", theme="monokai", line_numbers=False)
-    console.print("\n")
     console.print(syntax)
 
 
