@@ -1,3 +1,10 @@
+# [2.2.0-rc.4](https://gitlab.com/codematos/pluscoder/compare/v2.2.0-rc.3...v2.2.0-rc.4) (2024-11-18)
+
+
+### Bug Fixes
+
+* now environment variables are used for models instead of config values ([78778f9](https://gitlab.com/codematos/pluscoder/commit/78778f97d7d0ce9c57240d35968fb3ba10931b96))
+
 # [2.2.0-rc.3](https://gitlab.com/codematos/pluscoder/compare/v2.2.0-rc.2...v2.2.0-rc.3) (2024-11-17)
 
 
