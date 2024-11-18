@@ -19,8 +19,7 @@
 
 * version display at start ([ad43b8f](https://gitlab.com/codematos/pluscoder/commit/ad43b8fd76c75734aca1ed60a44f864df07f113a))
 
-# [2.2.0-rc.1](https://gitlab.com/codematos/pluscoder/compare/v2.1.0...v2.2.0-rc.1) (2024-11-12)
-
+# [2.3.0](https://gitlab.com/codematos/pluscoder/compare/v2.2.0...v2.3.0) (2024-11-06)
 
 ### Bug Fixes
 
@@ -32,6 +31,7 @@
 * initialization process now works seamlessly when running pluscoder by the first time ([be0270f](https://gitlab.com/codematos/pluscoder/commit/be0270f5db6832d5050ee8385ccfd56920ec9aa0))
 * initialization target agents now points all to standard developer ([25b21b8](https://gitlab.com/codematos/pluscoder/commit/25b21b86ee58256a780ad6869e5bd633e81f2bbd))
 * now cli extra args are being properly ignored ([d791932](https://gitlab.com/codematos/pluscoder/commit/d791932f34461c7480405d5a322b4c1a7b529a2e))
+* fixed messages with dict and str content items when merged when using multimodal inputs ([1acce49](https://gitlab.com/codematos/pluscoder/commit/1acce49521e8b43f4a50dff9e1449d7ad5bcfacd))
 * now openAI endpoints stream token usage ([6db44df](https://gitlab.com/codematos/pluscoder/commit/6db44df2d53bc5367a222f15898ce2ddfe46ce7a))
 * required PROJECT_OVERVIEW.md and CODING_GUIDELINES.md can now be created using --auto_confirm flag ([5b96a71](https://gitlab.com/codematos/pluscoder/commit/5b96a714e3a03c4deab6e6bd46235eb39a07a083))
 * run event emitter on current running loop if exists ([84e0100](https://gitlab.com/codematos/pluscoder/commit/84e01008152166c84bba3a571bad0ff982e8c9b9))
@@ -49,6 +49,27 @@
 * new --default_agent allow selection of a default agent to chat with ([883af57](https://gitlab.com/codematos/pluscoder/commit/883af576c468666921fe258a0c6d9cdc03298b8a))
 * new --repository and --source_branch configs to clone a repo before running pluscoder, --repository also accepts a git path ([80c5202](https://gitlab.com/codematos/pluscoder/commit/80c5202a0f41aa6476173fe3b9f9054d97430307))
 * new global configuration yaml for reusable configs cross project. Check --show_config to see where its located ([7b1447a](https://gitlab.com/codematos/pluscoder/commit/7b1447a45f4440b9ab4d9938c4c390cc02c750b6))
+* added /agent_create to create a persistent specialized agent and start a chat with it ([1ccad26](https://gitlab.com/codematos/pluscoder/commit/1ccad2616863e75a00627a75a12f78754c11e128))
+* default models ([5eb9adc](https://gitlab.com/codematos/pluscoder/commit/5eb9adcea08383bf29a26962a6414b5769507457))
+* new --debug flag to display some relevant debug information ([d757a80](https://gitlab.com/codematos/pluscoder/commit/d757a80ba630dbb92efa0b902703d2f3e37647a1))
+
+# [2.2.0](https://gitlab.com/codematos/pluscoder/compare/v2.1.0...v2.2.0) (2024-10-18)
+
+
+### Bug Fixes
+
+* error handling when starting in a non-git folder ([418235c](https://gitlab.com/codematos/pluscoder/commit/418235c3b8436f38b2ff1014d971a45dfd1ddf2d))
+* fixed loop when invoking non-orchestrator agent using --user_input ([61cd427](https://gitlab.com/codematos/pluscoder/commit/61cd4274cde9d17b2147482d59110cf0fe7c1876))
+* improve streaming block parsing with 1 more usecase ([7ae9096](https://gitlab.com/codematos/pluscoder/commit/7ae9096ae2d15c773279d736c56dae60cf21adbf))
+* initialization process now works seamlessly when running pluscoder by the first time ([be0270f](https://gitlab.com/codematos/pluscoder/commit/be0270f5db6832d5050ee8385ccfd56920ec9aa0))
+* initialization target agents now points all to standard developer ([25b21b8](https://gitlab.com/codematos/pluscoder/commit/25b21b86ee58256a780ad6869e5bd633e81f2bbd))
+
+
+### Features
+
+* add system reminders for agent to improve its output consistency ([9952347](https://gitlab.com/codematos/pluscoder/commit/995234784e7260b9db6cd5e59e12593131c1e84e))
+* auto-commits now commits only updated files ([f914dc3](https://gitlab.com/codematos/pluscoder/commit/f914dc3e0a76a1d72ac6c64e6a136b7ba25cecd0))
+* new --default_agent allow selection of a default agent to chat with ([883af57](https://gitlab.com/codematos/pluscoder/commit/883af576c468666921fe258a0c6d9cdc03298b8a))
 * now agents can read files directly from public repositories without requiring raw file urls. Available for Gitlab & Github only ([9149d47](https://gitlab.com/codematos/pluscoder/commit/9149d47671a4b3e216a9d153a2a2de9bbc036e01))
 * orchestrator now operates in read only mode to focus on task design ([3de34f8](https://gitlab.com/codematos/pluscoder/commit/3de34f8bbacda871c2ff99dccaf4fb81b4e01fe3))
 
