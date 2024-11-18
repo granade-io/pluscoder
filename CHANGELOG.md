@@ -1,3 +1,22 @@
+# [2.4.0-rc.1](https://gitlab.com/codematos/pluscoder/compare/v2.3.0...v2.4.0-rc.1) (2024-11-18)
+
+
+### Bug Fixes
+
+* now cli extra args are being properly ignored ([d791932](https://gitlab.com/codematos/pluscoder/commit/d791932f34461c7480405d5a322b4c1a7b529a2e))
+* now environment variables are used for models instead of config values ([78778f9](https://gitlab.com/codematos/pluscoder/commit/78778f97d7d0ce9c57240d35968fb3ba10931b96))
+* token validation at start and backend api ([99e5630](https://gitlab.com/codematos/pluscoder/commit/99e5630067144a45bf11ca7b03a2b237483cece9))
+
+
+### Features
+
+* added ~/.config/pluscoder/vars.env to manage global credentials ([46f5f89](https://gitlab.com/codematos/pluscoder/commit/46f5f89ccd62bca0c067597105221f406fa91226))
+* added exponential backoff on errors related to llm endpoint ([299e861](https://gitlab.com/codematos/pluscoder/commit/299e861b1ba9c73299812f16ee6311e5fd6a0145))
+* added vertex ai support through gcloud cli ([cb94f0d](https://gitlab.com/codematos/pluscoder/commit/cb94f0df5fd9947dbe8638b593a4075001d9cf64))
+* new --repository and --source_branch configs to clone a repo before running pluscoder, --repository also accepts a git path ([80c5202](https://gitlab.com/codematos/pluscoder/commit/80c5202a0f41aa6476173fe3b9f9054d97430307))
+* new global configuration yaml for reusable configs cross project. Check --show_config to see where its located ([7b1447a](https://gitlab.com/codematos/pluscoder/commit/7b1447a45f4440b9ab4d9938c4c390cc02c750b6))
+* version display at start ([ad43b8f](https://gitlab.com/codematos/pluscoder/commit/ad43b8fd76c75734aca1ed60a44f864df07f113a))
+
 # [2.2.0-rc.4](https://gitlab.com/codematos/pluscoder/compare/v2.2.0-rc.3...v2.2.0-rc.4) (2024-11-18)
 
 
