@@ -13,6 +13,7 @@ CONFIG_FILEPATH = ".pluscoder-config.yml"
 class ConfigPaths(NamedTuple):
     local: str  # Repository local config
     global_config: str  # User global config
+    global_env: str  # User global env file
 
 
 def get_config_paths() -> ConfigPaths:
@@ -26,10 +27,12 @@ def get_config_paths() -> ConfigPaths:
 
     if os.name == "nt":  # Windows
         global_config = os.path.join(home, "AppData", "Local", "pluscoder", "config.yml")
+        global_env = os.path.join(home, "AppData", "Roaming", "pluscoder", "vars.env")
     else:  # Unix-like
         global_config = os.path.join(home, ".config", "pluscoder", "config.yml")
+        global_env = os.path.join(home, ".config", "pluscoder", "vars.env")
 
-    return ConfigPaths(local, global_config)
+    return ConfigPaths(local, global_config, global_env)
 
 
 def get_local_config() -> str:
@@ -48,6 +51,10 @@ def get_global_config() -> str:
         str: Path to global config file
     """
     return get_config_paths().global_config
+
+
+def get_global_env_filepath():
+    return get_config_paths().global_env
 
 
 def read_yaml_file(file_path: str) -> List[str]:

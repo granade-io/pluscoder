@@ -372,6 +372,10 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         return {**state, **state_updates, "messages": state_updates["messages"]}
 
     def process_agent_response(self, state, response: AIMessage):
+        # Ignore process until all tools are executed
+        if response.tool_calls:
+            return {}
+
         # Updated files of the call
         call_updated_files = set()
         call_updated_files.update(self.stream_parser.pop_updated_files())

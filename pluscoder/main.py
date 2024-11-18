@@ -6,6 +6,7 @@ from datetime import datetime
 from datetime import timezone
 from pathlib import Path
 
+from dotenv import load_dotenv
 from rich.prompt import Prompt
 
 from pluscoder.__version__ import __version__
@@ -13,6 +14,7 @@ from pluscoder.commands import show_config
 from pluscoder.commands import show_repo
 from pluscoder.commands import show_repomap
 from pluscoder.config import config
+from pluscoder.config.utils import get_global_env_filepath
 from pluscoder.display_utils import display_agent
 from pluscoder.io_utils import io
 from pluscoder.model import get_inferred_provider
@@ -24,6 +26,9 @@ from pluscoder.type import TokenUsage
 from pluscoder.workflow import build_agents
 from pluscoder.workflow import build_workflow
 from pluscoder.workflow import run_workflow
+
+load_dotenv()
+load_dotenv(dotenv_path=get_global_env_filepath())
 
 
 def banner() -> None:
