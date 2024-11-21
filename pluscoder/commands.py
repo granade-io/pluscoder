@@ -94,18 +94,24 @@ def config_command(state: OrchestrationState, key: str, value: str, *args):
 
 @command_registry.register("undo")
 def undo(state: OrchestrationState):
-    """Revert last commit and remove last message from chat history"""
+    """Revert last commit and remove message from history until last user message is removed"""
     repo = Repository(io=io)
     if repo.undo():
-        # Filters values from dict where key ends with "_state"
-        last_message = state["messages"][-1]
+        messages = state.get("messages", [])
+        # Find last HumanMessage
+        last_human_idx = next(
+            (i for i in range(len(messages) - 1, -1, -1) if isinstance(messages[i], HumanMessage)), -1
+        )
 
-        if not last_message:
+        if last_human_idx == -1:
             io.event("> Last commit reverted. No chat messages to remove.")
             return state
 
-        io.event("> Last commit reverted and last message removed from chat history.")
-        return {"messages": delete_messages(state["messages"], include_ids=[last_message.id])}
+        # Get all message IDs from last human message to end
+        message_ids = [msg.id for msg in messages[last_human_idx:]]
+
+        io.event("> Last commit reverted and messages removed from chat history.")
+        return {"messages": delete_messages(state["messages"], include_ids=message_ids)}
     io.console.print("Failed to revert last commit.", style="bold red")
     return state
 
