@@ -1,3 +1,15 @@
+# [2.5.0-rc.1](https://gitlab.com/codematos/pluscoder/compare/v2.4.0...v2.5.0-rc.1) (2024-11-29)
+
+
+### Bug Fixes
+
+* /undo now removes last commit along messages until last user message is removed ([3fcb091](https://gitlab.com/codematos/pluscoder/commit/3fcb091d37b9c7e6f06e689787fad53bd0da2545))
+
+
+### Features
+
+* new --task_list arg to pass a json string or file for running task list with orchestrator ([4a3aa58](https://gitlab.com/codematos/pluscoder/commit/4a3aa58bdf8555a067fb0b29149a1382ecb78261))
+
 # [2.4.0](https://gitlab.com/codematos/pluscoder/compare/v2.3.0...v2.4.0) (2024-11-18)
 
 
