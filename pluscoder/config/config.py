@@ -1,3 +1,4 @@
+import os
 import re
 import sys
 from typing import Any
@@ -92,6 +93,27 @@ class Settings(BaseSettings):
     def validate_custom_agents_field(cls, v):  # noqa: N805
         return validate_custom_agents(v)
 
+    @field_validator("task_list")
+    def validate_task_list(cls, v: Optional[str]) -> Optional[str]:  # noqa: N805
+        if not v:
+            return None
+
+        # Check if it's a valid JSON string
+        if v.strip().startswith(("{", "[")):
+            try:
+                import json
+
+                json.loads(v)
+                return v
+            except json.JSONDecodeError as error:
+                raise ValueError("Invalid JSON string provided for task_list") from error
+
+        # Check if it's a valid filepath
+        if os.path.exists(v):
+            return v
+
+        raise ValueError("task_list must be either a valid JSON string or an existing filepath")
+
     # Application behavior
     init: CliImplicitFlag[bool] = Field(True, description="Enable/disable initial setup")
     initialized: CliImplicitFlag[bool] = Field(False, description="Pluscoder was or not initialized")
@@ -101,6 +123,7 @@ class Settings(BaseSettings):
     display_internal_outputs: bool = Field(False, description="Display internal agent outputs")
     auto_confirm: bool = Field(False, description="Enable/disable auto confirmation of pluscoder execution")
     user_input: str = Field("", description="Predefined user input")
+    task_list: Optional[str] = Field(None, description="JSON string or filepath containing tasks to execute")
 
     # File paths
     overview_filename: str = Field("PROJECT_OVERVIEW.md", description="Filename for project overview")
