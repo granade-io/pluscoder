@@ -87,7 +87,7 @@ PlusCoder supports the following commands during interaction:
 - `/clear`: Reset entire chat history.
 - `/diff`: Show last commit diff.
 - `/config <key> <value>`: Override any pluscoder configuration. e.g., `/config auto-commits false`
-- `/undo`: Revert last commit and remove last message from chat history.
+- `/undo`: Revert last commit along all messages until last user message is removed.
 - `/agent`: Start a conversation with a new agent from scratch.
 - `/agent_create`: Creates a persistent specialized agent to work with.
 - `/help`: Display help information for available commands.

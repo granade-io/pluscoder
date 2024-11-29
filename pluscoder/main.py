@@ -66,6 +66,56 @@ def banner() -> None:
     )
 
 
+def parse_task_list():
+    """Parse and validate the task list from JSON string or file."""
+    import json
+
+    if not config.task_list:
+        return None
+
+    try:
+        # Parse JSON content
+        if config.task_list.strip().startswith(("{", "[")):
+            tasks = json.loads(config.task_list)
+            source = "JSON string"
+        else:
+            with open(config.task_list) as f:
+                tasks = json.loads(f.read())
+            source = f"file '{config.task_list}'"
+
+        # Validate task structure
+        required_fields = ["objective", "details", "restrictions", "outcome", "agent"]
+
+        if not isinstance(tasks, list):
+            raise ValueError("Task list must be an array of tasks")
+
+        for task in tasks:
+            if not isinstance(task, dict):
+                raise ValueError("Each task must be a dictionary")
+
+            # Validate required fields
+            missing = [field for field in required_fields if field not in task]
+            if missing:
+                msg = f"Task missing required fields: {', '.join(missing)}"
+                raise ValueError(msg)
+
+            # Validate agent exists
+            if task["agent"] not in ["domain_stakeholder", "domain_expert", "developer", "planning", "orchestrator"]:
+                msg = f"Invalid agent '{task['agent']}' in task '{task['objective']}'"
+                raise ValueError(msg)
+
+            # Add default values like in setup.py
+            task.setdefault("completed", False)
+            task.setdefault("is_finished", False)
+
+        io.event(f"> Loaded {len(tasks)} tasks from {source}")
+        return tasks
+
+    except (json.JSONDecodeError, IOError, ValueError) as e:
+        io.console.print(f"Error parsing task list: {e}", style="bold red")
+        sys.exit(1)
+
+
 def run_silent_checks():
     """Run tests and linter silently and return any warnings."""
     repo = Repository(io)
@@ -130,6 +180,9 @@ def display_initial_messages():
 
     if config.read_only:
         io.event("> Running on 'read-only' mode")
+
+    if config.task_list:
+        io.event("> Running in task list execution mode")
 
     # Warns token cost
     if not get_model_token_info(config.model):
@@ -284,7 +337,15 @@ def main() -> None:
         io.event(f"An error occurred. {err}")
         return
     try:
-        chat_agent = choose_chat_agent_node(agent_dict)
+        # Parse task list first
+        task_list = parse_task_list()
+
+        # In task list mode, force orchestrator agent like in setup.py
+        if task_list:
+            chat_agent = "orchestrator"
+            io.event("> Using orchestrator agent for task list execution")
+        else:
+            chat_agent = choose_chat_agent_node(agent_dict)
 
         state = {
             "agents_configs": agent_dict,
@@ -298,9 +359,22 @@ def main() -> None:
             "token_usage": None,
             "current_agent_deflections": 0,
             "max_agent_deflections": 3,
-            "is_task_list_workflow": False,
+            "is_task_list_workflow": bool(task_list),
             "status": "active",
         }
+
+        # Add task list data if present
+        if task_list:
+            from pluscoder.tools import delegate_tasks
+            from pluscoder.type import AgentInstructions
+
+            tool_data = {}
+            tool_data[delegate_tasks.name] = AgentInstructions(
+                general_objective="Execute predefined task list",
+                task_list=task_list,
+                resources=[],
+            ).dict()
+            state["tool_data"] = tool_data
 
         app = build_workflow(agent_dict)
         asyncio.run(run_workflow(app, state))
