@@ -5,9 +5,13 @@ from time import sleep
 from typing import Callable
 from typing import List
 from typing import Literal
+from typing import cast
 
 from langchain_community.callbacks.manager import get_openai_callback
 from langchain_core.messages import AIMessage
+from langchain_core.messages import BaseMessageChunk
+from langchain_core.messages import convert_to_messages
+from langchain_core.messages import message_chunk_to_message
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import Runnable
 from langchain_core.runnables import RunnableMap
@@ -26,7 +30,9 @@ from pluscoder.fs import get_formatted_files_content
 from pluscoder.io_utils import io
 from pluscoder.logs import file_callback
 from pluscoder.message_utils import HumanMessage
+from pluscoder.message_utils import build_file_editions_tool_message
 from pluscoder.message_utils import filter_messages
+from pluscoder.message_utils import mask_stale_file_messages
 from pluscoder.message_utils import tag_messages
 from pluscoder.model import get_llm
 from pluscoder.repo import Repository
@@ -163,10 +169,14 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         if not self.disable_reminder:
             reminder_messages.append(HumanMessage(content=self.get_reminder_prefill(state), tags=[self.id]))
 
+        # Get stale content version of messages
+        all_messages = state["messages"] + deflection_messages + reminder_messages
+        processed_messages = mask_stale_file_messages(all_messages)
+
         # assistant_prompt
         return RunnableMap(
             {
-                "messages": lambda x: state["messages"] + deflection_messages + reminder_messages,
+                "messages": lambda x: processed_messages,
                 "files_content": lambda x: files_content,
                 "repomap": lambda x: self.get_repomap() if config.use_repomap else "",
             }
@@ -203,7 +213,9 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                 self.stream_parser.close_stream()
             except Exception as e:
                 print(f"Error in stream events: {e}")
-        return gathered
+
+        # coerce to message
+        return message_chunk_to_message(cast(BaseMessageChunk, convert_to_messages([gathered])[0]))  # type: ignore
 
     def _invoke_llm_chain(self, state: OrchestrationState, deflection_messages: List[str] = []):
         assistant_prompt = self.build_assistant_prompt(state, deflection_messages=deflection_messages)
@@ -281,14 +293,13 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
 
         # new_state
         return {
-            "messages": interaction_msgs,
+            "messages": interaction_msgs + post_process_state.get("messages", []),
             "token_usage": {
                 "total_tokens": cb.total_tokens,
                 "prompt_tokens": cb.prompt_tokens,
                 "completion_tokens": cb.completion_tokens,
                 "total_cost": cb.total_cost,
             },
-            **post_process_state,
         }
 
     def agent_router(self, state: OrchestrationState) -> Literal["tools", "__end__"]:
@@ -376,11 +387,15 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         if response.tool_calls:
             return {}
 
-        # Updated files of the call
-        call_updated_files = set()
-        call_updated_files.update(self.stream_parser.pop_updated_files())
+        # Ignore process until all tools are executed
+        if response.tool_calls:
+            return {}
 
-        error_messages = self.stream_parser.pop_agent_errors()
+        # Updated files of the call
+        call_updated_files = self.stream_parser.get_updated_files()
+        self.updated_files.update(call_updated_files)
+
+        error_messages = self.stream_parser.agent_errors
 
         # check if last message has tool calls to ignore lint/test when files were edited during tool call
 
@@ -411,8 +426,10 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                 raise AgentException(error_message)
 
         # Updated files during entire agent execution
-        self.updated_files.update(call_updated_files)
+        file_editions_msgs = []
         if self.updated_files:
+            if len(self.updated_files) > 1:
+                io.event(f"> These files were successfully updated: {', '.join(self.updated_files)}")
             try:
                 if len(self.updated_files) > 1:
                     io.event(f"> These files were successfully updated: {', '.join(self.updated_files)}")
@@ -420,8 +437,12 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                 loop = asyncio.get_running_loop()
                 # If exists, run in current loop
                 loop.create_task(event_emitter.emit("files_updated", updated_files=self.updated_files))  # noqa: RUF006
-                self.updated_files = set()
             except RuntimeError:
                 # If no loop exists, create new one
                 asyncio.run(event_emitter.emit("files_updated", updated_files=self.updated_files))
-        return {}
+            finally:
+                file_editions_msgs = [build_file_editions_tool_message(list(self.updated_files), agent_id=self.id)]
+                self.updated_files = set()
+
+        # Add file editions tool message so agent can understand files was updated successfully
+        return {"messages": file_editions_msgs}

@@ -139,6 +139,7 @@ def get_llm_base(model_id, provider):
             temperature=0.0,
             max_tokens=4096,
             streaming=config.streaming,
+            extra_headers={"anthropic-beta": "prompt-caching-2024-07-31"},
         )
 
     # Uses OpenAI if available

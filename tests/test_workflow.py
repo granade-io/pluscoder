@@ -636,3 +636,134 @@ async def test_orchestrator_task_list_partial_run(
     assert orchestrator_agent.id in state["messages"][3].tags
 
     assert tools.delegate_tasks.name not in state["tool_data"]
+
+
+@pytest.mark.skip(reason="validate")
+@pytest.mark.asyncio
+@patch("pluscoder.main.parse_task_list")
+@patch("pluscoder.workflow.io.confirm")
+@patch("pluscoder.model.get_llm")
+@patch("pluscoder.workflow.accumulate_token_usage")
+@patch.object(Agent, "_invoke_llm_chain")
+async def test_task_list_workflow_execution(
+    mock_invoke_llm_chain,
+    mock_accumulate_token_usage,
+    mock_get_llm,
+    mock_io_confirm,
+    mock_parse_task_list,
+    orchestrator_agent,
+    agent,
+    mock_agents_config,
+):
+    """Test successful execution of task list workflow from JSON string input"""
+    # Mock task list as JSON string (simulating CLI input)
+    tasks = [
+        {
+            "objective": "Test task 1",
+            "details": "Details 1",
+            "restrictions": "None",
+            "outcome": "Outcome 1",
+            "agent": "developer",
+            "completed": False,
+            "is_finished": False,
+        }
+    ]
+    # Simulate JSON string from command line
+    mock_parse_task_list.return_value = tasks
+    mock_io_confirm.return_value = True
+
+    # Mock LLM responses
+    ai_message = AIMessage(content="Task delegated")
+    ai_message.tool_calls = [{"name": tools.delegate_tasks.name, "id": "1", "args": {"tasks": tasks}}]
+
+    dev_response = AIMessage(content="Task completed")
+    validation_response = AIMessage(content="Task validated")
+    validation_response.tool_calls = [
+        {"name": tools.is_task_completed.name, "id": "2", "args": {"completed": True, "feedback": "Done"}}
+    ]
+    summary = AIMessage(content="All tasks completed successfully")
+
+    mock_invoke_llm_chain.side_effect = [ai_message, dev_response, validation_response, summary]
+    mock_accumulate_token_usage.side_effect = lambda state, _: state
+    mock_get_llm.return_value = MagicMock()
+
+    # Set initial state with task list workflow flag
+    initial_state = {
+        "agents_configs": mock_agents_config,
+        "chat_agent": mock_agents_config["orchestrator"],
+        "status": "active",
+        "max_iterations": 1,
+        "current_iterations": 0,
+        "messages": [],
+        "tool_data": {},
+        "return_to_user": False,
+        "accumulated_token_usage": TokenUsage.default(),
+        "token_usage": None,
+        "is_task_list_workflow": True,
+        "max_agent_deflections": 2,
+        "current_agent_deflections": 0,
+    }
+
+    app = build_workflow(
+        {"orchestrator": mock_agents_config["orchestrator"], "developer": mock_agents_config["developer"]}
+    )
+    final_state = await run_workflow(app, initial_state)
+
+    # Verify workflow executed task list correctly
+    assert mock_invoke_llm_chain.call_count == 4
+    assert final_state["status"] == "active"
+    assert isinstance(final_state["messages"][-1], AIMessage)
+    assert "All tasks completed successfully" in final_state["messages"][-1].content
+
+
+@pytest.mark.skip(reason="validate")
+@pytest.mark.asyncio
+@patch("pluscoder.main.parse_task_list")
+@patch("pluscoder.workflow.io.confirm")
+@patch("pluscoder.model.get_llm")
+@patch("pluscoder.workflow.accumulate_token_usage")
+@patch.object(Agent, "_invoke_llm_chain")
+async def test_task_list_workflow_errors(
+    mock_invoke_llm_chain,
+    mock_accumulate_token_usage,
+    mock_get_llm,
+    mock_io_confirm,
+    mock_parse_task_list,
+    orchestrator_agent,
+    agent,
+    mock_agents_config,
+):
+    """Test error handling in task list workflow"""
+    # Mock LLM to avoid actual calls
+    mock_get_llm.return_value = MagicMock()
+    mock_invoke_llm_chain.return_value = AIMessage(content="Mock response")
+    mock_accumulate_token_usage.side_effect = lambda state, _: state
+
+    error_test_cases = [
+        (ValueError("Invalid JSON"), "Invalid JSON"),
+        (IOError("File not found"), "File not found"),
+        (ValueError("Task missing required fields"), "Task missing required fields"),
+    ]
+
+    for error, error_msg in error_test_cases:
+        mock_parse_task_list.side_effect = error
+
+        with pytest.raises(type(error), match=error_msg):  # noqa: PT012
+            initial_state = {
+                "agents_configs": mock_agents_config,
+                "chat_agent": mock_agents_config["orchestrator"],
+                "status": "active",
+                "max_iterations": 1,
+                "current_iterations": 0,
+                "messages": [],
+                "tool_data": {},
+                "return_to_user": False,
+                "accumulated_token_usage": TokenUsage.default(),
+                "token_usage": None,
+                "is_task_list_workflow": True,
+                "max_agent_deflections": 2,
+                "current_agent_deflections": 0,
+            }
+
+            app = build_workflow({"orchestrator": mock_agents_config["orchestrator"]})
+            await run_workflow(app, initial_state)

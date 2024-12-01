@@ -206,7 +206,7 @@ def test_process_agent_response(agent):
     state = OrchestrationState(context_files=[])
     response = AIMessage(content="Check `new_file.txt`")
     result = agent.process_agent_response(state, response)
-    assert result == {}
+    assert result == {"messages": []}
 
 
 def test_agent_router_return_tools(agent):

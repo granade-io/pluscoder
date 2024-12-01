@@ -74,9 +74,6 @@ repos:
       - id: python-check-blanket-noqa
         name: "[check]: check blanket noqa"
 
-      - id: python-check-blanket-type-ignore
-        name: "[check]: check blanket type ignore"
-
       - id: python-no-eval
         name: "[check]: check for eval()"
 

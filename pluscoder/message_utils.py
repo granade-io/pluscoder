@@ -9,10 +9,12 @@ from typing import Sequence
 from typing import Union
 from urllib.parse import urlparse
 
+from langchain_core.messages import AIMessage
 from langchain_core.messages import AnyMessage
 from langchain_core.messages import BaseMessage
 from langchain_core.messages import HumanMessage as LangChainHumanMessage
 from langchain_core.messages import RemoveMessage
+from langchain_core.messages import ToolMessage
 from langchain_core.messages import convert_to_messages
 
 
@@ -127,7 +129,7 @@ def tag_messages(messages: List[BaseMessage], tags: List[str], exclude_tagged: b
     Add tags to all messages in the list. Optionally exclude messages that are already tagged.
 
     :param messages: List of messages to tag.
-    :param tags: List of tags to add.
+    :param tags: List[str]: List of tags to add.
     :param exclude_tagged: If True, do not add tags to messages that already have tags.
     :return: List of messages with added tags.
     """
@@ -142,3 +144,88 @@ def tag_messages(messages: List[BaseMessage], tags: List[str], exclude_tagged: b
             msg.tags = [t for t in tags]
             tagged_messages.append(msg)
     return tagged_messages
+
+
+def build_feedback_ai_message_content(content: str):
+    return f"<system_feedback>\n{content}\n</system_feedback>\n"
+
+
+def build_file_editions_tool_message(filenames: List[str], agent_id: str) -> BaseMessage:
+    """Create a tool message indicating files were edited.
+
+    :param filenames: List of edited file paths
+    :return: Tool message with file_editions in metadata containing edited files
+    """
+    content = build_feedback_ai_message_content(f"These files were updated successfully: {', '.join(filenames)}")
+    return AIMessage(content=content, metadata={"file_editions": filenames}, tags=[agent_id])
+
+
+def build_stale_read_files_tool_message(
+    tool_message: ToolMessage, files: List[str], stale_files: List[str]
+) -> BaseMessage:
+    """Build a new tool message with stale placeholders for modified files and original content for unmodified files.
+
+    :param tool_message: Original read_files tool message
+    :param stale_files: List of file paths that are stale
+    :return: New tool message with stale content replaced
+    """
+    from pluscoder.fs import get_formatted_file_content
+
+    result = "Here are the files content:\n\n"
+
+    # First add all non-stale files with proper formatting
+    for filename in files:
+        if filename not in stale_files:
+            result += get_formatted_file_content(filename)
+
+    # Add notice about stale files at the end
+    if stale_files:
+        result += "\n\nIMPORTANT: Some files need to be re-read as they have been modified:\n"
+        for filename in stale_files:
+            result += f"- `{filename}`: Content is stale due to recent edits, please read this file again if needed\n"
+
+    new_msg = tool_message.model_copy()
+    new_msg.content = result.strip()
+    return new_msg
+
+
+def mask_stale_file_messages(messages: List[BaseMessage]) -> List[BaseMessage]:
+    """Get list of tool messages with stale content marked based on file_editions tags.
+
+    :param messages: List of messages to process
+    :param filenames: List of modified file paths to check
+    :return: Messages with stale content replaced with placeholder
+    """
+    stale_messages = []
+    edited_files = {}
+
+    # First pass - collect file editions timestamps and files
+    for idx, msg in enumerate(messages):
+        if hasattr(msg, "metadata") and "file_editions" in msg.metadata:
+            for filename in msg.metadata["file_editions"]:
+                if filename not in edited_files:
+                    edited_files[filename] = idx
+
+    # Process messages to handle stale content
+    for idx, msg in enumerate(messages):
+        if msg.type == "tool" and hasattr(messages[idx - 1], "tool_calls"):
+            # Related AI message
+            ai_message = messages[idx - 1]
+            # Find read_files tool call
+            for tool_call in ai_message.tool_calls:
+                if tool_call["name"] == "read_files":
+                    read_files = tool_call["args"].get("file_paths", [])
+                    stale_files = [
+                        filename for filename in read_files if filename in edited_files and idx < edited_files[filename]
+                    ]
+
+                    if stale_files:
+                        stale_messages.append(build_stale_read_files_tool_message(msg, read_files, stale_files))
+                        break
+            else:
+                stale_messages.append(msg)
+            continue
+
+        stale_messages.append(msg)
+
+    return stale_messages
