@@ -1,3 +1,10 @@
+# [2.5.0-rc.2](https://gitlab.com/codematos/pluscoder/compare/v2.5.0-rc.1...v2.5.0-rc.2) (2024-12-01)
+
+
+### Performance Improvements
+
+* now stale content is marked as stale for improving agent code suggestions ([c26e226](https://gitlab.com/codematos/pluscoder/commit/c26e226aaa9b599d90781fd12c8b2f79e1bfab7f))
+
 # [2.5.0-rc.1](https://gitlab.com/codematos/pluscoder/compare/v2.4.0...v2.5.0-rc.1) (2024-11-29)
 
 
