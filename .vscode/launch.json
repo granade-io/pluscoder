@@ -26,6 +26,17 @@
             ],
             "console": "integratedTerminal",
             "justMyCode": false
+        },
+        {
+            "name": "Pluscoder",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pluscoder",
+            "args": [
+                "--debug", "--dev"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false
         }
     ]
 }

@@ -243,7 +243,7 @@ def validate_run_requirements():
     if config.model is None:
         io.console.print("Model is empty. Configure a model to run Pluscoder.", style="bold red")
         io.console.print(
-            "Use [green]--config <your-model>[/green], the [green].pluscoder-config.yml[/green] config file or env vars to configure"
+            "Use [green]--model <your-model>[/green], the [green].pluscoder-config.yml[/green] config file or env vars to configure"
         )
         sys.exit(1)
 
