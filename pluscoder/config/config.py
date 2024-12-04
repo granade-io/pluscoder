@@ -144,6 +144,8 @@ class Settings(BaseSettings):
     weak_model: Optional[str] = Field(None, description="Weaker LLM model to use for less complex tasks")
     weak_model_provider: Optional[str] = Field(None, description="Provider to use for weak model")
 
+    embedding_model: Optional[str] = Field(None, description="Model to use for embeddings")
+
     # PlusCoder API
     pluscoder_token: Optional[str] = Field(None, description="PlusCoder API token for authentication")
 
