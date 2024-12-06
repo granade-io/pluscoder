@@ -213,4 +213,41 @@ def is_task_completed(
     return {"completed": completed, "feedback": feedback}
 
 
-base_tools = [read_files, move_files, read_file_from_url]
+@tool
+def search_repository(
+    query: Annotated[str, "The search query to find relevant code and content in the repository."],
+) -> str:
+    """
+    Search the repository content using semantic search.
+    Returns natural language description of search results including file locations and relevant snippets.
+    Results are ranked by relevance score.
+    """
+    try:
+        from pluscoder.search.engine import SearchEngine
+
+        engine = SearchEngine.get_instance()
+        results = engine.search(query, top_k=5)
+
+        if not results:
+            return "No matching results found in repository."
+
+        output = f"Found {len(results)} relevant results for query '{query}':\n\n"
+
+        for result in results:
+            file_path = result.chunk.file_metadata.file_path
+            relevance = f"{result.score:.2%}"
+            lines = f"lines {result.start_line}-{result.end_line}"
+            snippet = result.chunk.content.strip()
+
+            output += f"📄 {file_path} ({lines}) - Relevance: {relevance}\n"
+            output += f"Snippet:\n{snippet}\n\n"
+
+        return output
+
+    except RuntimeError:
+        return "Search engine is not initialized. Please build the search index first."
+    except Exception as e:
+        return f"Error performing search: {e!s}"
+
+
+base_tools = [read_files, move_files, read_file_from_url, search_repository]

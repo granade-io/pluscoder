@@ -136,6 +136,7 @@ Display current configuration settings using command `/show_config` or cmd line 
 - `model`: LLM model to use (default: `None`)
 - `orchestrator_model`: LLM model to use for orchestrator (default: same as `MODEL`)
 - `weak_model`: Weaker LLM model to use for less complex tasks (default: same as `MODEL`). (CURRENTLY NOT BEING USED)
+- `embedding_model`: Embedding model to use for vector database. (default: `None`).
 
 *Provider*:
 - `provider`: Provider to use. If `None`, provider will be selected based on available credential variables. Options: aws_bedrock, openai, litellm, anthropic, vertexai (default: `None`)

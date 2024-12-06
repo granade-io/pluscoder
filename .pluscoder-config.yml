@@ -63,7 +63,7 @@ lint_fix_command: make format        # Command to run linter fix
 # use_repomap: false           # Enable/disable repomap feature
 # repomap_level: 2             # Repomap detail level (0: minimal, 1: moderate, 2: detailed)
 # repomap_exclude_files: []    # List of files to exclude from repomap
-repo_exclude_files: [".*.(png|jpg|jpeg|svg)"]       # Regex patterns to exclude files from repo operations
+repo_exclude_files: [".*.(png|jpg|jpeg|svg)", '.vscode', "^(?!.*\\.py$).*$"]       # Regex patterns to exclude files from repo operations
 
 #------------------------------------------------------------------------------
 # Display Options

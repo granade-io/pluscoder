@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from rich.prompt import Prompt
 
 from pluscoder.__version__ import __version__
+from pluscoder.agents.event.config import event_emitter
 from pluscoder.commands import show_config
 from pluscoder.commands import show_repo
 from pluscoder.commands import show_repomap
@@ -21,6 +22,12 @@ from pluscoder.model import get_inferred_provider
 from pluscoder.model import get_model_token_info
 from pluscoder.model import get_model_validation_message
 from pluscoder.repo import Repository
+from pluscoder.search.algorithms import DenseSearch
+from pluscoder.search.algorithms import HybridSearch
+from pluscoder.search.algorithms import SparseSearch
+from pluscoder.search.chunking import TokenBasedChunking
+from pluscoder.search.embeddings import LiteLLMEmbedding
+from pluscoder.search.engine import SearchEngine
 from pluscoder.setup import setup
 from pluscoder.type import TokenUsage
 from pluscoder.workflow import build_agents
@@ -129,6 +136,43 @@ def run_silent_checks():
     if lint_result:
         warnings.append("Linter checks are failing. This may lead to issues when editing files.")
     return warnings
+
+
+async def initialize_search_engine():
+    """Initialize the search engine with appropriate algorithm."""
+    try:
+        storage_dir = Path(".pluscoder") / "search_index"
+        chunking = TokenBasedChunking(chunk_size=512, overlap=64)
+
+        if config.embedding_model:
+            embedding_model = LiteLLMEmbedding(model_name=config.embedding_model)
+            dense = DenseSearch(embedding_model)
+            sparse = SparseSearch()
+            algorithm = HybridSearch([dense, sparse])
+        else:
+            algorithm = SparseSearch()
+            embedding_model = None
+
+        engine = await SearchEngine.create(
+            chunking_strategy=chunking,
+            search_algorithm=algorithm,
+            storage_dir=storage_dir,
+            embedding_model=embedding_model,
+        )
+
+        # Connect to global event emitter
+        engine.events = event_emitter
+
+        # Get tracked files and start indexing
+        repo = Repository(io)
+        files = [Path(f) for f in repo.get_tracked_files()]
+
+        # Return task directly
+        return asyncio.create_task(engine.build_index(files))
+
+    except Exception as e:
+        io.console.print(f"Warning: Failed to initialize search engine: {e}", style="bold dark_goldenrod")
+        return None
 
 
 def display_initial_messages():
@@ -311,6 +355,9 @@ def main() -> None:
 
         validate_run_requirements()
         display_initial_messages()
+
+        # Initialize search engine
+        asyncio.run(initialize_search_engine())
 
         # Check if the default_agent is valid
         agent_dict = build_agents()

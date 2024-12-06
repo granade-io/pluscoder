@@ -1,8 +1,46 @@
 # event_emitter.py
 
 import asyncio
+from enum import Enum
 
-from pluscoder.agents.event.event_handler.base import AgentEventBaseHandler
+
+class AgentEvent(Enum):
+    NEW_AGENT_INSTRUCTIONS = "on_new_agent_instructions"
+    TASK_DELEGATED = "on_task_delegated"
+    TASK_VALIDATION_START = "on_task_validation_start"
+    TASK_COMPLETED = "on_task_completed"
+    TASK_LIST_COMPLETED = "on_task_list_completed"
+    FILES_UPDATED = "on_files_updated"
+    INDEXING_STARTED = "on_indexing_started"
+    INDEXING_COMPLETED = "on_indexing_completed"
+
+
+class AgentEventBaseHandler:
+    """Base class for all event handlers"""
+
+    async def on_new_agent_instructions(self, agent_instructions=None):
+        pass
+
+    async def on_task_delegated(self, agent_instructions=None):
+        pass
+
+    async def on_task_validation_start(self, agent_instructions=None):
+        pass
+
+    async def on_task_completed(self, agent_instructions=None):
+        pass
+
+    async def on_task_list_completed(self, agent_instructions=None):
+        pass
+
+    async def on_files_updated(self, updated_files):
+        pass
+
+    async def on_indexing_started(self, files):
+        pass
+
+    async def on_indexing_completed(self):
+        pass
 
 
 class EventEmitter:
