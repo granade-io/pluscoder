@@ -2,6 +2,7 @@
 
 import asyncio
 from enum import Enum
+from typing import Any
 
 
 class AgentEvent(Enum):
@@ -13,6 +14,9 @@ class AgentEvent(Enum):
     FILES_UPDATED = "on_files_updated"
     INDEXING_STARTED = "on_indexing_started"
     INDEXING_COMPLETED = "on_indexing_completed"
+    COST_UPDATE = "on_cost_update"
+    LIVE_DISPLAY_UPDATE = "on_live_display_update"
+    AGENT_STATE_UPDATE = "on_agent_state_update"
 
 
 class AgentEventBaseHandler:
@@ -42,6 +46,19 @@ class AgentEventBaseHandler:
     async def on_indexing_completed(self):
         pass
 
+    async def on_cost_update(self, token_usage=None):
+        """Handle token usage updates."""
+
+    async def on_live_display_update(self, component_name: str, data: Any) -> None:
+        """Handle updates to live display components.
+        Args:
+            component_name: Name of component to update
+            data: New data for the component
+        """
+
+    async def on_agent_state_update(self, agent_state=None):
+        """Handle agent state updates."""
+
 
 class EventEmitter:
     def __init__(self):
@@ -62,14 +79,36 @@ class EventEmitter:
         method_name = f"on_{event}"
         for handler in self.handlers:
             method = getattr(handler, method_name, None)
-            if method and asyncio.iscoroutinefunction(method):
-                await method(*args, **kwargs)
-            elif method:
-                method(*args, **kwargs)
+            if method:
+                if asyncio.iscoroutinefunction(method):
+                    await method(*args, **kwargs)
+                else:
+                    method(*args, **kwargs)
 
     def emit_sync(self, event, *args, **kwargs):
+        """Emit event synchronously, handling both sync and async methods."""
         method_name = f"on_{event}"
         for handler in self.handlers:
             method = getattr(handler, method_name, None)
-            if method:
-                method(*args, **kwargs)
+            if not method:
+                continue
+
+            try:
+                # For sync methods just call directly
+                if not asyncio.iscoroutinefunction(method):
+                    method(*args, **kwargs)
+                # For async methods in sync context
+                else:
+                    try:
+                        loop = asyncio.get_running_loop()
+                        task = asyncio.create_task(method(*args, **kwargs))
+                        # Ensure task reference is maintained
+                        _ = task
+                    except RuntimeError:
+                        # No loop running, create new one
+                        loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(loop)
+                        loop.run_until_complete(method(*args, **kwargs))
+            except Exception as e:
+                # Log error but continue execution
+                print(f"Error in event handler {method_name}: {e}")
