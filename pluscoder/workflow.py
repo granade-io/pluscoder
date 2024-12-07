@@ -320,7 +320,9 @@ async def _orchestrator_agent_node(
     target_agent = task["agent"]
 
     # Add response message from the executor agent to validate if the task has been completed
-    executor_agent_response = get_message_content_str(global_state["messages"][-1])
+    executor_agent_response = get_message_content_str(
+        filter_messages(global_state["messages"], include_tags=[target_agent], exclude_tags=["system_feedback"])[-1]
+    )
 
     # Validates using only last message not entire conversation
     await event_emitter.emit(
@@ -469,7 +471,7 @@ async def _orchestrator_agent_node(
 
         await event_emitter.emit(
             "task_list_interrumpted",
-            agent_instructions=OrchestratorAgent.get_agent_instructions(state_update),
+            agent_instructions=OrchestratorAgent.get_agent_instructions(global_state),
         )
 
         return {

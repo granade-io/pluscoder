@@ -1,5 +1,6 @@
 """Live display system for rich console output with component management."""
 
+import re
 from abc import ABC
 from abc import abstractmethod
 from typing import Any
@@ -17,7 +18,6 @@ from rich.progress import TextColumn
 from rich.text import Text
 
 from pluscoder.display_utils import get_cost_usage_display
-from pluscoder.display_utils import render_task
 from pluscoder.type import TokenUsage
 
 
@@ -123,9 +123,10 @@ class TokenUsageComponent(BaseComponent):
         self.token_usage = TokenUsage()
 
     def render(self):
-        return Group(
-            Text(get_cost_usage_display(self.token_usage), style="bold yellow"),
-        )
+        text = get_cost_usage_display(self.token_usage)
+        # Use regex to find numbers and surround them with [cyan]{number}[/cyan]
+        text = re.sub(r"(\d+(?:\.\d+)?)", lambda m: f"[cyan]{m.group(1)}[/cyan]", text)
+        return "[yellow]" + text + "[/yellow]"
 
     def update(self, token_usage):
         self.token_usage = token_usage
@@ -163,27 +164,103 @@ class TaskListComponent(BaseComponent):
 
     def __init__(self):
         self.tasks = []
+        self.progress = None
+        self.task_progress_ids = {}
+        self._current_action = None
+        self._current_task_index = None
+        self._live = None
 
     def render(self):
-        if not self.tasks:
-            return Text("")
-        task_renders = []
-        for task in self.tasks:
-            try:
-                task_renders.append(Text(render_task(task)))
-            except AttributeError:
-                # Skip invalid tasks
-                continue
-        return Group(*task_renders) if task_renders else Text("")
+        if not self.tasks or not self.progress:
+            return Text("", end="")
+        return self.progress
 
-    def update(self, data, action=None):
+    def update(self, data, action=None, task_index=None):
         """Update task list data.
         Args:
             data: List of AgentTask objects or dict with tasks list
+            action: Optional action type ('new_task_list', 'delegate', 'validate', 'complete')
+            task_index: Index of task being acted upon
         """
-        if isinstance(data, dict) and "tasks" in data:
-            self.tasks = data["tasks"]
+        if action in ["list_complete", "list_interrupted"]:
+            self.progress.stop()
+            self.progress = None
+            self.task_progress_ids = {}
+            return
+
+        if isinstance(data, dict) and "task_list" in data:
+            self.tasks = data["task_list"]
         elif isinstance(data, list):
             self.tasks = data
         else:
             self.tasks = []
+
+        self._current_action = action
+        self._current_task_index = task_index
+
+        # Handle new task list creation
+        if action == "new_task_list":
+            self.progress = Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                auto_refresh=False,
+            )
+            self.task_progress_ids = {}
+            for idx, task in enumerate(self.tasks):
+                try:
+                    description = (
+                        f"[yellow][ ] {task.objective} - {task.agent}: Delegating..."
+                        if idx == 0
+                        else f"[ ] {task.objective} - {task.agent}"
+                    )
+                    task_id = self.progress.add_task(description, start=False, total=1)
+                    self.task_progress_ids[idx] = task_id
+                except AttributeError:
+                    continue
+            return
+
+        # Update task descriptions based on state
+        if self.progress and self.tasks:
+            for idx, task in enumerate(self.tasks):
+                try:
+                    if idx not in self.task_progress_ids:
+                        continue
+
+                    description = task.objective
+                    task_id = self.task_progress_ids[idx]
+
+                    if idx < self._current_task_index:
+                        # Completed tasks
+                        self.progress.update(task_id, description=f"[green][✓] {description}")
+                    elif idx == self._current_task_index and action:
+                        # Current task with action
+                        if action == "delegate":
+                            self.progress.update(
+                                task_id, description=f"[yellow][ ] {description} - {task.agent}: Delegating..."
+                            )
+                        elif action == "validate":
+                            self.progress.update(
+                                task_id, description=f"[yellow][ ] {description} - {task.agent}: Validating..."
+                            )
+                        elif action == "complete":
+                            self.progress.update(task_id, description=f"[green][✓] {description}")
+                    else:
+                        # Pending tasks
+                        self.progress.update(task_id, description=f"[ ] {description} - {task.agent}")
+                except AttributeError:
+                    continue
+
+    def _get_or_create_progress_id(self, task_index):
+        """Get existing progress ID or create new one for task index."""
+        if task_index not in self.task_progress_ids:
+            task_id = self.progress.add_task("", start=True)
+            self.task_progress_ids[task_index] = task_id
+        return self.task_progress_ids[task_index]
+
+    def start(self):
+        """Start progress display."""
+        super().start()
+
+    def stop(self):
+        """Stop progress display."""
+        super().stop()
