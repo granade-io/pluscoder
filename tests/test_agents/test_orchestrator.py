@@ -15,7 +15,7 @@ def orchestrator_agent():
         AgentConfig(
             id=OrchestratorAgent.id,
             name="Orchestrator",
-            description="Orchestrate and manage other agents",
+            description="Design and run complex plan delegating it to other agents",
             prompt=OrchestratorAgent.specialization_prompt,
             reminder="",
             tools=[],

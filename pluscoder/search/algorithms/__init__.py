@@ -82,7 +82,10 @@ class SparseSearch(SearchAlgorithm):
 
         # Create and index BM25
         self.bm25 = bm25s.BM25(corpus=corpus, backend="auto")
-        self.bm25.index(corpus=bm25s.tokenize(texts=corpus, lower=True, stopwords=self.stopwords))
+        self.bm25.index(
+            corpus=bm25s.tokenize(texts=corpus, lower=True, stopwords=self.stopwords, show_progress=False),
+            show_progress=False,
+        )
 
     async def search(self, query: str, top_k: int = 5) -> List[SearchResult]:
         if not self.bm25:

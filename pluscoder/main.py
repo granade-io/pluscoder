@@ -251,9 +251,7 @@ def choose_chat_agent_node(agents: dict):
     display_agent_list(agents)
 
     choice = Prompt.ask(
-        "Select an agent",
-        choices=[str(i) for i in range(1, len(agents) + 1)],
-        default="1",
+        "Select an agent", choices=[str(i) for i in range(1, len(agents) + 1)], default="1", console=io.console
     )
 
     chosen_agent = list(agents)[int(choice) - 1]

@@ -53,7 +53,7 @@ def build_agents() -> dict[str, AgentConfig]:
         "orchestrator": AgentConfig(
             id=OrchestratorAgent.id,
             name="Orchestrator",
-            description="Orchestrate and manage other agents",
+            description="Design and run complex plan delegating it to other agents",
             prompt=OrchestratorAgent.specialization_prompt,
             reminder="",
             tools=[tool.name for tool in tools.base_tools],
@@ -111,11 +111,13 @@ def user_input(state: OrchestrationState):
     if config.user_input:
         user_input = config.user_input
     else:
+        io.live.stop()
         io.console.print()
         io.console.print(
             "[bold green]Enter your message ('q' or 'ctrl+c' to exit, '/help' for commands): [/bold green]"
         )
         user_input = io.input("")
+        io.live.start()
 
     if is_command(user_input):
         # Commands handles the update to state

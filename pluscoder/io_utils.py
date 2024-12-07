@@ -4,6 +4,7 @@ import os
 import sys
 import tempfile
 from pathlib import Path
+from typing import Any
 from typing import Optional
 
 from PIL import ImageGrab
@@ -21,6 +22,8 @@ from rich.rule import Rule
 from rich.text import Text
 
 from pluscoder.config import config
+from pluscoder.live_display import BaseComponent
+from pluscoder.live_display import FlexibleProgress
 from pluscoder.repo import Repository
 
 logging.getLogger().setLevel(logging.ERROR)  # hide warning log
@@ -127,13 +130,44 @@ class CustomProgress(Progress):
     chunks = []
     style = "blue"
 
+    def __init__(self, *args, live=None, console=None, **kwargs):
+        self.__live = live
+        self._console = console
+        super().__init__(*args, console=console, **kwargs)
+
+    @property
+    def live(self):
+        """Get live display instance"""
+        return self.__live
+
+    @live.setter
+    def live(self, value):
+        """Set live display instance"""
+        self.__live = value
+
+    @property
+    def console(self):
+        """Get console instance"""
+        return self._console
+
+    @console.setter
+    def console(self, value):
+        """Set console instance"""
+        self._console = value
+
     def start(self) -> None:
         self.chunks = []
         self.started = True
+        if self.live:
+            self.live.refresh()
         return super().start()
 
     def stop(self) -> None:
         self.started = False
+        if self.chunks:
+            self.flush(self.style)
+        if self.live:
+            self.live.refresh()
         return super().stop()
 
     def flush(self, style):
@@ -183,7 +217,8 @@ class IO:
 
     def __init__(self, log_level=logging.INFO):
         self.console = CustomConsole()
-        self.progress = None
+        self.live = FlexibleProgress(console=self.console, auto_refresh=True, transient=False)
+        self.progress = None  # Initialize progress as None
         self.ctrl_c_count = 0
         self.last_input = ""
         self.completer = CombinedCompleter()
@@ -256,7 +291,10 @@ class IO:
         if config.auto_confirm:
             io.event("> Auto-confirming...")
             return True
-        return Confirm.ask(f"[green]{message}[/green]", console=self.console, default=True)
+        self.live.stop()
+        result = Confirm.ask(f"[green]{message}[/green]", console=self.console, default=True)
+        self.live.start()
+        return result
 
     def log_to_debug_file(
         self,
@@ -286,6 +324,19 @@ class IO:
             f.write(f"{indented_content}\n")
 
     def set_progress(self, progress: Progress) -> None:
+        """Set the current progress display.
+        Args:
+            progress: Progress instance to use, or None to clear
+        """
+        # Remove existing progress if any
+        if self.progress:
+            self.progress.stop()
+
+        # Set new progress
+        if progress and isinstance(progress, CustomProgress):
+            # Access required for CustomProgress functionality
+            progress.live = self.live  # type: ignore
+            progress.console = self.console  # type: ignore
         self.progress = progress
 
     def stream(self, chunk: str, style=None) -> None:
@@ -293,6 +344,35 @@ class IO:
             self.console.print(chunk, style=style, end="")
         else:
             self.progress.stream(chunk, style)
+
+    def register_live_component(self, name: str, component: BaseComponent) -> None:
+        """Register a new component in the live display.
+
+        Args:
+            name: Unique identifier for the component
+            component: Component instance to register
+        """
+        self.live.register_component(name, component)
+
+    def update_live_component(self, name: str, data: Any, **kwargs) -> None:
+        """Update a registered component with new data.
+
+        Args:
+            name: Component identifier
+            data: New data for the component
+        """
+        self.live.update_component(name, data, **kwargs)
+
+    def stop_live(self) -> None:
+        """Stop the live display"""
+        if self.live:
+            self.live.stop()
+
+    def cleanup(self) -> None:
+        """Cleanup IO resources"""
+        self.stop_live()
+        if self.progress:
+            self.progress.stop()
 
 
 io = IO()

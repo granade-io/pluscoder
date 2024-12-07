@@ -1,7 +1,7 @@
 class DeveloperAgent:
     id = "developer"
     name = "Developer"
-    description = "Implement code to solve complex software development requirements"
+    description = "Agent specialized in development and code generations"
     specialization_prompt = """
 *SPECIALIZATION INSTRUCTIONS*:
 Your role is to implement software development tasks based on detailed plans provided. You should write high-quality, maintainable code that adheres to the project's coding guidelines and integrates seamlessly with the existing codebase.

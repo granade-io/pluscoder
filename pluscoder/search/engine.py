@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import List
 from typing import Optional
 
-from pluscoder.agents.event.base import EventEmitter
+from pluscoder.agents.event.config import event_emitter
 from pluscoder.search.algorithms import SearchAlgorithm
 from pluscoder.search.chunking import ChunkingStrategy
 from pluscoder.search.embeddings import EmbeddingModel
@@ -35,7 +35,6 @@ class SearchEngine:
             self.search_algorithm = search_algorithm
             self.embedding_model = embedding_model
             self.index_manager = None
-            self.events = EventEmitter()
             self.is_initialized = True
 
     def __new__(cls, *args, **kwargs):
@@ -80,9 +79,9 @@ class SearchEngine:
 
     async def build_index(self, file_paths: List[Path]) -> None:
         """Build or rebuild the search index."""
-        await self.events.emit("indexing_started", files=file_paths)
+        await event_emitter.emit("indexing_started", files=file_paths)
         await self.index_manager.build_index(file_paths)
-        await self.events.emit("indexing_completed")
+        await event_emitter.emit("indexing_completed")
 
     async def add_files(self, file_paths: List[Path]) -> None:
         """Add new files to the index."""
