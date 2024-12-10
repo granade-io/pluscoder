@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Any
 from typing import Optional
 
+from inflection import parameterize
+
 
 class IndexStorage:
     """Handles persistence of search index and related data.
@@ -14,13 +16,18 @@ class IndexStorage:
     with untrusted data as pickle can be unsafe in such cases.
     """
 
-    def __init__(self, storage_dir: Path):
+    def __init__(self, storage_dir: Path, embedding_model: Optional[str]):
         self.storage_dir = storage_dir
-        self.storage_dir.mkdir(parents=True, exist_ok=True)
+        self.embedding_model = embedding_model
+        self.mkdir()
 
     def _get_path(self, name: str) -> Path:
         """Get full path for a storage item."""
-        return self.storage_dir / f"{name}.pickle"
+        snake_model = parameterize(self.embedding_model, separator="_") if self.embedding_model else "default"
+        return self.storage_dir / snake_model / f"{name}.pickle"
+
+    def mkdir(self):
+        self._get_path("").parent.mkdir(parents=True, exist_ok=True)
 
     def save(self, name: str, data: Any) -> None:
         """Save data to storage."""

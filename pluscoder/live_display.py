@@ -62,6 +62,7 @@ class FlexibleProgress(Live):
             refresh_per_second: Number of screen refreshes per second
         """
         self.components: Dict[str, BaseComponent] = {}
+        self.started_components: list[str] = []
         super().__init__(*args, **kwargs)
 
     def register_component(self, name: str, component: BaseComponent) -> None:
@@ -96,24 +97,39 @@ class FlexibleProgress(Live):
         """
         return self.components.get(name)
 
-    # def refresh(self) -> None:
-    #     """Refresh the display with current component states."""
-    #     renderable = Group(*[comp.render() for comp in self.components.values()])
-    #     self.update(renderable)
-    #     super().refresh()
+    def get_renderable(self) -> ConsoleRenderable | RichCast | str:
+        """Get renderable content from started components."""
+        return Group(*[self.components[name].render() for name in self.started_components])
 
-    def start(self, refresh: bool = False) -> None:
-        for comp in self.components.values():
-            comp.start()
+    def start(self, component: str | None = None, refresh: bool = False) -> None:
+        """Start display components.
+        Args:
+            component: Optional component name to start. If None, starts all components
+            refresh: Whether to refresh display after starting
+        """
+        for name in self.components:
+            if component and name != component:
+                continue
+            self.components[name].start()
+            if name not in self.started_components:
+                self.started_components.append(name)
         return super().start(refresh)
 
-    def stop(self) -> None:
-        for comp in self.components.values():
-            comp.stop()
+    def stop(self, component: str | None = None) -> None:
+        """Stop display components.
+        Args:
+            component: Optional component name to stop. If None, stops all components
+        """
+        if component:
+            if comp := self.components.get(component):
+                comp.stop()
+                if component in self.started_components:
+                    self.started_components.remove(component)
+        else:
+            for comp in self.components.values():
+                comp.stop()
+            self.started_components.clear()
         return super().stop()
-
-    def get_renderable(self) -> ConsoleRenderable | RichCast | str:
-        return Group(*[comp.render() for comp in self.components.values()])
 
 
 class TokenUsageComponent(BaseComponent):
@@ -149,7 +165,9 @@ class IndexingComponent(BaseComponent):
     def update(self, indexing):
         self.indexing = indexing
         if self.indexing:
-            self.progress.add_task("[yellow]Still indexing repository for better suggestions...[/yellow]", start=True)
+            self.progress.add_task(
+                "[yellow]Indexing repository for better suggestions. Wait few seconds minutes...[/yellow]", start=True
+            )
             self.progress.refresh()
 
     def start(self):

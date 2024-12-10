@@ -22,7 +22,7 @@ class SearchAlgorithm(ABC):
     """Abstract base class for search algorithms."""
 
     @abstractmethod
-    async def build_index(self, chunks: List[Chunk]) -> None:
+    async def build_index(self, chunks: List[Chunk], from_cache: bool = False) -> None:
         """Build search index from chunks."""
 
     @abstractmethod
@@ -38,21 +38,24 @@ class DenseSearch(SearchAlgorithm):
         self.chunks: List[Chunk] = []
         self.index: Optional[np.ndarray] = None
 
-    async def build_index(self, chunks: List[Chunk]) -> None:
+    async def build_index(self, chunks: List[Chunk], from_cache: bool = False) -> None:
         """Build search index from chunks."""
         self.chunks = chunks
 
         # Generate embeddings if not present
-        embeddings = await self.embedding_model.embed_chunks(chunks)
-        for chunk, embedding in zip(chunks, embeddings, strict=False):
-            chunk.embedding = embedding
-
-        self.index = np.array(embeddings)
+        if not from_cache or len(chunks) > 0 and not chunks[0].embedding:
+            # TODO: calculate properly if cached chunks has embedding
+            embeddings = await self.embedding_model.embed_document(chunks)
+            for chunk, embedding in zip(chunks, embeddings, strict=False):
+                chunk.embedding = embedding
+            self.index = np.array(embeddings)
+        else:
+            self.index = np.array([chunk.embedding for chunk in chunks])
 
     async def search(self, query: str, top_k: int = 5) -> List[SearchResult]:
         # Get query embedding
         query_embedding = (
-            await self.embedding_model.embed_chunks([Chunk(content=query, metadata=None, embedding=None)])
+            await self.embedding_model.embed_queries([Chunk(content=query, metadata=None, embedding=None)])
         )[0]
 
         # Calculate similarity scores
@@ -76,12 +79,12 @@ class SparseSearch(SearchAlgorithm):
         self.bm25 = None
         self.stopwords = stopwords or []
 
-    async def build_index(self, chunks: List[Chunk]) -> None:
+    async def build_index(self, chunks: List[Chunk], from_cache: bool = False) -> None:
         self.chunks = chunks
         corpus = [chunk.content for chunk in chunks]
 
         # Create and index BM25
-        self.bm25 = bm25s.BM25(corpus=corpus, backend="auto")
+        self.bm25 = bm25s.BM25(corpus=corpus, backend="numpy")
         self.bm25.index(
             corpus=bm25s.tokenize(texts=corpus, lower=True, stopwords=self.stopwords, show_progress=False),
             show_progress=False,
@@ -92,7 +95,11 @@ class SparseSearch(SearchAlgorithm):
             raise ValueError("Index not built")
 
         # Get BM25 scores and documents
-        results, scores = self.bm25.retrieve(bm25s.tokenize(query, lower=True, stopwords=self.stopwords), k=top_k)
+        results, scores = self.bm25.retrieve(
+            bm25s.tokenize(query, lower=True, stopwords=self.stopwords),
+            k=top_k,
+            backend_selection="numpy",
+        )
 
         # Map results back to chunks and create search results
         search_results = []
@@ -111,9 +118,9 @@ class HybridSearch(SearchAlgorithm):
         self.algorithms = algorithms
         self.k = k
 
-    async def build_index(self, chunks: List[Chunk]) -> None:
+    async def build_index(self, chunks: List[Chunk], from_cache: bool = False) -> None:
         for algo in self.algorithms:
-            await algo.build_index(chunks)
+            await algo.build_index(chunks, from_cache)
 
     async def search(self, query: str, top_k: int = 5) -> List[SearchResult]:
         # Get results from each algorithm

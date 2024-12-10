@@ -118,6 +118,7 @@ class Settings(BaseSettings):
     init: CliImplicitFlag[bool] = Field(True, description="Enable/disable initial setup")
     initialized: CliImplicitFlag[bool] = Field(False, description="Pluscoder was or not initialized")
     read_only: CliImplicitFlag[bool] = Field(False, description="Enable/disable read-only mode")
+    skip_repo_index: CliImplicitFlag[bool] = Field(False, description="Skip repository indexing")
     streaming: bool = Field(True, description="Enable/disable LLM streaming")
     user_feedback: bool = Field(True, description="Enable/disable user feedback")
     display_internal_outputs: bool = Field(False, description="Display internal agent outputs")

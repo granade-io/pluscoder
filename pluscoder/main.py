@@ -27,7 +27,9 @@ from pluscoder.search.algorithms import HybridSearch
 from pluscoder.search.algorithms import SparseSearch
 from pluscoder.search.chunking import TokenBasedChunking
 from pluscoder.search.embeddings import LiteLLMEmbedding
+from pluscoder.search.embeddings.models import EmbeddingModel
 from pluscoder.search.engine import SearchEngine
+from pluscoder.search.storage import IndexStorage
 from pluscoder.setup import setup
 from pluscoder.type import TokenUsage
 from pluscoder.workflow import build_agents
@@ -138,13 +140,34 @@ def run_silent_checks():
     return warnings
 
 
+def ask_index_confirmation() -> bool:
+    io.console.print("")
+    io.event("> Embedding model detected.")
+    io.console.print("Indexing your repository will optimize the performance of Pluscoder agents.")
+    io.console.print(
+        "This process may take a few minutes.\n\n"
+        "Use '--skip_repo_index' flag to start immediately without indexing.\n"
+    )
+    return io.confirm("Would you like to index the repository now?")
+
+
 async def initialize_search_engine():
     """Initialize the search engine with appropriate algorithm."""
     try:
+        io.live.start("indexing")
         storage_dir = Path(".pluscoder") / "search_index"
         chunking = TokenBasedChunking(chunk_size=512, overlap=64)
 
-        if config.embedding_model:
+        storage = IndexStorage(storage_dir, config.embedding_model)
+        has_embeddings = EmbeddingModel.has_embeddings(storage)
+        if (
+            config.embedding_model
+            and has_embeddings
+            or config.embedding_model
+            and not has_embeddings
+            and not config.skip_repo_index
+            and ask_index_confirmation()
+        ):
             embedding_model = LiteLLMEmbedding(model_name=config.embedding_model)
             dense = DenseSearch(embedding_model)
             sparse = SparseSearch()
@@ -168,11 +191,12 @@ async def initialize_search_engine():
         files = [Path(f) for f in repo.get_tracked_files()]
 
         # Return task directly
-        return asyncio.create_task(engine.build_index(files))
+        await engine.build_index(files)
+        io.live.stop("indexing")
 
     except Exception as e:
-        io.console.print(f"Warning: Failed to initialize search engine: {e}", style="bold dark_goldenrod")
-        return None
+        io.console.print(f"Error: Failed to initialize search engine: {e}", style="bold red")
+        raise
 
 
 def display_initial_messages():

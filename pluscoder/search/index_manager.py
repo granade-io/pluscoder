@@ -67,7 +67,7 @@ class IndexManager:
             self.file_hashes = self.storage.load("file_hashes") or {}
 
             if self.chunks and self.file_hashes:
-                await self.search_algorithm.build_index(self.chunks)
+                await self.search_algorithm.build_index(self.chunks, from_cache=True)
                 return
 
         self.chunks = []
@@ -77,7 +77,7 @@ class IndexManager:
             await self._process_file(file_path)
 
         if self.embedding_model and self.chunks:
-            embeddings = await self.embedding_model.embed_chunks(self.chunks)
+            embeddings = await self.embedding_model.embed_document(self.chunks)
             for chunk, embedding in zip(self.chunks, embeddings, strict=False):
                 chunk.embedding = embedding
 
@@ -110,7 +110,7 @@ class IndexManager:
         if self.embedding_model:
             new_chunks = [c for c in self.chunks if not c.embedding]
             if new_chunks:
-                embeddings = await self.embedding_model.embed_chunks(new_chunks)
+                embeddings = await self.embedding_model.embed_document(new_chunks)
                 for chunk, embedding in zip(new_chunks, embeddings, strict=False):
                     chunk.embedding = embedding
 

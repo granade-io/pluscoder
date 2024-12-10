@@ -29,8 +29,7 @@ class SearchEngine:
         """Initialize search engine."""
         if not hasattr(self, "is_initialized"):
             storage_dir = storage_dir or Path.home() / ".pluscoder" / "search_index"
-            storage_dir.mkdir(parents=True, exist_ok=True)
-            self.storage = IndexStorage(storage_dir)
+            self.storage = IndexStorage(storage_dir, getattr(embedding_model, "model_name", None))
             self.chunking_strategy = chunking_strategy
             self.search_algorithm = search_algorithm
             self.embedding_model = embedding_model
@@ -101,11 +100,19 @@ class SearchEngine:
 
         try:
             # Get current event loop, create if none exists
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # If inside event loop, create new one for sync execution
-                loop = asyncio.new_event_loop()
-            return loop.run_until_complete(self.index_manager.search_algorithm.search(query, top_k))
+            loop = asyncio.get_running_loop()
+            # If exists, run in current loop
+            return loop.create_task(self.index_manager.search_algorithm.search(query, top_k))
+        except RuntimeError:
+            # If no loop exists, create new one
+            return asyncio.run(self.index_manager.search_algorithm.search(query, top_k))
+        except Exception as e:
+            error_msg = "Search failed: " + str(e)
+            raise RuntimeError(error_msg) from e
+
+    async def async_search(self, query: str, top_k: int = 5) -> List[SearchResult]:
+        try:
+            return await self.index_manager.search_algorithm.search(query, top_k)
         except Exception as e:
             error_msg = "Search failed: " + str(e)
             raise RuntimeError(error_msg) from e

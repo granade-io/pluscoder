@@ -17,7 +17,10 @@ os.environ["COHERE_API_KEY"] = "1mDJaJPwj1BATZRNYyCMbEtKMdTZD47e9BvqW3xO"
 async def main():
     # Initialize components
     chunking = TokenBasedChunking(chunk_size=512, overlap=64)
-    embedding = LiteLLMEmbedding()
+    embedding = LiteLLMEmbedding(
+        # model_name="vertex_ai/text-embedding-005",
+        batch_size=64
+    )
     search_algo = HybridSearch([DenseSearch(embedding_model=embedding), SparseSearch()])
 
     # Create search engine with persistence using factory pattern
@@ -40,7 +43,8 @@ async def main():
         if not query:
             break
 
-        result = await engine.search(query)
+        # result = engine.search(query)
+        result = await engine.async_search(query)
         print("\nSearch results:")
         print("-" * 50)
         for search_result in result:

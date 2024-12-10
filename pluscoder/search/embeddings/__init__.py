@@ -1,61 +1,112 @@
 """Embedding models implementation."""
 
 import asyncio
-from abc import ABC
-from abc import abstractmethod
 from typing import List
 
-import cohere
+import google_crc32c
+import litellm
 import numpy as np
-from litellm import embedding
-from tqdm.auto import tqdm
+from litellm import EmbeddingResponse
+from litellm import aembedding
+from tenacity import RetryError
+from tenacity import retry
+from tenacity import retry_if_exception_message
+from tenacity import stop_after_attempt
+from tenacity import wait_exponential
 
+from pluscoder.search.embeddings.models import EmbeddingModel
+from pluscoder.search.embeddings.models import ProviderConfig
+from pluscoder.search.embeddings.providers import get_provider_config
 from pluscoder.search.models import Chunk
 
 
-class EmbeddingModel(ABC):
-    """Abstract base class for embedding models."""
-
-    @abstractmethod
-    async def embed_chunks(self, chunks: List[Chunk]) -> List[List[float]]:
-        """Generate embeddings for chunks."""
-
-
 class LiteLLMEmbedding(EmbeddingModel):
-    """Cohere embedding implementation."""
+    """LiteLLM embedding implementation supporting multiple providers."""
 
     def __init__(
         self,
-        model_name: str = "embed-english-v3.0",
+        model_name: str = "cohere/embed-english-v3.0",
         batch_size: int = 64,
-        embedding_type: str = "ubinary",
     ):
         self.model_name = model_name
         self.batch_size = batch_size
-        self.embedding_type = embedding_type
 
-    async def embed_chunks(self, chunks: List[Chunk]) -> List[List[float]]:
+    async def embed_document(self, chunks: List[Chunk]) -> List[List[float]]:
         """Generate embeddings for chunks in batches."""
         all_embeddings = []
+
+        provider_config = get_provider_config(self.model_name, "search_document")
 
         # Split chunks into batches
         for i in range(0, len(chunks), self.batch_size):
             batch = chunks[i : i + self.batch_size]
-            batch_embeddings = await self._embed_batch(batch)
+            batch_embeddings = await self._embed_batch(batch, provider_config)
             all_embeddings.extend(batch_embeddings)
-            await asyncio.sleep(1)  # Rate limiting
+            await asyncio.sleep(60)  # Rate limiting
 
         return all_embeddings
 
-    async def _embed_batch(self, chunks: List[Chunk]) -> List[List[float]]:
-        """Embed a batch of chunks."""
+    async def embed_queries(self, queries: List[Chunk]) -> List[List[float]]:
+        """Generate embeddings for a query."""
+        all_embeddings = []
+
+        provider_config = get_provider_config(self.model_name, "search_query")
+
+        # Split chunks into batches
+        for i in range(0, len(queries), self.batch_size):
+            batch = queries[i : i + self.batch_size]
+            batch_embeddings = await self._embed_batch(batch, provider_config)
+            all_embeddings.extend(batch_embeddings)
+
+        return all_embeddings
+
+    async def _embed_batch_retry(self, chunks: List[Chunk]) -> List[List[float]]:
         try:
-            texts = [chunk.content for chunk in chunks]
-            response = embedding(model=self.model_name, input=texts, input_type="search_document")
+            provider_config = get_provider_config(self.model_name)
+            return await self._embed_batch(chunks, provider_config)
+        except RetryError:
+            return [[0.0] * 1024] * len(chunks)
 
-            return [embed["embedding"] for embed in response.data]
+    @retry(
+        wait=wait_exponential(multiplier=1, min=4, max=60),
+        stop=stop_after_attempt(10),
+    )
+    async def _embed_batch(
+        self,
+        chunks: List[Chunk],
+        provider_config: ProviderConfig,
+    ) -> List[List[float]]:
+        """Embed a batch of chunks."""
+        texts = [chunk.content for chunk in chunks]
 
-        except Exception as e:
-            # Log error and return empty embeddings
-            print(f"Embedding error: {e!s}")
-            return [[0.0] * 1024] * len(chunks)  # Default size for empty embeddings
+        response = await aembedding(
+            model=self.model_name,
+            input=texts,
+            **provider_config.model_dump(),
+        )
+        return [embed["embedding"] for embed in response.data]
+
+
+# @retry(
+#     wait=wait_exponential(multiplier=1, min=4, max=60),
+#     stop=stop_after_attempt(10),
+# )
+# async def __embed(model: str, input: str | list[str], **kwargs) -> list[list[float]]:
+#     response = await aembedding(model=model, input=[input] if isinstance(input, str) else input, **kwargs)
+#     return [embed["embedding"] for embed in response.data]
+
+
+# async def __embed_batch(
+#     model: str,
+#     input: list[str],
+#     batch_size: int,
+#     delay: int,
+#     **kwargs,
+# ) -> list[list[float]]:
+#     embeddings: list[list[float]] = []
+#     for idx in range(0, len(input), batch_size):
+#         batch: list[str] = input[idx : idx + batch_size]
+#         embedding: list[list[float]] = await __embed(model=model, input=batch, **kwargs)
+#         embeddings.extend(embedding)
+#         await asyncio.sleep(delay=delay)  # workaround for rate limiting issues
+#     return embeddings
