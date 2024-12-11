@@ -161,12 +161,49 @@ def test_get_tracked_files_with_exclude_patterns(mock_config, mock_repo):
         "",  # untracked files (none in this case)
     ]
 
+    mock_config.repo_include_only_files = []
     mock_config.repo_exclude_files = [r".*\.txt$", r"test\..*"]
 
     repo = Repository(io=io)
     result = repo.get_tracked_files()
 
     assert result == ["file1.py"]
+
+
+@patch("pluscoder.repo.config")
+def test_get_tracked_files_with_include_only_patterns(mock_config, mock_repo):
+    mock_repo_instance = Mock()
+    mock_repo.return_value = mock_repo_instance
+    mock_repo_instance.git.ls_files.side_effect = [
+        "file1.py\nfile2.txt\ntest.py\nsetup.py",  # tracked files
+        "",  # untracked files
+    ]
+
+    mock_config.repo_include_only_files = [r".*\.py$"]
+    mock_config.repo_exclude_files = []
+
+    repo = Repository(io=io)
+    result = repo.get_tracked_files()
+
+    assert result == ["file1.py", "setup.py", "test.py"]
+
+
+@patch("pluscoder.repo.config")
+def test_get_tracked_files_with_include_and_exclude_patterns(mock_config, mock_repo):
+    mock_repo_instance = Mock()
+    mock_repo.return_value = mock_repo_instance
+    mock_repo_instance.git.ls_files.side_effect = [
+        "file1.py\nfile2.txt\ntest.py\nsetup.py",  # tracked files
+        "",  # untracked files
+    ]
+
+    mock_config.repo_include_only_files = [r".*\.py$"]
+    mock_config.repo_exclude_files = [r"test\..*"]
+
+    repo = Repository(io=io)
+    result = repo.get_tracked_files()
+
+    assert result == ["file1.py", "setup.py"]
 
 
 @patch("builtins.input", side_effect=["y", "y"])

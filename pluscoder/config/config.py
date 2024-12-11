@@ -173,6 +173,9 @@ class Settings(BaseSettings):
     repo_exclude_files: List[str] = Field(
         [], description="List of regex patterns to exclude files from repo operations"
     )
+    repo_include_only_files: List[str] = Field(
+        [], description="List of regex patterns to include only specific files from repo operations"
+    )
 
     # Show args
     show_repo: CliImplicitFlag[bool] = Field(False, description="Show repository information")
