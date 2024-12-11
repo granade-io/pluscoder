@@ -47,9 +47,13 @@ class ConsoleAgentEventHandler(AgentEventBaseHandler):
             print(f"Error initializing components: {e}")
             self._initialized = False
 
-    async def on_indexing_started(self, files=[]):
+    async def on_indexing_started(self, chunks: int = 0):
         """Display spinner when indexing starts."""
-        self.io.update_live_component("indexing", True)
+        self.io.update_live_component("indexing", {"total_chunks": chunks})
+
+    async def on_indexing_progress(self, data):
+        """Display spinner when indexing starts."""
+        self.io.update_live_component("indexing", data)
 
     async def on_indexing_completed(self):
         """Update progress when indexing completes."""

@@ -40,7 +40,10 @@ class AgentEventBaseHandler:
     async def on_files_updated(self, updated_files):
         pass
 
-    async def on_indexing_started(self, files):
+    async def on_indexing_started(self, chunks=0):
+        pass
+
+    async def on_indexing_progress(self, data=None):
         pass
 
     async def on_indexing_completed(self):

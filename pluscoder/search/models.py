@@ -27,6 +27,7 @@ class FileMetadata(BaseModel):
     file_size: int = Field(..., description="File size in bytes")
     created: float = Field(..., description="Creation timestamp")
     last_modified: float = Field(..., description="Last modified timestamp")
+    file_hash: str = Field(..., description="SHA256 hash of file content")
 
 
 class TextMetadata(BaseModel):

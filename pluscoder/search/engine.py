@@ -76,15 +76,20 @@ class SearchEngine:
         )
         return instance
 
-    async def build_index(self, file_paths: List[Path]) -> None:
+    async def build_index(self, file_paths: List[Path], reindex: bool = True) -> None:
         """Build or rebuild the search index."""
-        await event_emitter.emit("indexing_started", files=file_paths)
-        await self.index_manager.build_index(file_paths)
+
+        await self.index_manager.build_index(file_paths, reindex)
         await event_emitter.emit("indexing_completed")
 
     async def add_files(self, file_paths: List[Path]) -> None:
         """Add new files to the index."""
-        await self.index_manager.add_files(file_paths)
+
+        for file_path in file_paths:
+            await self.index_manager.add_files([file_path])
+            await event_emitter.emit("indexing_progress", {"file_processed": str(file_path)})
+
+        await event_emitter.emit("indexing_completed")
 
     async def remove_files(self, file_paths: List[Path]) -> None:
         """Remove files from the index."""

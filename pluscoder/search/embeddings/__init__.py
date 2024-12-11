@@ -3,17 +3,13 @@
 import asyncio
 from typing import List
 
-import google_crc32c
-import litellm
-import numpy as np
-from litellm import EmbeddingResponse
 from litellm import aembedding
 from tenacity import RetryError
 from tenacity import retry
-from tenacity import retry_if_exception_message
 from tenacity import stop_after_attempt
 from tenacity import wait_exponential
 
+from pluscoder.agents.event.config import event_emitter
 from pluscoder.search.embeddings.models import EmbeddingModel
 from pluscoder.search.embeddings.models import ProviderConfig
 from pluscoder.search.embeddings.providers import get_provider_config
@@ -36,13 +32,16 @@ class LiteLLMEmbedding(EmbeddingModel):
         all_embeddings = []
 
         provider_config = get_provider_config(self.model_name, "search_document")
+        await event_emitter.emit("indexing_started", chunks=len(chunks))
 
         # Split chunks into batches
         for i in range(0, len(chunks), self.batch_size):
             batch = chunks[i : i + self.batch_size]
             batch_embeddings = await self._embed_batch(batch, provider_config)
+            await event_emitter.emit("indexing_progress", data={"chunks": self.batch_size})
             all_embeddings.extend(batch_embeddings)
-            await asyncio.sleep(60)  # Rate limiting
+            if i + self.batch_size < len(chunks):
+                await asyncio.sleep(60)  # Rate limiting
 
         return all_embeddings
 

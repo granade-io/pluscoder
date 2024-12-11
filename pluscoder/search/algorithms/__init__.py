@@ -42,15 +42,17 @@ class DenseSearch(SearchAlgorithm):
         """Build search index from chunks."""
         self.chunks = chunks
 
-        # Generate embeddings if not present
-        if not from_cache or len(chunks) > 0 and not chunks[0].embedding:
-            # TODO: calculate properly if cached chunks has embedding
-            embeddings = await self.embedding_model.embed_document(chunks)
-            for chunk, embedding in zip(chunks, embeddings, strict=False):
+        # Filter chunks that need embedding
+        chunks_to_embed = [chunk for chunk in chunks if not chunk.embedding]
+
+        # Calculate embeddings only for chunks without them
+        if chunks_to_embed:
+            new_embeddings = await self.embedding_model.embed_document(chunks_to_embed)
+            for chunk, embedding in zip(chunks_to_embed, new_embeddings, strict=False):
                 chunk.embedding = embedding
-            self.index = np.array(embeddings)
-        else:
-            self.index = np.array([chunk.embedding for chunk in chunks])
+
+        # Build final index from all chunks
+        self.index = np.array([chunk.embedding for chunk in chunks])
 
     async def search(self, query: str, top_k: int = 5) -> List[SearchResult]:
         # Get query embedding

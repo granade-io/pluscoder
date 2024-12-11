@@ -153,7 +153,12 @@ class IndexingComponent(BaseComponent):
 
     def __init__(self):
         self.indexing = False
-        self.progress = Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"))
+        self.progress = Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+        )
+        self.task_id = None
 
     def render(self):
         if not self.show:
@@ -162,13 +167,22 @@ class IndexingComponent(BaseComponent):
             return Text("", end="")
         return self.progress
 
-    def update(self, indexing):
-        self.indexing = indexing
-        if self.indexing:
-            self.progress.add_task(
-                "[yellow]Indexing repository for better suggestions. Wait few seconds minutes...[/yellow]", start=True
-            )
-            self.progress.refresh()
+    def update(self, data):
+        if not data:
+            self.indexing = False
+        if isinstance(data, dict):
+            if "total_chunks" in data:
+                self.task_id = self.progress.add_task(
+                    "[yellow]Preparing to index repository...[/yellow]", total=data["total_chunks"], start=True
+                )
+                self.indexing = True
+            elif "chunks" in data:
+                self.progress.update(
+                    self.task_id,
+                    description="[yellow]Indexing repository for better suggestions...[/yellow]",
+                    advance=data["chunks"],
+                )
+        self.progress.refresh()
 
     def start(self):
         self.show = True

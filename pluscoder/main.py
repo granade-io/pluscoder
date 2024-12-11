@@ -27,9 +27,7 @@ from pluscoder.search.algorithms import HybridSearch
 from pluscoder.search.algorithms import SparseSearch
 from pluscoder.search.chunking import TokenBasedChunking
 from pluscoder.search.embeddings import LiteLLMEmbedding
-from pluscoder.search.embeddings.models import EmbeddingModel
 from pluscoder.search.engine import SearchEngine
-from pluscoder.search.storage import IndexStorage
 from pluscoder.setup import setup
 from pluscoder.type import TokenUsage
 from pluscoder.workflow import build_agents
@@ -158,40 +156,43 @@ async def initialize_search_engine():
         storage_dir = Path(".pluscoder") / "search_index"
         chunking = TokenBasedChunking(chunk_size=512, overlap=64)
 
-        storage = IndexStorage(storage_dir, config.embedding_model)
-        has_embeddings = EmbeddingModel.has_embeddings(storage)
-        if (
-            config.embedding_model
-            and has_embeddings
-            or config.embedding_model
-            and not has_embeddings
-            and not config.skip_repo_index
-            and ask_index_confirmation()
-        ):
+        # Configure search algorithm and embedding model based on config
+        embedding_model = None
+        algorithm = SparseSearch()
+
+        if config.embedding_model:
             embedding_model = LiteLLMEmbedding(model_name=config.embedding_model)
             dense = DenseSearch(embedding_model)
             sparse = SparseSearch()
             algorithm = HybridSearch([dense, sparse])
-        else:
-            algorithm = SparseSearch()
-            embedding_model = None
 
+        # Create engine with final configuration
         engine = await SearchEngine.create(
             chunking_strategy=chunking,
             search_algorithm=algorithm,
             storage_dir=storage_dir,
             embedding_model=embedding_model,
         )
-
         # Connect to global event emitter
         engine.events = event_emitter
 
-        # Get tracked files and start indexing
+        # Get tracked files
         repo = Repository(io)
         files = [Path(f) for f in repo.get_tracked_files()]
 
-        # Return task directly
-        await engine.build_index(files)
+        # Check if reindexing needed and ask confirmation
+        if config.embedding_model:
+            # hybrid search engine being used
+            reindex_needed = engine.index_manager.reindex_needed(files)
+            if reindex_needed and not config.skip_repo_index and ask_index_confirmation():
+                await engine.build_index(files, reindex=True)
+            elif reindex_needed:
+                await engine.build_index(files, reindex=False)
+            else:
+                await engine.build_index(files, reindex=True)
+        else:
+            await engine.build_index(files, reindex=True)
+
         io.live.stop("indexing")
 
     except Exception as e:
