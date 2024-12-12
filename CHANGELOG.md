@@ -1,3 +1,10 @@
+# [2.5.0-rc.4](https://gitlab.com/codematos/pluscoder/compare/v2.5.0-rc.3...v2.5.0-rc.4) (2024-12-12)
+
+
+### Features
+
+* now chat history can be preserved between agents conversations ([65c7db3](https://gitlab.com/codematos/pluscoder/commit/65c7db3291ee86937b05260ff820a5ec7d963949))
+
 # [2.5.0-rc.3](https://gitlab.com/codematos/pluscoder/compare/v2.5.0-rc.2...v2.5.0-rc.3) (2024-12-12)
 
 
