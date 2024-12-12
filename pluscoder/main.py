@@ -281,6 +281,14 @@ def choose_chat_agent_node(agents: dict):
 
     chosen_agent = list(agents)[int(choice) - 1]
     io.event(f"> Starting chat with {chosen_agent} agent.")
+
+    # Display suggestions for chosen agent
+    agent = agents[chosen_agent]
+    if hasattr(agent, "suggestions"):
+        io.console.print("\n[dark_goldenrod]Example requests:[/dark_goldenrod]")
+        for suggestion in agent.suggestions:
+            io.console.print(f"   > {suggestion}")
+
     return chosen_agent
 
 

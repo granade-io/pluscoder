@@ -60,6 +60,7 @@ def build_agents() -> dict[str, AgentConfig]:
             default_context_files=default_context_files,
             repository_interaction=True,
             read_only=True,
+            suggestions=OrchestratorAgent.suggestions,
         ),
         "developer": AgentConfig(
             id=DeveloperAgent.id,
@@ -71,6 +72,7 @@ def build_agents() -> dict[str, AgentConfig]:
             default_context_files=default_context_files,
             repository_interaction=True,
             read_only=False,
+            suggestions=DeveloperAgent.suggestions,
         ),
         "domain_stakeholder": AgentConfig(
             id=DomainStakeholderAgent.id,
@@ -82,6 +84,7 @@ def build_agents() -> dict[str, AgentConfig]:
             default_context_files=default_context_files,
             repository_interaction=True,
             read_only=False,
+            suggestions=DomainStakeholderAgent.suggestions,
         ),
     }
 

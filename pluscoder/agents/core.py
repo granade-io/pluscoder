@@ -2,6 +2,12 @@ class DeveloperAgent:
     id = "developer"
     name = "Developer"
     description = "Agent specialized in development and code generations"
+    suggestions = [
+        "Create a FastAPI endpoint for user profile with SQLAlchemy models",
+        "Implement Redis caching layer for frequently accessed API routes",
+        "Add Swagger documentation for the payment processing endpoints",
+        "Set up Celery tasks for async email notifications",
+    ]
     specialization_prompt = """
 *SPECIALIZATION INSTRUCTIONS*:
 Your role is to implement software development tasks based on detailed plans provided. You should write high-quality, maintainable code that adheres to the project's coding guidelines and integrates seamlessly with the existing codebase.
@@ -28,6 +34,12 @@ class DomainStakeholderAgent:
     id = "domain_stakeholder"
     name = "Domain Stakeholder"
     description = "Discuss project details, maintain project overview, roadmap, and brainstorm"
+    suggestions = [
+        "Design a social media feed microservice with MongoDB",
+        "Plan integration of Stripe payment processing system",
+        "Design WebSocket architecture for real-time chat feature",
+        "Plan ElasticSearch implementation for product search",
+    ]
     specialization_prompt = """
 *SPECIALIZATION INSTRUCTIONS*:
 Your role is to discuss project details with the user, do planning, roadmap generation, brainstorming, design, etc.

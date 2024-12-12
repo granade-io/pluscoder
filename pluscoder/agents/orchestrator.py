@@ -25,7 +25,12 @@ Remember your role is to understand user requirements to generate/plan a proper 
 
 class OrchestratorAgent(Agent):
     id = "orchestrator"
-
+    suggestions = [
+        "Plan implementation of SSO with Keycloak and JWT auth",
+        "Create roadmap for migrating monolith to microservices",
+        "Design implementation of AWS S3 file upload system",
+        "Plan Kubernetes deployment with monitoring setup",
+    ]
     specialization_prompt = """
 *SPECIALIZATION INSTRUCTIONS*:
 You are the Orchestrator Agent, your role is to understand user requirements to generate/plan a proper list of task to solve those requirements with the help of specialized Pluscoder AI Agents.

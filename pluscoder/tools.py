@@ -215,7 +215,7 @@ def is_task_completed(
 
 
 @tool
-def search_repository(
+def query_repository(
     query: Annotated[str, "Query with keywords to find relevant code, content and files in the repository."],
 ) -> str:
     """
@@ -250,4 +250,4 @@ def search_repository(
         return "Search engine is not available. Just read key files of the repository for better understanding and analysis."
 
 
-base_tools = [read_files, move_files, read_file_from_url, search_repository]
+base_tools = [read_files, move_files, read_file_from_url, query_repository]

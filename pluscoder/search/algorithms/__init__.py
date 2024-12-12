@@ -98,9 +98,10 @@ class SparseSearch(SearchAlgorithm):
 
         # Get BM25 scores and documents
         results, scores = self.bm25.retrieve(
-            bm25s.tokenize(query, lower=True, stopwords=self.stopwords),
+            bm25s.tokenize(query, lower=True, stopwords=self.stopwords, show_progress=False),
             k=top_k,
             backend_selection="numpy",
+            show_progress=False,
         )
 
         # Map results back to chunks and create search results
