@@ -1,3 +1,13 @@
+# [2.5.0-rc.3](https://gitlab.com/codematos/pluscoder/compare/v2.5.0-rc.2...v2.5.0-rc.3) (2024-12-12)
+
+
+### Features
+
+* agent suggestions ([508eb87](https://gitlab.com/codematos/pluscoder/commit/508eb8724a1e62630f179aa358a2e67eba97274f))
+* agents can now query the codebase using vector db with --embedding_model ([ce9ca59](https://gitlab.com/codematos/pluscoder/commit/ce9ca594bb4fe93ba0fdc58ed9453a0423e2af70))
+* new --repo_include_only regex to include specific files when running agents ([c2adc53](https://gitlab.com/codematos/pluscoder/commit/c2adc53c5c4c4e96af0dd72326789668a434de09))
+* now indexing detects if file were created/updated/removed at start of pluscoder ([7fce8ed](https://gitlab.com/codematos/pluscoder/commit/7fce8ed82c181d0c8d1ecbb2272a41b2a4475ab4))
+
 # [2.5.0-rc.2](https://gitlab.com/codematos/pluscoder/compare/v2.5.0-rc.1...v2.5.0-rc.2) (2024-12-01)
 
 
