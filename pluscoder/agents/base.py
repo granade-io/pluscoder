@@ -406,7 +406,7 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                 else ""
             )
             raise AgentException(
-                "Some errors occurred when executing your actions"
+                "Some errors occurred when executing your actions:\n\n"
                 + "\n".join(error_messages)
                 + "\nPlease review all errors and solve the present issues if you can. Maybe you will need to read files again to understand what is missing or what happened."
                 + updated_files_msg

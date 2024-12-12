@@ -21,6 +21,8 @@ from pluscoder.display_utils import display_agent
 from pluscoder.io_utils import io
 from pluscoder.message_utils import HumanMessage
 from pluscoder.message_utils import delete_messages
+from pluscoder.message_utils import filter_messages
+from pluscoder.message_utils import tag_messages
 from pluscoder.repo import Repository
 from pluscoder.type import AgentConfig
 from pluscoder.type import OrchestrationState
@@ -141,10 +143,18 @@ def select_agent(state: OrchestrationState, *args):
 
         chosen_agent = list(agent_dict.keys())[int(choice) - 1]
 
-    io.event(f"> Starting chat with {chosen_agent} agent. Chat history was cleared.")
+    preserve_chat = io.confirm("Preserve that story with new agent?")
 
-    # Clear chats to start new conversations
-    return {**_clear(state), "chat_agent": agent_dict[chosen_agent]}
+    if not preserve_chat:
+        io.event(f"> Starting chat with {chosen_agent} agent. Chat history was cleared.")
+        return {**_clear(state), "chat_agent": agent_dict[chosen_agent]}
+
+    # Preserve history by adding new agent tag
+    current_messages = filter_messages(state["messages"], include_tags=[state["chat_agent"].id])
+    tagged_messages = tag_messages(current_messages, tags=[agent_dict[chosen_agent].id])
+
+    io.event(f"> Starting chat with {chosen_agent} agent. Chat history preserved.")
+    return {**state, "messages": tagged_messages, "chat_agent": agent_dict[chosen_agent]}
 
 
 @command_registry.register("help")

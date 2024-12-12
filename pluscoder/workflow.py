@@ -111,16 +111,15 @@ def user_input(state: OrchestrationState):
         # Handle task list workflow. Do not append any user message
         return {"return_to_user": False}
 
+    io.live.stop()
     if config.user_input:
         user_input = config.user_input
     else:
-        io.live.stop()
         io.console.print()
         io.console.print(
             "[bold green]Enter your message ('q' or 'ctrl+c' to exit, '/help' for commands): [/bold green]"
         )
         user_input = io.input("")
-        io.live.start()
 
     if is_command(user_input):
         # Commands handles the update to state
@@ -128,6 +127,7 @@ def user_input(state: OrchestrationState):
         return handle_command(user_input, state=state)
 
     # Routes messages to the chosen agent
+    io.live.start()
 
     return {
         "return_to_user": False,
