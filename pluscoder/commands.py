@@ -136,6 +136,7 @@ def select_agent(state: OrchestrationState, *args):
             "Select an agent",
             choices=[str(i) for i in range(1, len(agent_dict) + 1)],
             default="1",
+            console=io.console,
         )
 
         chosen_agent = list(agent_dict.keys())[int(choice) - 1]

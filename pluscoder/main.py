@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from rich.prompt import Prompt
 
 from pluscoder.__version__ import __version__
+from pluscoder.agents.event.config import event_emitter
 from pluscoder.commands import show_config
 from pluscoder.commands import show_repo
 from pluscoder.commands import show_repomap
@@ -21,6 +22,12 @@ from pluscoder.model import get_inferred_provider
 from pluscoder.model import get_model_token_info
 from pluscoder.model import get_model_validation_message
 from pluscoder.repo import Repository
+from pluscoder.search.algorithms import DenseSearch
+from pluscoder.search.algorithms import HybridSearch
+from pluscoder.search.algorithms import SparseSearch
+from pluscoder.search.chunking import TokenBasedChunking
+from pluscoder.search.embeddings import LiteLLMEmbedding
+from pluscoder.search.engine import SearchEngine
 from pluscoder.setup import setup
 from pluscoder.type import TokenUsage
 from pluscoder.workflow import build_agents
@@ -131,6 +138,68 @@ def run_silent_checks():
     return warnings
 
 
+def ask_index_confirmation() -> bool:
+    io.console.print("")
+    io.event("> Embedding model detected.")
+    io.console.print("Indexing your repository will optimize the performance of Pluscoder agents.")
+    io.console.print(
+        "This process may take a few minutes.\n\n"
+        "Use '--skip_repo_index' flag to start immediately without indexing.\n"
+    )
+    return io.confirm("Would you like to index the repository now?")
+
+
+async def initialize_search_engine():
+    """Initialize the search engine with appropriate algorithm."""
+    try:
+        io.live.start("indexing")
+        storage_dir = Path(".pluscoder") / "search_index"
+        chunking = TokenBasedChunking(chunk_size=512, overlap=64)
+
+        # Configure search algorithm and embedding model based on config
+        embedding_model = None
+        algorithm = SparseSearch()
+
+        if config.embedding_model:
+            embedding_model = LiteLLMEmbedding(model_name=config.embedding_model)
+            dense = DenseSearch(embedding_model)
+            sparse = SparseSearch()
+            algorithm = HybridSearch([dense, sparse])
+
+        # Create engine with final configuration
+        engine = await SearchEngine.create(
+            chunking_strategy=chunking,
+            search_algorithm=algorithm,
+            storage_dir=storage_dir,
+            embedding_model=embedding_model,
+        )
+        # Connect to global event emitter
+        engine.events = event_emitter
+
+        # Get tracked files
+        repo = Repository(io)
+        files = [Path(f) for f in repo.get_tracked_files()]
+
+        # Check if reindexing needed and ask confirmation
+        if config.embedding_model:
+            # hybrid search engine being used
+            reindex_needed = engine.index_manager.reindex_needed(files)
+            if reindex_needed and not config.skip_repo_index and ask_index_confirmation():
+                await engine.build_index(files, reindex=True)
+            elif reindex_needed:
+                await engine.build_index(files, reindex=False)
+            else:
+                await engine.build_index(files, reindex=True)
+        else:
+            await engine.build_index(files, reindex=True)
+
+        io.live.stop("indexing")
+
+    except Exception as e:
+        io.console.print(f"Error: Failed to initialize search engine: {e}", style="bold red")
+        raise
+
+
 def display_initial_messages():
     """Display initial message with the number of files detected by git, excluded files, and model information."""
     banner()
@@ -207,13 +276,19 @@ def choose_chat_agent_node(agents: dict):
     display_agent_list(agents)
 
     choice = Prompt.ask(
-        "Select an agent",
-        choices=[str(i) for i in range(1, len(agents) + 1)],
-        default="1",
+        "Select an agent", choices=[str(i) for i in range(1, len(agents) + 1)], default="1", console=io.console
     )
 
     chosen_agent = list(agents)[int(choice) - 1]
     io.event(f"> Starting chat with {chosen_agent} agent.")
+
+    # Display suggestions for chosen agent
+    agent = agents[chosen_agent]
+    if hasattr(agent, "suggestions"):
+        io.console.print("\n[dark_goldenrod]Example requests:[/dark_goldenrod]")
+        for suggestion in agent.suggestions:
+            io.console.print(f"   > {suggestion}")
+
     return chosen_agent
 
 
@@ -243,7 +318,7 @@ def validate_run_requirements():
     if config.model is None:
         io.console.print("Model is empty. Configure a model to run Pluscoder.", style="bold red")
         io.console.print(
-            "Use [green]--config <your-model>[/green], the [green].pluscoder-config.yml[/green] config file or env vars to configure"
+            "Use [green]--model <your-model>[/green], the [green].pluscoder-config.yml[/green] config file or env vars to configure"
         )
         sys.exit(1)
 
@@ -311,6 +386,9 @@ def main() -> None:
 
         validate_run_requirements()
         display_initial_messages()
+
+        # Initialize search engine
+        asyncio.run(initialize_search_engine())
 
         # Check if the default_agent is valid
         agent_dict = build_agents()

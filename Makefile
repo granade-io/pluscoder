@@ -48,7 +48,7 @@ venv:
 	@echo [$(DATETIME)] $@
 	@if [ ! -d $(VENV_DIR) ]; then \
 		echo "Creating virtual environment ..."; \
-		python3 -m venv $(VENV_DIR); \
+		python3.12 -m venv $(VENV_DIR); \
 	else \
 		echo "Virtual environment already exists."; \
 	fi

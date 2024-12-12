@@ -162,9 +162,14 @@ class Repository:
             # Combine and sort the results
             all_files = sorted(tracked_files.union(untracked_files))
 
-            # Filter out files based on repo_exclude_files patterns
+            # First apply include_only patterns if defined
+            if config.repo_include_only_files:
+                include_patterns = [re.compile(pattern) for pattern in config.repo_include_only_files]
+                all_files = [file for file in all_files if any(pattern.search(file) for pattern in include_patterns)]
+
+            # Then apply exclude patterns
             exclude_patterns = [re.compile(pattern) for pattern in config.repo_exclude_files]
-            return [file for file in all_files if not any(pattern.match(file) for pattern in exclude_patterns)]
+            return [file for file in all_files if not any(pattern.search(file) for pattern in exclude_patterns)]
 
         except Exception as e:
             self.io.console.print(f"An error occurred: {e}", style="bold red")

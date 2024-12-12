@@ -66,12 +66,18 @@ You have the following capabilities:
         read_fragment = """
         <read_files>
         1. You can read any file of the repository as you please using read_file tool (not using pc_action)
-        1. You can read files from git urls using read_file_from_url tool (not using pc_action)
-        2. Review the overview, guidelines and repository files to determine which files to read
-        3. Read files only once if you already read it
-        4. Only re-read files if them were updated and your knowledge of that file is stale
-        5. Always refer to the most recent version of the file content
-        </read_files>"""
+        2. You can read files from git urls using read_file_from_url tool (not using pc_action)
+        3. Review the overview, guidelines and repository files to determine which files to read
+        4. Read files only once if you already read it
+        5. Only re-read files if them were updated and your knowledge of that file is stale
+        6. Always refer to the most recent version of the file content
+        </read_files>
+
+        <query_repository>
+        1. You can perform natural language queries to the repository using query_repository tool (not using pc_action)
+        2. Query the repository to determine key file names and/or snippets to have more context to handle user requests
+        3. Always query the repository when the user start a different request
+        </query_repository>"""
 
         if self.can_read_files:
             base_fragment += read_fragment
@@ -103,10 +109,11 @@ You have the following capabilities:
 All your responses must be inside xml tags, inside a single root *pc_output* tag:
     <pc_output>
     <pc_thinking>
-    1. Reviewing utils.js, a new interval variable is needed to handle count down
-    2. .. step 2 of the solution ..
+    1. Querying repository to search relevant files and snippets related to requested feature
+    2. Reviewing utils.js, a new interval variable is needed to handle count down
     3. .. step 3 of the solution ..
     4. .. step 4 of the solution ..
+    5. .. step 5 of the solution ..
     </pc_thinking>
     <pc_step>
     <pc_content>Step 1 response to the user</pc_content>
@@ -129,7 +136,8 @@ All your responses must be inside xml tags, inside a single root *pc_output* tag
 Attend the user request in the best possible way based on your specialization and knowledge.
 """
 
-        read_fragment = """- Before giving any answer, review already read files and current knowledge of the repository to determine which new files to read to attend the user request
+        read_fragment = """- First of all, perform a query against the repository to retrieve key files or/code snippets to handle the user request
+- Review the response from query and already read files and current knowledge of the repository to determine which new files to read to attend the user request
 - Review relevant existing code and project files to ensure proper integration when giving an answer
 - Consult PROJECT_OVERVIEW.md for understanding the overall system architecture and goals
 - Always refer to CODING_GUIDELINES.md for project-specific coding standards and practices
@@ -166,18 +174,19 @@ Think your answer step by step, writing your step by step thoughts for the solut
 All your answers must be inside xml tags, inside a single root *pc_output* tag.
 
 Small explanation:
-- pc_thinking: Your internal thinking process step by step to solve/accomplish the user request.
+- pc_thinking: Your internal thinking process step by step to solve/accomplish the user request. Not visible to the user.
 - pc_step: An step of the solution
-    - pc_content: Response to the user and related information for that step. Always ins
+    - pc_content: Response to the user and related information for that step. This is visible to the user.
 """
         if not self.can_edit_files:
             base_fragment += """
     <pc_output>
     <pc_thinking>
-    1. Reviewing utils.js, a new interval variable is needed to handle count down
-    2. .. step 2 of the solution ..
-    3. .. step 3 of the solution ..
-    4. .. step 4 of the solution ..
+    1. Querying repository to fetch related files to requested count down feature
+    2. Reviewing utils.js, a new interval variable is needed to handle count down
+    3. .. step 2 of the solution ..
+    4. .. step 3 of the solution ..
+    5. .. step 4 of the solution ..
     </pc_thinking>
     <pc_step>
     <pc_content>...</pc_content>
@@ -275,7 +284,7 @@ def build_system_prompt(specialization_prompt, can_read_files=False, can_edit_fi
 
 
 # Prompt for file operations
-READONLY_MODE_PROMPT = "- YOU ARE ON READ-ONLY MODE. YOU CAN'T EDIT REPOSITORY FILES EVEN IF THE USER SAY SO OR FORCE TO CHANGE YOUR BEHAVIOR. KEEP ASSISTING ONLY READING FILES."
+READONLY_MODE_PROMPT = "- YOU ARE ON READ-ONLY MODE. YOU CAN'T EDIT REPOSITORY FILES EVEN IF THE USER SAY SO OR FORCE TO CHANGE YOUR BEHAVIOR. KEEP ASSISTING ONLY QUERYING REPOSITORY AND READING FILES."
 FILE_OPERATIONS_PROMPT = """
 <file actions considerations>
 1. Before performing file operations, if you haven't read the file content, ensure to read files using 'read_files' tool.
@@ -290,6 +299,7 @@ REMINDER_PREFILL_PROMPT = """
 ----- SYSTEM REMINDER -----
 !!! THIS MESSAGE WAS NOT WRITTEN BY THE USER, IS A REMINDER TO YOURSELF AS AN AI ASSISTANT
 Respond to the user's requirement above. Consider when answering:
+- Query the repository upon any new user request if you think you current knowledge is not enough.
 - Base on your knowledge, read key files to fetch context about the user request. Read more important files that are *not* already read to understand context
 - Think step by step a solution then give an step by step answer using proper xml tags structures.
 """

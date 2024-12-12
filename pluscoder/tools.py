@@ -1,5 +1,6 @@
 import re
 import shutil
+import traceback
 from typing import Annotated
 from typing import Dict
 from typing import List
@@ -213,4 +214,40 @@ def is_task_completed(
     return {"completed": completed, "feedback": feedback}
 
 
-base_tools = [read_files, move_files, read_file_from_url]
+@tool
+def query_repository(
+    query: Annotated[str, "Query with keywords to find relevant code, content and files in the repository."],
+) -> str:
+    """
+    Search key file snippets and filenames in the repository for better understanding and analysis given a new user request.
+    """
+    try:
+        from pluscoder.search.engine import SearchEngine
+
+        engine = SearchEngine.get_instance()
+        results = engine.search(query, top_k=5)
+
+        if not results:
+            return "No matching results found in repository. Just read key files of the repository for better understanding and analysis."
+
+        output = f"Found {len(results)} possible relevant results for query '{query}':\n\n"
+
+        for result in results:
+            file_path = result.chunk.file_metadata.file_path
+            relevance = f"{result.score:.2%}"
+            lines = f"lines {result.start_line}-{result.end_line}"
+            snippet = result.chunk.content.strip()
+
+            output += f"📄 {file_path} ({lines}) - Relevance: {relevance}\n"
+            output += f"Snippet:\n{snippet}\n\n"
+
+        output += "Given these results analyze which key files to read and if is necessary to perform another search query for handling the user request."
+
+        return output
+
+    except Exception:
+        io.console.print(traceback.format_exc(), style="bold red")
+        return "Search engine is not available. Just read key files of the repository for better understanding and analysis."
+
+
+base_tools = [read_files, move_files, read_file_from_url, query_repository]

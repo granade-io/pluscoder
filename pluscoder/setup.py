@@ -11,6 +11,7 @@ from pluscoder.config import config
 from pluscoder.exceptions import GitCloneException
 from pluscoder.exceptions import NotGitRepositoryException
 from pluscoder.io_utils import io
+from pluscoder.model import get_default_embedding_model
 from pluscoder.model import get_default_model_for_provider
 from pluscoder.model import get_inferred_provider
 from pluscoder.model import get_model_validation_message
@@ -20,7 +21,7 @@ from pluscoder.type import TokenUsage
 
 # TODO: Move this?
 CONFIG_FILE = ".pluscoder-config.yml"
-CONFIG_OPTIONS = ["provider", "model", "auto_commits", "allow_dirty_commits"]
+CONFIG_OPTIONS = ["provider", "model", "embedding_model", "auto_commits", "allow_dirty_commits"]
 
 CONFIG_TEMPLATE = """
 #------------------------------------------------------------------------------
@@ -157,6 +158,9 @@ def prompt_for_config():
             default = get_inferred_provider()
         elif option == "model":
             default = config.model or get_default_model_for_provider(current_config.get("provider"))
+            current_config[option] = default
+        elif option == "embedding_model":
+            default = config.embedding_model or get_default_embedding_model(current_config.get("provider"))
             current_config[option] = default
         else:
             default = current_config[option]

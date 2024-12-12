@@ -428,8 +428,6 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         # Updated files during entire agent execution
         file_editions_msgs = []
         if self.updated_files:
-            if len(self.updated_files) > 1:
-                io.event(f"> These files were successfully updated: {', '.join(self.updated_files)}")
             try:
                 if len(self.updated_files) > 1:
                     io.event(f"> These files were successfully updated: {', '.join(self.updated_files)}")

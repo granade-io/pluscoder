@@ -63,6 +63,7 @@ class AgentConfig(BaseModel):
     read_only: bool = False
     repository_interaction: bool = True
     is_custom: bool = False
+    suggestions: Optional[List[str]] = None
 
 
 # TODO: This should be config independent

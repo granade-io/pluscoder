@@ -91,11 +91,15 @@ def filter_messages(
     *,
     include_types: Optional[Sequence[str]] = None,
     include_tags: Optional[Sequence[str]] = None,
+    exclude_tags: Optional[Sequence[str]] = None,
     include_no_tags: Optional[bool] = None,
 ) -> List[BaseMessage]:
     messages = convert_to_messages(messages)
     filtered: List[BaseMessage] = []
     for msg in messages:
+        if exclude_tags and hasattr(msg, "tags") and any(tag in exclude_tags for tag in msg.tags):
+            continue
+
         if include_tags and hasattr(msg, "tags") and any(tag in include_tags for tag in msg.tags):
             filtered.append(msg)
 
@@ -157,7 +161,7 @@ def build_file_editions_tool_message(filenames: List[str], agent_id: str) -> Bas
     :return: Tool message with file_editions in metadata containing edited files
     """
     content = build_feedback_ai_message_content(f"These files were updated successfully: {', '.join(filenames)}")
-    return AIMessage(content=content, metadata={"file_editions": filenames}, tags=[agent_id])
+    return AIMessage(content=content, metadata={"file_editions": filenames}, tags=[agent_id, "system_feedback"])
 
 
 def build_stale_read_files_tool_message(

@@ -4,8 +4,6 @@ import re
 from rich.console import Console
 from rich.syntax import Syntax
 
-from pluscoder.type import TokenUsage
-
 
 def display_diff(diff_text, filepath, console):
     # Display using rich syntax highlighting
@@ -61,12 +59,18 @@ def display_file_diff(content: str, filepath: str, console=None) -> None:
     return True
 
 
-def get_cost_usage_display(token_usage: TokenUsage):
+def get_cost_usage_display(token_usage):
     if not token_usage:
         text_content = "Tokens: ↑:0 ↓:0 T:0 $0"
     else:
         text_content = f"Tokens: ↑:{token_usage['prompt_tokens']} ↓:{token_usage['completion_tokens']} T:{token_usage['total_tokens']} ${token_usage['total_cost']:.3f}"
     return text_content
+
+
+def render_task(task):
+    """Render a single task with status indicator."""
+    status = "✓" if task.is_finished else "⋯"
+    return f"{status} {task.objective}"
 
 
 def display_agent(agent, agent_type: str):

@@ -53,13 +53,14 @@ def build_agents() -> dict[str, AgentConfig]:
         "orchestrator": AgentConfig(
             id=OrchestratorAgent.id,
             name="Orchestrator",
-            description="Orchestrate and manage other agents",
+            description="Design and run complex plan delegating it to other agents",
             prompt=OrchestratorAgent.specialization_prompt,
             reminder="",
             tools=[tool.name for tool in tools.base_tools],
             default_context_files=default_context_files,
             repository_interaction=True,
             read_only=True,
+            suggestions=OrchestratorAgent.suggestions,
         ),
         "developer": AgentConfig(
             id=DeveloperAgent.id,
@@ -71,6 +72,7 @@ def build_agents() -> dict[str, AgentConfig]:
             default_context_files=default_context_files,
             repository_interaction=True,
             read_only=False,
+            suggestions=DeveloperAgent.suggestions,
         ),
         "domain_stakeholder": AgentConfig(
             id=DomainStakeholderAgent.id,
@@ -82,6 +84,7 @@ def build_agents() -> dict[str, AgentConfig]:
             default_context_files=default_context_files,
             repository_interaction=True,
             read_only=False,
+            suggestions=DomainStakeholderAgent.suggestions,
         ),
     }
 
@@ -111,11 +114,13 @@ def user_input(state: OrchestrationState):
     if config.user_input:
         user_input = config.user_input
     else:
+        io.live.stop()
         io.console.print()
         io.console.print(
             "[bold green]Enter your message ('q' or 'ctrl+c' to exit, '/help' for commands): [/bold green]"
         )
         user_input = io.input("")
+        io.live.start()
 
     if is_command(user_input):
         # Commands handles the update to state
@@ -318,7 +323,9 @@ async def _orchestrator_agent_node(
     target_agent = task["agent"]
 
     # Add response message from the executor agent to validate if the task has been completed
-    executor_agent_response = get_message_content_str(global_state["messages"][-1])
+    executor_agent_response = get_message_content_str(
+        filter_messages(global_state["messages"], include_tags=[target_agent], exclude_tags=["system_feedback"])[-1]
+    )
 
     # Validates using only last message not entire conversation
     await event_emitter.emit(
@@ -467,7 +474,7 @@ async def _orchestrator_agent_node(
 
         await event_emitter.emit(
             "task_list_interrumpted",
-            agent_instructions=OrchestratorAgent.get_agent_instructions(state_update),
+            agent_instructions=OrchestratorAgent.get_agent_instructions(global_state),
         )
 
         return {

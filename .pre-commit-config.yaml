@@ -78,14 +78,14 @@ repos:
         name: "[check]: check for eval()"
 
   - repo: https://github.com/abravalheri/validate-pyproject
-    rev: v0.21
+    rev: v0.22
     hooks:
       - id: validate-pyproject
         name: "[check]: validate pyproject.toml"
         files: pyproject\.toml$
 
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: "2.3.1"
+    rev: "v2.5.0"
     hooks:
       - id: pyproject-fmt
         name: "  [fix]: format pyproject.toml"

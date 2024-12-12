@@ -3,15 +3,15 @@
     "files.eol": "\n",
     "editor.renderWhitespace": "all",
     "python.languageServer": "Pylance",
-    "python.analysis.typeCheckingMode": "standard",
+    // "python.analysis.typeCheckingMode": "standard",
     "python.analysis.diagnosticMode": "workspace",
     "python.analysis.importFormat": "absolute",
     "python.analysis.fixAll": [
         "source.convertImportFormat",
     ],
     "[python]": {
-        // "editor.formatOnType": true,
-        "editor.formatOnSave": false,
+        "editor.formatOnType": true,
+        "editor.formatOnSave": true,
         "editor.defaultFormatter": "charliermarsh.ruff",
         "editor.codeActionsOnSave": {
             "source.fixAll": "explicit",
@@ -27,6 +27,17 @@
         ],
         "editor.renderWhitespace": "all",
         "editor.tabSize": 4
+    },
+    "ruff.lint.args": [
+        "--config=${workspaceFolder}/ruff.toml",
+    ],
+    "ruff.format.args": [
+        "--config=${workspaceFolder}/ruff.toml",
+    ],
+    "notebook.formatOnSave.enabled": true,
+    "notebook.codeActionsOnSave": {
+        "notebook.source.fixAll": "explicit",
+        "notebook.source.organizeImports": "explicit",
     },
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,

@@ -118,6 +118,7 @@ class Settings(BaseSettings):
     init: CliImplicitFlag[bool] = Field(True, description="Enable/disable initial setup")
     initialized: CliImplicitFlag[bool] = Field(False, description="Pluscoder was or not initialized")
     read_only: CliImplicitFlag[bool] = Field(False, description="Enable/disable read-only mode")
+    skip_repo_index: CliImplicitFlag[bool] = Field(False, description="Skip repository indexing")
     streaming: bool = Field(True, description="Enable/disable LLM streaming")
     user_feedback: bool = Field(True, description="Enable/disable user feedback")
     display_internal_outputs: bool = Field(False, description="Display internal agent outputs")
@@ -144,6 +145,8 @@ class Settings(BaseSettings):
     weak_model: Optional[str] = Field(None, description="Weaker LLM model to use for less complex tasks")
     weak_model_provider: Optional[str] = Field(None, description="Provider to use for weak model")
 
+    embedding_model: Optional[str] = Field(None, description="Model to use for embeddings")
+
     # PlusCoder API
     pluscoder_token: Optional[str] = Field(None, description="PlusCoder API token for authentication")
 
@@ -169,6 +172,9 @@ class Settings(BaseSettings):
     repomap_exclude_files: List[str] = Field([], description="List of files to exclude from repomap")
     repo_exclude_files: List[str] = Field(
         [], description="List of regex patterns to exclude files from repo operations"
+    )
+    repo_include_only_files: List[str] = Field(
+        [], description="List of regex patterns to include only specific files from repo operations"
     )
 
     # Show args

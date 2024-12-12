@@ -221,3 +221,23 @@ def get_inferred_provider():
     # There is no variable for detecting vertexai
 
     return "litellm"
+
+
+def get_default_embedding_model(provider: str):
+    if provider == "openai":
+        return "text-embedding-3-small"
+    if provider == "anthropic":
+        return None
+    if provider == "vertexai":
+        return "embed-english-v3.0"
+    if provider == "azure":
+        return "text-embedding-ada-002"
+    if provider == "aws_bedrock":
+        return "amazon.titan-embed-text-v1"
+    if provider == "cohere":
+        return "embed-english-v3.0"
+    if provider == "mistral":
+        return "mistral/mistral-embed"
+    if provider == "voyage":
+        return "voyage-01"
+    return None
