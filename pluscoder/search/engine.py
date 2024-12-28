@@ -76,16 +76,64 @@ class SearchEngine:
         )
         return instance
 
+    def _is_indexable_file(self, file_path: Path) -> bool:
+        """Check if file should be indexed based on extension."""
+        text_extensions = {
+            # Code files
+            ".py",
+            ".js",
+            ".jsx",
+            ".ts",
+            ".java",
+            ".c",
+            ".cpp",
+            ".h",
+            ".hpp",
+            ".cs",
+            ".rb",
+            ".php",
+            ".go",
+            ".rs",
+            ".swift",
+            ".kt",
+            ".scala",
+            # Text files
+            ".md",
+            ".txt",
+            ".json",
+            ".yml",
+            ".yaml",
+            ".xml",
+            ".html",
+            ".css",
+            ".sql",
+            ".sh",
+            ".bash",
+            ".env",
+            ".ini",
+            ".cfg",
+            ".conf",
+            # Documentation
+            ".rst",
+            ".adoc",
+            ".tex",
+        }
+        return file_path.suffix.lower() in text_extensions
+
     async def build_index(self, file_paths: List[Path], reindex: bool = True) -> None:
         """Build or rebuild the search index."""
+        # Filter only indexable files
+        indexable_files = [f for f in file_paths if self._is_indexable_file(f)]
 
-        await self.index_manager.build_index(file_paths, reindex)
+        await self.index_manager.build_index(indexable_files, reindex)
         await event_emitter.emit("indexing_completed")
 
     async def add_files(self, file_paths: List[Path]) -> None:
         """Add new files to the index."""
+        # Filter only indexable files
+        indexable_files = [f for f in file_paths if self._is_indexable_file(f)]
 
-        for file_path in file_paths:
+        for file_path in indexable_files:
             await self.index_manager.add_files([file_path])
             await event_emitter.emit("indexing_progress", {"file_processed": str(file_path)})
 

@@ -264,8 +264,8 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                     io.log_to_debug_file("## AgentException Deflection")
                     io.log_to_debug_file(e.message, indent=4)
 
-                    # io.console.print(f"Error: {e!s}")
-                    io.console.print("::re-thinking due an issue:: ", style="bold dark_goldenrod")
+                    # io.print(f"Error: {e!s}")
+                    io.print("::re-thinking due an issue:: ", style="bold dark_goldenrod")
                     if self.current_deflection <= self.max_deflections:
                         self.current_deflection += 1
                         interaction_msgs.append(HumanMessage(content=f"An error ocurred: {e!s}", tags=[self.id]))
@@ -273,7 +273,7 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                         backoff_time *= 2  # Exponential backoff
                 except Exception as e:
                     # Handles unknown exceptions, maybe caused by llm api or wrong state
-                    io.console.print(f"An error ocurred when calling model: {e!s}", style="bold red")
+                    io.print(f"An error ocurred when calling model: {e!s}", style="bold red")
                     error_traceback = traceback.format_exc()
                     if config.debug:
                         io.console.log(f"Traceback:\n{error_traceback}", style="bold red")
@@ -379,7 +379,7 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
 
         state_updates = self.graph.invoke(state, {"callbacks": [file_callback]})
 
-        io.console.print("")
+        io.print("")
         return {**state, **state_updates, "messages": state_updates["messages"]}
 
     def process_agent_response(self, state, response: AIMessage):

@@ -94,7 +94,7 @@ Return the only well-formatted json without any tag. With this structure:
 
     model = get_llm()
     if model is None:
-        io.console.print("Error: Language model not found.", style="bold red")
+        io.print("Error: Language model not found.", style="bold red")
         return ""
 
     parser = JsonOutputParser()

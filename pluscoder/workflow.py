@@ -13,6 +13,7 @@ from pluscoder import tools
 from pluscoder.agents.base import Agent
 from pluscoder.agents.core import DeveloperAgent
 from pluscoder.agents.core import DomainStakeholderAgent
+from pluscoder.agents.core import RepoExplorerAgent
 from pluscoder.agents.event.config import event_emitter
 from pluscoder.agents.orchestrator import OrchestratorAgent
 from pluscoder.agents.output_handlers.action_handlers import ActionProcessHandler
@@ -86,6 +87,18 @@ def build_agents() -> dict[str, AgentConfig]:
             read_only=False,
             suggestions=DomainStakeholderAgent.suggestions,
         ),
+        "repo_explorer": AgentConfig(
+            id="repo_explorer",
+            name="Explorer",
+            description=RepoExplorerAgent.description,
+            prompt=RepoExplorerAgent.specialization_prompt,
+            reminder=RepoExplorerAgent.reminder,
+            tools=[tool.name for tool in [tools.read_files, tools.query_repository]],
+            default_context_files=[],
+            repository_interaction=True,
+            read_only=True,
+            suggestions=RepoExplorerAgent.suggestions,
+        ),
     }
 
     # Add custom agent configs
@@ -115,10 +128,8 @@ def user_input(state: OrchestrationState):
     if config.user_input:
         user_input = config.user_input
     else:
-        io.console.print()
-        io.console.print(
-            "[bold green]Enter your message ('q' or 'ctrl+c' to exit, '/help' for commands): [/bold green]"
-        )
+        io.print()
+        io.print("[bold green]Enter your message ('q' or 'ctrl+c' to exit, '/help' for commands): [/bold green]")
         user_input = io.input("")
 
     if is_command(user_input):
@@ -222,7 +233,7 @@ async def _agent_node(state: OrchestrationState) -> OrchestrationState:
         agent_config = state["agents_configs"][task["agent"]]
 
     # Display agent information
-    io.console.print(Rule(agent_config.name))
+    io.print(Rule(agent_config.name))
 
     # Execute the agent's graph node and get a its modified state
     messages = filter_messages(state["messages"], include_tags=[agent_config.id])
@@ -258,7 +269,7 @@ async def _orchestrator_agent_node(
         # If user message and no active task (or are all completed)
         if not OrchestratorAgent.is_agent_response(global_state) and not global_state["is_task_list_workflow"]:
             # Display agent information
-            io.console.print(Rule(orchestrator_agent.id))
+            io.print(Rule(orchestrator_agent.id))
 
             # User message received
             messages = filter_messages(state["messages"], include_tags=[orchestrator_agent.id])
@@ -284,7 +295,7 @@ async def _orchestrator_agent_node(
             # Print task list as Markdown
             agent_instructions = OrchestratorAgent.get_agent_instructions(global_state)
             markdown_content = agent_instructions.to_markdown()
-            io.console.print(Markdown(markdown_content))
+            io.print(Markdown(markdown_content))
 
             # Ask the user for confirmation to proceed
             if not io.confirm("Do you want to proceed?"):
@@ -371,7 +382,7 @@ async def _orchestrator_agent_node(
             )
 
             # Display agent information
-            io.console.print(Rule(orchestrator_agent.id))
+            io.print(Rule(orchestrator_agent.id))
 
             # Generate a final summarized answer to the user
             task_results = "\n---\n".join(

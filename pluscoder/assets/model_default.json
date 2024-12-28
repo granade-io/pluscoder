@@ -20,6 +20,7 @@
     "vertex_ai-ai21_models": "vertex_ai/jamba-1.5-large",
     "palm": "palm/chat-bison-001",
     "gemini": "gemini/gemini-gemma-2-9b-it",
+    "google": "gemini-1.5-pro",
     "cohere_chat": "command-r-plus-08-2024",
     "replicate": "replicate/mistralai/mixtral-8x7b-instruct-v0.1",
     "openrouter": "openrouter/mistralai/mistral-7b-instruct:free",

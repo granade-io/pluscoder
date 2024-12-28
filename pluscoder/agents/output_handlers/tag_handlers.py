@@ -40,7 +40,7 @@ class ConsoleDisplayHandler(TagHandler):
         diff_text = None
 
         if file:
-            self.io.console.print(f"\n`{file}`", style=style)
+            self.io.print(f"\n`{file}`", style=style)
 
         if action == "file_diff":
             pattern = re.compile(r"<original>(.*?)<\/original>[\s\n]*<new>(.*?)<\/new>", re.DOTALL)
@@ -70,7 +70,7 @@ class ConsoleDisplayHandler(TagHandler):
 
         if diff_text:
             # Display using rich syntax highlighting
-            display_diff(diff_text, file, self.io.console)
+            display_diff(diff_text, file, self.io)
 
     def process(self, tag: str, attributes: dict, content: str) -> None:
         style = "green"
@@ -83,4 +83,4 @@ class ConsoleDisplayHandler(TagHandler):
         elif tag == "pc_action":
             self.display_file_action(attributes["action"], attributes, content)
             return
-        self.io.console.print(content, style=style)
+        self.io.print(content, style=style)

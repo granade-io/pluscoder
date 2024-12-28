@@ -5,11 +5,11 @@ from rich.console import Console
 from rich.syntax import Syntax
 
 
-def display_diff(diff_text, filepath, console):
+def display_diff(diff_text, filepath, io):
     # Display using rich syntax highlighting
-    # console.print(Text(f"`{filepath}`", style="bold"))
+    # print(Text(f"`{filepath}`", style="bold"))
     syntax = Syntax(diff_text, "diff", theme="monokai", line_numbers=False)
-    console.print(syntax)
+    io.print(syntax)
 
 
 def display_file_diff(content: str, filepath: str, console=None) -> None:

@@ -95,19 +95,19 @@ class IndexManager:
             embedding_model=embedding_model,
         )
 
-    def reindex_needed(self, file_paths: List[Path]) -> bool:
-        """Check if reindexing is needed based on file changes and embedding status."""
+    def reindex_needed(self, file_paths: List[Path]) -> List[Path]:
+        """Check which files need reindexing based on changes and embedding status."""
         # Check if we have any embeddings
         chunks = self.storage.load("chunks") or []
         has_embeddings = all(bool(chunk) for chunk in chunks if chunk.embedding)
 
         if not has_embeddings:
-            return True
+            return file_paths
 
         # Check for file changes
         file_hashes = self.storage.load("file_hashes") or {}
         new_files, modified_files, _ = self._analyze_file_changes(file_paths, file_hashes)
-        return bool(new_files or modified_files)
+        return list(new_files | modified_files)
 
     def _save_state(self) -> None:
         """Save current state."""

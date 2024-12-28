@@ -139,7 +139,7 @@ Display current configuration settings using command `/show_config` or cmd line 
 - `embedding_model`: Embedding model to use for vector database. (default: `None`).
 
 *Provider*:
-- `provider`: Provider to use. If `None`, provider will be selected based on available credential variables. Options: aws_bedrock, openai, litellm, anthropic, vertexai (default: `None`)
+- `provider`: Provider to use. If `None`, provider will be selected based on available credential variables. Options: aws_bedrock, openai, litellm, anthropic, vertexai, google (default: `None`)
 - `orchestrator_model_provider`: Provider to use for orchestrator model (default: same as `PROVIDER`)
 - `weak_model_provider`: Provider to use for weak model (default: same as `PROVIDER`). (CURRENTLY NOT BEING USED)
 

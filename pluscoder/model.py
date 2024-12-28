@@ -5,6 +5,7 @@ from typing import Optional
 from langchain_anthropic import ChatAnthropic
 from langchain_aws import ChatBedrock
 from langchain_community.chat_models import ChatLiteLLM
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 
 from pluscoder.config import config
@@ -104,6 +105,8 @@ def get_model_token_info(model_name: str) -> dict:
 
 @lru_cache
 def get_default_model_for_provider(provider_name: str) -> Optional[str]:
+    if provider_name == "google":
+        return "gemini-1.5-pro"
     default_models = _get_provider_model()
     return default_models.get(provider_name, None)
 
@@ -120,10 +123,20 @@ def get_model_validation_message(provider) -> Optional[str]:
     # Check OpenAI
     if provider == "openai" and not os.getenv("OPENAI_API_KEY", None):
         return "OpenAI provider defined but OpenAI API key is not configured or empty."
+
+    # Check Google
+    if provider == "google" and not os.getenv("GOOGLE_API_KEY", None):
+        return "Google provider defined but Google API key is not configured or empty."
     return None
 
 
 def get_llm_base(model_id, provider):
+    # Uses Google if available
+    if os.getenv("GOOGLE_API_KEY", None) and provider == "google":
+        return ChatGoogleGenerativeAI(
+            model=model_id, temperature=0.0, max_tokens=4096, streaming=config.streaming, max_retries=2
+        )
+
     # Uses aws bedrock if available
     if os.getenv("AWS_ACCESS_KEY_ID", None) and provider == "aws_bedrock":
         return ChatBedrock(
@@ -205,6 +218,10 @@ def get_weak_llm():
 def get_inferred_provider():
     if config.provider:
         return config.provider
+
+    # Uses Google if available
+    if os.getenv("GOOGLE_API_KEY", None):
+        return "google"
 
     # Uses aws bedrock if available
     if os.getenv("AWS_ACCESS_KEY_ID", None):

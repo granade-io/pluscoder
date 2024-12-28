@@ -33,7 +33,7 @@ class XMLStreamParser:
                 self.agent_errors.append(e.message)
             except Exception:
                 if config.debug:
-                    self.io.console.print(traceback.format_exc(), style="bold red")
+                    self.io.print(traceback.format_exc(), style="bold red")
 
     def start_stream(self):
         self.agent_errors = []

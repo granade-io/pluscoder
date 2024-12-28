@@ -82,13 +82,13 @@ class Repository:
 
         except GitCommandError as e:
             if self.io:
-                self.io.console.print(f"Error cloning repository: {e}", style="bold red")
+                self.io.print(f"Error cloning repository: {e}", style="bold red")
             raise GitCloneException(url, str(e)) from e
 
     def commit(self, message="Auto-commit", updated_files=None):
         """Create a new commit from specified updated files."""
         if not config.allow_dirty_commits and self.repo.is_dirty():
-            self.io.console.print(
+            self.io.print(
                 "Warn: Repository is dirty and allow_dirty_commits is set to False. No new commit created.",
                 style="bold dark_goldenrod",
             )
@@ -114,12 +114,12 @@ class Repository:
 
             return True
         except GitCommandError as e:
-            self.io.console.print(f"Error creating commit: {e}", style="bold red")
+            self.io.print(f"Error creating commit: {e}", style="bold red")
             return False
         except HookExecutionError:
             if config.debug:
-                self.io.console.print(traceback.format_exc())
-            self.io.console.print("WARN: Pre-commit hook didn't pass", style="bold dark_goldenrod")
+                self.io.print(traceback.format_exc())
+            self.io.print("WARN: Pre-commit hook didn't pass", style="bold dark_goldenrod")
             # Return true event when the commit failed
             return True
 
@@ -130,13 +130,13 @@ class Repository:
             if "(pluscoder)" in last_commit.author.name:
                 self.repo.git.reset("--hard", "HEAD~1")
                 return True
-            self.io.console.print(
+            self.io.print(
                 "Last commit was not made by pluscoder, can't be reverted.",
                 style="bold dark_goldenrod",
             )
             return False
         except GitCommandError as e:
-            self.io.console.print(f"Error undoing last commit: {e}", style="bold red")
+            self.io.print(f"Error undoing last commit: {e}", style="bold red")
             return False
 
     def diff(self):
@@ -145,7 +145,7 @@ class Repository:
             last_commit = self.repo.head.commit
             return self.repo.git.show(last_commit.hexsha)
         except GitCommandError as e:
-            self.io.console.print(f"Error getting diff: {e}", style="bold red")
+            self.io.print(f"Error getting diff: {e}", style="bold red")
             return ""
 
     def get_tracked_files(self) -> List[str]:
@@ -172,7 +172,7 @@ class Repository:
             return [file for file in all_files if not any(pattern.search(file) for pattern in exclude_patterns)]
 
         except Exception as e:
-            self.io.console.print(f"An error occurred: {e}", style="bold red")
+            self.io.print(f"An error occurred: {e}", style="bold red")
             return []
 
     def create_default_files(self):
@@ -196,9 +196,9 @@ class Repository:
             missing_files.append(config.guidelines_file_path)
 
         if missing_files:
-            self.io.console.print("The following files are required:", style="bold red")
+            self.io.print("The following files are required:", style="bold red")
             for file in missing_files:
-                self.io.console.print(f"- {file}", style="bold red")
+                self.io.print(f"- {file}", style="bold red")
 
         # Ask y/n to create the files if missing
         if missing_files:
@@ -223,7 +223,7 @@ class Repository:
         if not config.run_lint_after_edit:
             return None  # Return None as there's no error, just not configured
         if config.run_lint_after_edit and not config.lint_command:
-            self.io.console.print(
+            self.io.print(
                 "No lint command configured. Skipping linting.",
                 style="bold dark_goldenrod",
             )
@@ -260,7 +260,7 @@ class Repository:
         if not config.run_tests_after_edit:
             return None  # Return None as there's no error, just not configured
         if config.run_tests_after_edit and not config.test_command:
-            self.io.console.print(
+            self.io.print(
                 "No test command configured. Skipping tests.",
                 style="bold dark_goldenrod",
             )

@@ -46,7 +46,7 @@ def get_language_and_parser(file_extension: str, io) -> Tuple:
             parser = get_parser(language_name)
             loaded_languages[language_name] = (language, parser)
         except Exception:
-            io.console.print(
+            io.print(
                 f"Warning: Language '{language_name}' not supported. Falling back to Python.",
                 style="bold dark_goldenrod",
             )

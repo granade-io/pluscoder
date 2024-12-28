@@ -191,7 +191,7 @@ def prompt_for_config():
 
     error_msg = get_model_validation_message(current_config["provider"])
     if error_msg:
-        io.console.print(error_msg, style="bold red")
+        io.print(error_msg, style="bold red")
 
     return example_config_text
 
@@ -379,7 +379,7 @@ def initialize_repository():
 
     # Check if both files were created
     if not (Path(config.overview_file_path).exists() and Path(config.guidelines_file_path).exists()):
-        io.console.print(
+        io.print(
             "Error: Could not create `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md`. Please try again.",
             style="bold red",
         )
@@ -389,7 +389,7 @@ def initialize_repository():
     config.update(initialized="true", persist=True)
 
     io.event("> Repository initialization completed.")
-    io.console.print(
+    io.print(
         "Files `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md` were generated and will be used as context for Pluscoder.\n"
     )
 
@@ -401,17 +401,17 @@ def setup() -> bool:
         repo.change_repository(repo.repository_path)
         config.reconfigure()
     except GitCloneException as e:
-        io.console.print(str(e), style="bold red")
+        io.print(str(e), style="bold red")
         return False
     except NotGitRepositoryException as e:
-        io.console.print(str(e), style="bold red")
+        io.print(str(e), style="bold red")
         return False
     except ValueError as e:
-        io.console.print(f"Invalid repository path: {e}", style="bold red")
+        io.print(f"Invalid repository path: {e}", style="bold red")
         return False
 
     if (not Path(CONFIG_FILE).exists() or not config.initialized) and config.init:
-        io.console.print(
+        io.print(
             "Welcome to Pluscoder! Let's customize your project configuration.",
             style="bold green",
         )
@@ -430,7 +430,7 @@ def setup() -> bool:
         # Additional configuration
         additional_config()
 
-        io.console.print(
+        io.print(
             "Initialization will analyze your project for better agent assistance generating `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md` files."
         )
         if io.confirm("Do you want to initialize it now (takes ~1min)? (recommended)"):

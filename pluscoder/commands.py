@@ -72,9 +72,9 @@ def diff(state: OrchestrationState):
     diff = repo.diff()
     if diff:
         syntax = Syntax(diff, "diff", theme="monokai", line_numbers=True)
-        io.console.print(syntax)
+        io.print(syntax)
     else:
-        io.console.print("No changes in the last commit.")
+        io.print("No changes in the last commit.")
     return state
 
 
@@ -82,14 +82,14 @@ def diff(state: OrchestrationState):
 def config_command(state: OrchestrationState, key: str, value: str, *args):
     """Override any pluscoder configuration. e.g: `/config auto_commits false`"""
     if key not in config.__dict__:
-        io.console.print(f"Error: '{key}' is not a valid configuration option.", style="bold red")
+        io.print(f"Error: '{key}' is not a valid configuration option.", style="bold red")
         return state
     old_value = getattr(config, key)
     try:
         config.__init__(**{key: value})
-        io.console.print(f"Config updated: {key} = {getattr(config, key)} (was: {old_value})")
+        io.print(f"Config updated: {key} = {getattr(config, key)} (was: {old_value})")
     except ValidationError:
-        io.console.print("Invalid value.", style="bold red")
+        io.print("Invalid value.", style="bold red")
 
     return state
 
@@ -113,8 +113,8 @@ def undo(state: OrchestrationState):
         message_ids = [msg.id for msg in messages[last_human_idx:]]
 
         io.event("> Last commit reverted and messages removed from chat history.")
-        return {"messages": delete_messages(state["messages"], include_ids=message_ids)}
-    io.console.print("Failed to revert last commit.", style="bold red")
+        return {**state, "messages": delete_messages(state["messages"], include_ids=message_ids)}
+    io.print("Failed to revert last commit.", style="bold red")
     return state
 
 
@@ -128,11 +128,11 @@ def select_agent(state: OrchestrationState, *args):
 
     if chosen_agent not in agent_dict:
         # chose an agent interactively
-        io.console.print("[bold green]Choose an agent to chat with:[/bold green]")
+        io.print("[bold green]Choose an agent to chat with:[/bold green]")
 
         for i, (_agent_id, agent) in enumerate(agent_dict.items(), 1):
             agent_type = "[cyan]Custom[/cyan]" if agent.is_custom else "[yellow]Predefined[/yellow]"
-            io.console.print(f"{i}. {display_agent(agent, agent_type)}")
+            io.print(f"{i}. {display_agent(agent, agent_type)}")
 
         choice = Prompt.ask(
             "Select an agent",
@@ -167,7 +167,7 @@ def help_command(state: OrchestrationState):
     for cmd_name, cmd_func in command_registry.commands.items():
         table.add_row(f"/{cmd_name}", cmd_func.__doc__ or "No description available")
 
-    io.console.print(table)
+    io.print(table)
     return state
 
 
@@ -184,15 +184,15 @@ def run_command(state: OrchestrationState, *args) -> OrchestrationState:
             text=True,
         )
         output = result.stdout
-        io.console.print(f"Command executed successfully:\n{output}")
+        io.print(f"Command executed successfully:\n{output}")
         state["command_output"] = output
     except subprocess.CalledProcessError as e:
         error_message = f"Command execution failed:\nError: {e}\nOutput: {e.output}\nError output: {e.stderr}"
-        io.console.print(error_message, style="bold red")
+        io.print(error_message, style="bold red")
         state["command_output"] = error_message
     except Exception as e:
         error_message = f"An unexpected error occurred: {e!s}"
-        io.console.print(error_message, style="bold red")
+        io.print(error_message, style="bold red")
         state["command_output"] = error_message
 
     return state
@@ -201,16 +201,16 @@ def run_command(state: OrchestrationState, *args) -> OrchestrationState:
 @command_registry.register("init")
 def _init(state: OrchestrationState):
     """Start repository initialization to improve repository understanding"""
-    io.console.print(
+    io.print(
         "Initialization will analyze the repository to create/update `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md` files."
     )
-    io.console.print("It takes about 1-2 minutes to complete.")
+    io.print("It takes about 1-2 minutes to complete.")
     if io.confirm("Do you want to initialize it now? (recommended)"):
         from pluscoder.setup import initialize_repository
 
         initialize_repository()
     else:
-        io.console.print("Repository initialization cancelled.")
+        io.print("Repository initialization cancelled.")
     return state
 
 
@@ -224,7 +224,7 @@ def show_repo(state: OrchestrationState = None):
     for file in tracked_files:
         tree.add(file)
 
-    io.console.print(Panel(tree, title="Repository Files", expand=False))
+    io.print(Panel(tree, title="Repository Files", expand=False))
     return state
 
 
@@ -235,9 +235,9 @@ def show_repomap(state: OrchestrationState = None):
     repomap = repo.generate_repomap()
 
     if repomap:
-        io.console.print(Panel(repomap, title="Repository Map", expand=False))
+        io.print(Panel(repomap, title="Repository Map", expand=False))
     else:
-        io.console.print("Repomap is not enabled or could not be generated.")
+        io.print("Repomap is not enabled or could not be generated.")
     return state
 
 
@@ -246,7 +246,7 @@ def show_config(state: OrchestrationState = None):
     """Display Pluscoder configuration and config file locations"""
 
     # Show current values
-    io.console.print("")
+    io.print("")
     table = Table(title="Current Configuration Values")
     table.add_column("Setting", style="cyan")
     table.add_column("Value", style="magenta")
@@ -256,7 +256,7 @@ def show_config(state: OrchestrationState = None):
             continue
         table.add_row(key, str(value))
 
-    io.console.print(table)
+    io.print(table)
 
     # Show config locations
     paths = get_config_paths()
@@ -265,7 +265,7 @@ def show_config(state: OrchestrationState = None):
     locations.add_column("Path", style="green")
     locations.add_row("Local (Repository)", paths.local)
     locations.add_row("User Global", paths.global_config)
-    io.console.print(locations)
+    io.print(locations)
     return state
 
 
@@ -276,9 +276,9 @@ def create_agent(state: OrchestrationState, *args):
 
     io.event("> Started new agent creation")
 
-    io.console.print(Rule("Agent Personalization"))
+    io.print(Rule("Agent Personalization"))
     # Repository interaction
-    io.console.print(
+    io.print(
         "WARN: Disabling code-base interaction will cause the agent to know nothing about the repository or its files",
         style="bold dark_goldenrod",
     )
@@ -287,17 +287,17 @@ def create_agent(state: OrchestrationState, *args):
     # Read only config
     read_only = not (repository_interaction and io.confirm("Allow this agent to edit files?"))
 
-    io.console.print("Describe the problem you want to solve or an agent to create")
-    io.console.print("Example: 'I need a ReactJs frontend with MaterialUI and Swagger APIs connections'")
-    io.console.print("Example: 'An Agent to refactor my Python code with Design Patterns'")
+    io.print("Describe the problem you want to solve or an agent to create")
+    io.print("Example: 'I need a ReactJs frontend with MaterialUI and Swagger APIs connections'")
+    io.print("Example: 'An Agent to refactor my Python code with Design Patterns'")
     description = io.input("Describe your problem or agent:\n")
 
     try:
         new_agent = generate_agent(description, repository_interaction)
-        io.console.print(Rule("Generated Agent"))
-        io.console.print(f"[bold green]{new_agent['name']}[/bold green]: {new_agent['description']}\n")
-        io.console.print(new_agent["prompt"], style="bold green")
-        io.console.print(Rule())
+        io.print(Rule("Generated Agent"))
+        io.print(f"[bold green]{new_agent['name']}[/bold green]: {new_agent['description']}\n")
+        io.print(new_agent["prompt"], style="bold green")
+        io.print(Rule())
         if not io.confirm("Do you to proceed with this agent?"):
             io.event("\n> Agent was discarded. Run /agent_create again with better indications")
             return {}
@@ -342,8 +342,8 @@ def create_agent(state: OrchestrationState, *args):
         )
     except Exception:
         if config.debug:
-            io.console.print(traceback.format_exc(), style="bold red")
-        io.console.print("Error generating agent: Please run command again", style="bold red")
+            io.print(traceback.format_exc(), style="bold red")
+        io.print("Error generating agent: Please run command again", style="bold red")
 
     return state
 
@@ -352,8 +352,8 @@ def create_agent(state: OrchestrationState, *args):
 def custom_command(state: OrchestrationState, prompt_name: str = "", *args):
     """Execute a custom prompt command"""
     if not prompt_name:
-        io.console.print("Error: Custom prompt name is required.", style="bold red")
-        io.console.print("Usage: /custom <prompt_name> <additional instructions>")
+        io.print("Error: Custom prompt name is required.", style="bold red")
+        io.print("Usage: /custom <prompt_name> <additional instructions>")
         return state
 
     custom_prompt = next(
@@ -361,7 +361,7 @@ def custom_command(state: OrchestrationState, prompt_name: str = "", *args):
         None,
     )
     if not custom_prompt:
-        io.console.print(f"Error: Custom prompt '{prompt_name}' not found.", style="bold red")
+        io.print(f"Error: Custom prompt '{prompt_name}' not found.", style="bold red")
         return state
 
     user_input = " ".join(args)
@@ -369,7 +369,7 @@ def custom_command(state: OrchestrationState, prompt_name: str = "", *args):
 
     current_agent = state["chat_agent"]
 
-    io.console.print(f"Custom prompt '{prompt_name}' executed and added to {current_agent.name}'s message history.")
+    io.print(f"Custom prompt '{prompt_name}' executed and added to {current_agent.name}'s message history.")
     return {
         # Add the combined prompt as a HumanMessage to the current agent's message history
         "messages": [HumanMessage(content=combined_prompt, tags=[state["chat_agent"].id])],

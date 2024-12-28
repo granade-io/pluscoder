@@ -80,7 +80,7 @@ class ConsoleAgentEventHandler(AgentEventBaseHandler):
             #         try:
             #             self.progress.update(self.usage_task_id, description=f"[yellow]{text}[/yellow]")
             #         except Exception:
-            #             self.io.console.print(text, style="yellow")
+            #             self.io.print(text, style="yellow")
         except Exception as e:
             print(f"Error updating token usage: {e}")
 

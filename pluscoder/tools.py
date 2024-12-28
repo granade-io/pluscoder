@@ -176,7 +176,7 @@ def extract_files(
     """
     Detect and extract all files mentioned with their full paths.
     """
-    io.console.print(mentioned_files)
+    io.print(mentioned_files)
     return mentioned_files
 
 
@@ -216,7 +216,9 @@ def is_task_completed(
 
 @tool
 def query_repository(
-    query: Annotated[str, "Query with keywords to find relevant code, content and files in the repository."],
+    query: Annotated[
+        str, "Natural language query with keywords to find relevant code, content and files in the repository."
+    ],
 ) -> str:
     """
     Search key file snippets and filenames in the repository for better understanding and analysis given a new user request.
@@ -246,8 +248,44 @@ def query_repository(
         return output
 
     except Exception:
-        io.console.print(traceback.format_exc(), style="bold red")
+        io.print(traceback.format_exc(), style="bold red")
         return "Search engine is not available. Just read key files of the repository for better understanding and analysis."
+
+
+# @tool
+# def query_repository(
+#     query: Annotated[str, "Query with keywords to find relevant code, content and files in the repository."],
+# ) -> str:
+#     """
+#     Search key file snippets and filenames in the repository for better understanding and analysis given a new user request.
+#     """
+#     from pluscoder.agents.base import Agent
+
+#     agent = Agent(
+#         AgentConfig(
+#             id="repo_explorer",
+#             name="Explorer",
+#             description=RepoExplorerAgent.description,
+#             prompt=RepoExplorerAgent.specialization_prompt,
+#             reminder="",
+#             tools=[tool.name for tool in [read_files, _query_repository]],
+#             default_context_files=[],
+#             repository_interaction=True,
+#             read_only=True,
+#             suggestions=RepoExplorerAgent.suggestions,
+#         ),
+#     )
+#     loop = asyncio.get_running_loop()
+#     # If exists, run in current loop
+#     response = loop.create_task(
+#         agent.graph_node(
+#             {
+#                 "messages": [
+#                     HumanMessage(query, tags=["repo_explorer"]),
+#                 ],
+#             }
+#         )
+#     )
 
 
 base_tools = [read_files, move_files, read_file_from_url, query_repository]

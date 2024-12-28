@@ -175,7 +175,7 @@ class CustomProgress(Progress):
         full_text = "".join(self.chunks)
 
         # Print the full text
-        self.console.print(full_text, style=style)
+        self.print(full_text, style=style)
 
         # Clear the chunks list and add only the remainder (if any)
         self.chunks.clear()
@@ -189,7 +189,7 @@ class CustomProgress(Progress):
             full_text = "".join(self.chunks) + parts[0]
 
             # Print the full text
-            self.console.print(full_text, style=style)
+            self.print(full_text, style=style)
 
             # Clear the chunks list and add only the remainder (if any)
             self.chunks.clear()
@@ -228,8 +228,15 @@ class IO:
         if self.completer.command_completer:
             self.completer.command_completer.register_command(command_name, command_description)
 
+    def print(self, content: str = "", **kwargs):
+        """Print content to console"""
+        if not config.silent:
+            self.console.print(content, **kwargs)
+
     def event(self, string: str):
-        return self.console.print(string, style="yellow")
+        if not config.silent:
+            return self.print(string, style="yellow")
+        return None
 
     def handle_clipboard_image(self):
         try:
@@ -240,7 +247,7 @@ class IO:
                 os.close(fd)
                 return path
         except Exception as e:
-            self.console.print(f"Error handling clipboard image: {e}", style="bold red")
+            self.print(f"Error handling clipboard image: {e}", style="bold red")
         return None
 
     def input(self, string: str, autocomplete=True) -> str:
@@ -263,7 +270,7 @@ class IO:
                 if self.ctrl_c_count == 2:
                     event.app.exit(exception=KeyboardInterrupt)
                 else:
-                    self.console.print("\nPress Ctrl+C again to exit.")
+                    self.print("\nPress Ctrl+C again to exit.")
             else:
                 self.ctrl_c_count = 0
                 buf.text = ""
@@ -297,10 +304,7 @@ class IO:
         return result
 
     def log_to_debug_file(
-        self,
-        message: Optional[str] = None,
-        json_data: Optional[dict] = None,
-        indent: int = 0,
+        self, message: Optional[str] = None, json_data: Optional[dict] = None, indent: int = 0, force: bool = False
     ) -> None:
         if json_data is not None:
             try:
@@ -340,10 +344,11 @@ class IO:
         self.progress = progress
 
     def stream(self, chunk: str, style=None) -> None:
-        if not self.progress:
-            self.console.print(chunk, style=style, end="")
-        else:
-            self.progress.stream(chunk, style)
+        if not config.silent:
+            if not self.progress:
+                self.print(chunk, style=style, end="")
+            else:
+                self.progress.stream(chunk, style)
 
     def register_live_component(self, name: str, component: BaseComponent) -> None:
         """Register a new component in the live display.
