@@ -40,7 +40,7 @@ load_dotenv(dotenv_path=get_global_env_filepath())
 
 def banner() -> None:
     """Display the Pluscoder banner."""
-    io.console.print(
+    io.print(
         f"""
 [bold green]
 -------------------------------------------------------------------------------
@@ -119,7 +119,7 @@ def parse_task_list():
         return tasks
 
     except (json.JSONDecodeError, IOError, ValueError) as e:
-        io.console.print(f"Error parsing task list: {e}", style="bold red")
+        io.print(f"Error parsing task list: {e}", style="bold red")
         sys.exit(1)
 
 
@@ -138,15 +138,15 @@ def run_silent_checks():
     return warnings
 
 
-def ask_index_confirmation() -> bool:
-    io.console.print("")
+def ask_index_confirmation(tracked_files: int) -> bool:
+    io.print("")
     io.event("> Embedding model detected.")
-    io.console.print("Indexing your repository will optimize the performance of Pluscoder agents.")
-    io.console.print(
+    io.print("Indexing your repository will optimize the performance of Pluscoder agents.")
+    io.print(
         "This process may take a few minutes.\n\n"
         "Use '--skip_repo_index' flag to start immediately without indexing.\n"
     )
-    return io.confirm("Would you like to index the repository now?")
+    return io.confirm(f"Would you like to index the repository now? ({tracked_files} files to index)")
 
 
 async def initialize_search_engine():
@@ -183,10 +183,10 @@ async def initialize_search_engine():
         # Check if reindexing needed and ask confirmation
         if config.embedding_model:
             # hybrid search engine being used
-            reindex_needed = engine.index_manager.reindex_needed(files)
-            if reindex_needed and not config.skip_repo_index and ask_index_confirmation():
+            files_to_reindex = engine.index_manager.reindex_needed(files)
+            if files_to_reindex and not config.skip_repo_index and ask_index_confirmation(len(files_to_reindex)):
                 await engine.build_index(files, reindex=True)
-            elif reindex_needed:
+            elif files_to_reindex:
                 await engine.build_index(files, reindex=False)
             else:
                 await engine.build_index(files, reindex=True)
@@ -196,7 +196,7 @@ async def initialize_search_engine():
         io.live.stop("indexing")
 
     except Exception as e:
-        io.console.print(f"Error: Failed to initialize search engine: {e}", style="bold red")
+        io.print(f"Error: Failed to initialize search engine: {e}", style="bold red")
         raise
 
 
@@ -245,7 +245,7 @@ def display_initial_messages():
     # Model validation
     error_msg = get_model_validation_message(main_provider)
     if error_msg:
-        io.console.print(error_msg, style="bold red")
+        io.print(error_msg, style="bold red")
 
     if config.read_only:
         io.event("> Running on 'read-only' mode")
@@ -255,7 +255,7 @@ def display_initial_messages():
 
     # Warns token cost
     if not get_model_token_info(config.model):
-        io.console.print(
+        io.print(
             f"Token usage info not available for model `{config.model}`. Cost calculation can be unaccurate.",
             style="bold dark_goldenrod",
         )
@@ -285,24 +285,24 @@ def choose_chat_agent_node(agents: dict):
     # Display suggestions for chosen agent
     agent = agents[chosen_agent]
     if hasattr(agent, "suggestions"):
-        io.console.print("\n[dark_goldenrod]Example requests:[/dark_goldenrod]")
-        for suggestion in agent.suggestions:
-            io.console.print(f"   > {suggestion}")
+        io.print("\n[dark_goldenrod]Example requests:[/dark_goldenrod]")
+        for suggestion in agent.suggestions or []:
+            io.print(f"   > {suggestion}")
 
     return chosen_agent
 
 
 def display_agent_list(agents: dict):
     """Display the list of available agents with their indices."""
-    io.console.print("\n[bold green]Available agents:[/bold green]")
+    io.print("\n[bold green]Available agents:[/bold green]")
     for i, (_agent_id, agent) in enumerate(agents.items(), 1):
         agent_type = "[cyan]Custom[/cyan]" if agent.is_custom else "[yellow]Predefined[/yellow]"
-        io.console.print(f"{i}. {display_agent(agent, agent_type)}")
+        io.print(f"{i}. {display_agent(agent, agent_type)}")
 
 
 def explain_default_agent_usage():
     """Explain how to use the --default_agent option."""
-    io.console.print(
+    io.print(
         "\n[bold]How to use --default_agent:[/bold]"
         "\n1. Use the agent name: --default_agent=orchestrator"
         "\n2. Use the agent index: --default_agent=1"
@@ -316,8 +316,8 @@ def validate_run_requirements():
         io.event("> .git directory not found. Make sure you're in a Git repository.")
         sys.exit(1)
     if config.model is None:
-        io.console.print("Model is empty. Configure a model to run Pluscoder.", style="bold red")
-        io.console.print(
+        io.print("Model is empty. Configure a model to run Pluscoder.", style="bold red")
+        io.print(
             "Use [green]--model <your-model>[/green], the [green].pluscoder-config.yml[/green] config file or env vars to configure"
         )
         sys.exit(1)
@@ -329,7 +329,7 @@ async def validate_token() -> bool:
     from pluscoder.exceptions import TokenValidationException
 
     if not config.pluscoder_token:
-        io.console.print(
+        io.print(
             "PlusCoder token not configured. Please set PLUSCODER_TOKEN env var or use --pluscoder_token",
             style="bold red",
         )
@@ -338,20 +338,20 @@ async def validate_token() -> bool:
     try:
         token_info = await verify_token()
         if token_info.get("expired"):
-            io.console.print(token_info.get("expiration_message", "Token has expired"), style="bold red")
+            io.print(token_info.get("expiration_message", "Token has expired"), style="bold red")
             return False
 
         if token_info.get("expires_at"):
             expires = datetime.fromisoformat(token_info["expires_at"].replace("Z", "+00:00"))
             days_left = (expires - datetime.now(timezone.utc)).days
             if days_left <= 7:
-                io.console.print(
+                io.print(
                     f"Warning: Your Pluscoder token will expire in {days_left} days. Contact us at support@pluscoder.cl if you think this is an error.",
                     style="bold dark_goldenrod",
                 )
         return True
     except TokenValidationException as e:
-        io.console.print(str(e), style="bold red")
+        io.print(str(e), style="bold red")
         return False
 
 
@@ -362,7 +362,7 @@ def main() -> None:
     try:
         # Check for new command-line arguments
         if config.version:
-            io.console.print(f"{__version__}")
+            io.print(f"{__version__}")
             return
 
         if config.show_repo:
@@ -401,17 +401,17 @@ def main() -> None:
             and config.default_agent not in agent_dict
         ):
             display_agent_list(agent_dict)
-            io.console.print(f"Error: Invalid agent: {config.default_agent}", style="bold red")
+            io.print(f"Error: Invalid agent: {config.default_agent}", style="bold red")
             sys.exit(1)
 
         warnings = run_silent_checks()
         for warning in warnings:
-            io.console.print(f"Warning: {warning}", style="bold dark_goldenrod")
+            io.print(f"Warning: {warning}", style="bold dark_goldenrod")
             if not io.confirm("Proceed anyways?"):
                 sys.exit(0)
     except Exception as err:
         if config.debug:
-            io.console.print(traceback.format_exc(), style="bold red")
+            io.print(traceback.format_exc(), style="bold red")
         io.event(f"An error occurred. {err}")
         return
     try:
@@ -461,7 +461,7 @@ def main() -> None:
         return
     except Exception as err:
         if config.debug:
-            io.console.print(traceback.format_exc(), style="bold red")
+            io.print(traceback.format_exc(), style="bold red")
         io.event(f"An error occurred. {err} during workflow run.")
         return
 
