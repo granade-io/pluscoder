@@ -1,3 +1,10 @@
+# [2.5.0-rc.5](https://gitlab.com/codematos/pluscoder/compare/v2.5.0-rc.4...v2.5.0-rc.5) (2024-12-28)
+
+
+### Features
+
+* add --silent flag to hide logs ([8961a9e](https://gitlab.com/codematos/pluscoder/commit/8961a9eca6df12a9d8ad6f120ebf5f8a249aa036))
+
 # [2.5.0-rc.4](https://gitlab.com/codematos/pluscoder/compare/v2.5.0-rc.3...v2.5.0-rc.4) (2024-12-12)
 
 
