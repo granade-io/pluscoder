@@ -1,3 +1,10 @@
+# [2.5.0-rc.6](https://gitlab.com/codematos/pluscoder/compare/v2.5.0-rc.5...v2.5.0-rc.6) (2024-12-28)
+
+
+### Bug Fixes
+
+* main print ([5d1ea3f](https://gitlab.com/codematos/pluscoder/commit/5d1ea3f110b1ff9ba2d87fcbeff0b39d6dcd5e89))
+
 # [2.5.0-rc.5](https://gitlab.com/codematos/pluscoder/compare/v2.5.0-rc.4...v2.5.0-rc.5) (2024-12-28)
 
 
