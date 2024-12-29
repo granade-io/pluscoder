@@ -1,0 +1,110 @@
+
+site_name: PlusCoder
+site_description: Documentation for PlusCoder AI-Driven Software Development Workflow
+site_author: PlusCoder Team
+site_url: https://pluscoder.cl/docs
+
+theme:
+  name: material
+  logo: "assets/pc.svg"
+  favicon: "assets/pc.ico"
+  font:
+    text: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif
+    code: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - content.code.copy
+    - content.code.annotate
+    - search.suggest
+    - search.highlight
+    - color.scheme
+    - instant.loading
+
+  palette:
+    # Default dark mode
+    - scheme: slate
+      primary: deep purple
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+    # Light mode option
+    - scheme: default
+      primary: deep purple
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Automatic mode based on system preference
+    - media: "(prefers-color-scheme)"
+      scheme: slate
+      primary: deep purple
+      accent: blue
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to system preference
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_source: true
+            show_root_heading: true
+            show_root_full_path: true
+            show_signature_annotations: true
+            separate_signature: true
+            line_length: 88
+
+
+nav:
+  - index.md
+  - PlusCoder:
+    - pluscoder/index.md
+    - Introduction: pluscoder/introduction.md
+    - Installation: pluscoder/installation_and_setup.md
+    - Quick Start: pluscoder/quick_start.md
+  - Running locally:
+    - local/index.md
+    - CLI: local/cli.md
+    - Configuration: local/configuration.md
+    - Talk to PlusCoder: local/talk_to_pluscoder.md
+    - Agents: local/agents.md
+    - Tools: local/tools.md
+    - Tips & Tricks: local/tips_and_tricks.md
+  - Running in the Cloud:
+    - cloud/index.md
+    - Non-Interactive Modes: cloud/non_interactive_mode.md
+    - Workflow Integration: cloud/workflow_automation.md
+  - API Reference:
+    - Agents: api/agents.md
+    - Tools: api/tools.md
+    - Configuration: api/config.md
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.caret
+  - pymdownx.critic
+  - pymdownx.mark
+  - pymdownx.superfences
+  - pymdownx.snippets
+  - pymdownx.tilde
+  - pymdownx.inlinehilite
+
+copyright: "© 2024 Pluscoder. All rights reserved"
+
+extra:
+  generator: false
+
+extra_css:
+  - stylesheets/extra.css

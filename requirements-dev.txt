@@ -4,3 +4,8 @@ pyinstaller==6.10.0
 ruff==0.7.1
 twine==5.1.1
 wheel==0.45.0
+mkdocs==1.6.1
+mkdocs-material==9.4.14
+mkdocstrings[python]==0.27.0
+mkdocstrings-python==1.12.2
+markdown

@@ -55,7 +55,7 @@ python-env-tools/**
 .env
 
 # local files
-local/
+./local/
 output/
 
 # .langchain
@@ -70,3 +70,9 @@ build/
 # Ruff
 .ruff_cache
 .ruff_report.json
+
+# MkDocs
+site/
+.cache/
+htmlcov/
+mkdocs_build/
