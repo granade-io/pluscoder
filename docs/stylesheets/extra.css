@@ -1,0 +1,42 @@
+
+.md-footer-custom-link {
+    text-align: center;
+    padding: 1rem 0;
+    background-color: rgba(0, 0, 0, 0.05);
+    width: 100%;
+    display: block;
+}
+
+.md-footer-custom-link a {
+    color: var(--md-default-fg-color);
+    text-decoration: underline;
+    font-weight: bold;
+}
+
+.md-footer-custom-link a:hover {
+    color: var(--md-accent-fg-color);
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-featured {
+    white-space: nowrap;
+    background: linear-gradient(135deg, rgb(103, 58, 183) 0%, rgb(92, 52, 164) 100%);
+    color: rgb(255, 255, 255);
+    padding: 3px 8px;
+    border-radius: 4px;
+    box-shadow: rg
+}
+
+.text-emphasis {
+    font-size: 1rem;
+    font-weight: 300;
+    font-style: italic;
+}
+
+img.header {
+    width: 70%;
+    max-width: 500px;
+}

@@ -93,6 +93,24 @@ test: .pytest
 	@echo "[$(DATETIME)] Running tests ..."
 	@pytest -v tests
 
+.PHONY: docs-serve  ## Serve documentation locally
+docs-serve:
+	@echo [$(DATETIME)] $@
+	@echo "[$(DATETIME)] Serving documentation locally ..."
+	@mkdocs serve
+
+.PHONY: docs-build  ## Build documentation
+docs-build:
+	@echo [$(DATETIME)] $@
+	@echo "[$(DATETIME)] Building documentation ..."
+	@mkdocs build
+
+.PHONY: docs-deploy  ## Deploy documentation to GitHub Pages
+docs-deploy:
+	@echo [$(DATETIME)] $@
+	@echo "[$(DATETIME)] Deploying documentation ..."
+	@mkdocs gh-deploy
+
 .PHONY: lint  ## Check that source code meets quality standards
 lint: .ruff
 	@echo [$(DATETIME)] $@
