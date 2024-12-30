@@ -198,22 +198,6 @@ def run_command(state: OrchestrationState, *args) -> OrchestrationState:
     return state
 
 
-@command_registry.register("init")
-def _init(state: OrchestrationState):
-    """Start repository initialization to improve repository understanding"""
-    io.print(
-        "Initialization will analyze the repository to create/update `PROJECT_OVERVIEW.md` and `CODING_GUIDELINES.md` files."
-    )
-    io.print("It takes about 1-2 minutes to complete.")
-    if io.confirm("Do you want to initialize it now? (recommended)"):
-        from pluscoder.setup import initialize_repository
-
-        initialize_repository()
-    else:
-        io.print("Repository initialization cancelled.")
-    return state
-
-
 @command_registry.register("show_repo")
 def show_repo(state: OrchestrationState = None):
     """Display repository files tree in the context"""
@@ -265,6 +249,7 @@ def show_config(state: OrchestrationState = None):
     locations.add_column("Path", style="green")
     locations.add_row("Local (Repository)", paths.local)
     locations.add_row("User Global", paths.global_config)
+    locations.add_row("User Global Env vars", paths.global_env)
     io.print(locations)
     return state
 
@@ -332,7 +317,7 @@ def create_agent(state: OrchestrationState, *args):
             prompt=new_agent["prompt"],
             reminder=new_agent.get("reminder", ""),
             tools=[tool.name for tool in tools.base_tools],
-            default_context_files=["PROJECT_OVERVIEW.md", "CODING_GUIDELINES.md"],
+            default_context_files=[],
             read_only=new_agent["read_only"],
             repository_interaction=new_agent["repository_interaction"],
         )

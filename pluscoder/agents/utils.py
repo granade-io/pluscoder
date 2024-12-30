@@ -33,8 +33,7 @@ Given the following prompt for an programming AI Agent that have access to a rep
     4. Ensure your implementation aligns with the overall project architecture and goals.
 
     Guidelines:
-    - Consult PROJECT_OVERVIEW.md for understanding the overall system architecture and goals.
-    - Always refer to CODING_GUIDELINES.md for project-specific coding standards and practices.
+    - Always reuse project-specific coding standards and practices.
     - Follow the project's file structure and naming conventions.
 
     *IMPORTANT*:

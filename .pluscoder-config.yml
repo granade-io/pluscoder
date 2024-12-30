@@ -19,10 +19,7 @@ dev: true
 #------------------------------------------------------------------------------
 # File Paths
 #------------------------------------------------------------------------------
-# overview_filename: PROJECT_OVERVIEW.md     # Project overview filename
 # log_filename: pluscoder.log                # Log filename
-# overview_file_path: PROJECT_OVERVIEW.md    # Path to project overview file
-# guidelines_file_path: CODING_GUIDELINES.md # Path to coding guidelines file
 
 #------------------------------------------------------------------------------
 # Model and API Settings
@@ -63,7 +60,7 @@ lint_fix_command: make format        # Command to run linter fix
 # use_repomap: false           # Enable/disable repomap feature
 # repomap_level: 2             # Repomap detail level (0: minimal, 1: moderate, 2: detailed)
 # repomap_exclude_files: []    # List of files to exclude from repomap
-repo_exclude_files: [".*.(png|jpg|jpeg|svg)", '.vscode', "^(?!.*\\.py$).*$"]       # Regex patterns to exclude files from repo operations
+repo_exclude_files: [".*.(png|jpg|jpeg|svg)", '.vscode']       # Regex patterns to exclude files from repo operations
 
 #------------------------------------------------------------------------------
 # Display Options

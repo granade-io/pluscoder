@@ -1,6 +1,5 @@
 import subprocess
 from unittest.mock import ANY
-from unittest.mock import MagicMock
 from unittest.mock import Mock
 from unittest.mock import call
 from unittest.mock import patch
@@ -204,58 +203,6 @@ def test_get_tracked_files_with_include_and_exclude_patterns(mock_config, mock_r
     result = repo.get_tracked_files()
 
     assert result == ["file1.py", "setup.py"]
-
-
-@patch("builtins.input", side_effect=["y", "y"])
-@patch("pluscoder.repo.os.path.isfile")
-def test_setup_all_files_exist(mock_isfile, mock_input, mock_repo):
-    mock_isfile.side_effect = [
-        True,
-        True,
-        True,
-    ]  # For overview, guidelines, and .gitignore
-
-    repo = Repository(io=io)
-    result = repo.setup()
-
-    assert result is True
-
-
-@patch("pluscoder.repo.os.path.isfile")
-@patch("pluscoder.repo.open", new_callable=MagicMock)
-@patch("builtins.input", side_effect=["y", "y"])
-@patch("pluscoder.repo.config")
-def test_setup_missing_files_user_agrees(mock_config, mock_input, mock_open, mock_isfile, mock_repo):
-    mock_isfile.side_effect = [
-        False,
-        False,
-        False,
-        False,
-        False,
-    ]  # For overview, guidelines, and .gitignore
-    mock_config.overview_file_path = "mocked_overview.md"
-    mock_config.guidelines_file_path = "mocked_guidelines.md"
-
-    repo = Repository(io=io)
-    result = repo.setup()
-
-    assert result is True
-    assert mock_open.call_count == 2
-    mock_open.assert_any_call("mocked_overview.md", "w")
-    mock_open.assert_any_call("mocked_guidelines.md", "w")
-
-
-@patch("pluscoder.repo.os.path.isfile")
-@patch("pluscoder.repo.open", new_callable=Mock)
-@patch("builtins.input", return_value="n")
-def test_setup_missing_files_user_disagrees(mock_input, mock_open, mock_isfile, mock_repo):
-    mock_isfile.return_value = False
-
-    repo = Repository(io=io)
-    result = repo.setup()
-
-    assert result is False
-    mock_open.assert_not_called()
 
 
 def test_commit_with_custom_committer(mock_repo):

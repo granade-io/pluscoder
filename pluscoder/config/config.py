@@ -128,10 +128,7 @@ class Settings(BaseSettings):
     task_list: Optional[str] = Field(None, description="JSON string or filepath containing tasks to execute")
 
     # File paths
-    overview_filename: str = Field("PROJECT_OVERVIEW.md", description="Filename for project overview")
     log_filename: str = Field("pluscoder.log", description="Filename for logs")
-    overview_file_path: str = Field("PROJECT_OVERVIEW.md", description="Path to the project overview file")
-    guidelines_file_path: str = Field("CODING_GUIDELINES.md", description="Path to the coding guidelines file")
 
     # Model and API settings
     model: Optional[str] = Field(None, description="LLM model to use")
@@ -147,9 +144,6 @@ class Settings(BaseSettings):
     weak_model_provider: Optional[str] = Field(None, description="Provider to use for weak model")
 
     embedding_model: Optional[str] = Field(None, description="Model to use for embeddings")
-
-    # PlusCoder API
-    pluscoder_token: Optional[str] = Field(None, description="PlusCoder API token for authentication")
 
     # Git settings
     auto_commits: bool = Field(False, description="Enable/disable automatic Git commits")

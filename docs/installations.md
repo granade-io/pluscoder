@@ -1,11 +1,3 @@
-# PlusCoder - Quick Start
-
-* **PlusCoder** is an AI-powered tool that accelerates software development by assisting with planning, coding, and management tasks.
-* The name ”+ Coder” extends beyond just **“You + Coder”**—it can be paired with other tools, or CI/CD processes, enhancing them with AI.
-* PlusCoder is a versatile assistant specialized for integration with other systems for streamlined, effortless development.
-
----
-
 ## Installation
 
 You have tree options to install PlusCoder, depending of the type of user you are:
@@ -47,19 +39,6 @@ alias pluscoder-docker="docker run --env-file <(env) -v $(pwd):/app -it --rm $PL
 
 ### b. **Contributor**
 
-Follow these steps to install PlusCoder for development with a Makefile and Docker:
-
-1. **Local Development**: Install PlusCoder in a virtual environment using the following commands:
-
-```bash
-make
-```
-
-1. **Docker Development**: You can also run PlusCoder using Docker with the following command:
-
-```Dockerfile
-make
-```
 
 ---
 

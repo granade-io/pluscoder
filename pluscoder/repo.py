@@ -175,43 +175,6 @@ class Repository:
             self.io.print(f"An error occurred: {e}", style="bold red")
             return []
 
-    def create_default_files(self):
-        if not os.path.isfile(config.overview_file_path):
-            with open(config.overview_file_path, "w") as f:
-                f.write("")
-
-        if not os.path.isfile(config.guidelines_file_path):
-            with open(config.guidelines_file_path, "w") as f:
-                f.write("")
-
-    def setup(self):
-        """Validates if repository meets requirements to use pluscoder"""
-        missing_files = []
-
-        # Check overview file
-        if not os.path.isfile(config.overview_file_path):
-            missing_files.append(config.overview_file_path)
-
-        if not os.path.isfile(config.guidelines_file_path):
-            missing_files.append(config.guidelines_file_path)
-
-        if missing_files:
-            self.io.print("The following files are required:", style="bold red")
-            for file in missing_files:
-                self.io.print(f"- {file}", style="bold red")
-
-        # Ask y/n to create the files if missing
-        if missing_files:
-            if self.io.confirm("To proceed, create the missing files?"):
-                self.create_default_files()
-
-                # allow to continue using pluscoder
-
-            else:
-                # otherwise, stop using pluscoder
-                return False
-        return True
-
     def run_lint(self) -> Optional[str]:
         """
         Execute the configured lint command, with optional auto-fix.

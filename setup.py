@@ -20,4 +20,6 @@ setup(
             "pluscoder=pluscoder.main:main",
         ],
     },
+    license="GPL-3.0",
+    license_files=["LICENSE"],
 )

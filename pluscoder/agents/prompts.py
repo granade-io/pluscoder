@@ -139,8 +139,7 @@ Attend the user request in the best possible way based on your specialization an
         read_fragment = """- First of all, perform a query against the repository to retrieve key files or/code snippets to handle the user request
 - Review the response from query and already read files and current knowledge of the repository to determine which new files to read to attend the user request
 - Review relevant existing code and project files to ensure proper integration when giving an answer
-- Consult PROJECT_OVERVIEW.md for understanding the overall system architecture and goals
-- Always refer to CODING_GUIDELINES.md for project-specific coding standards and practices
+- Always reuse project-specific coding standards and practices
 - Follow the project's file structure and naming conventions
 """
 

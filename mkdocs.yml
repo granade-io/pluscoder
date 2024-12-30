@@ -1,7 +1,7 @@
 
 site_name: PlusCoder
-site_description: Documentation for PlusCoder AI-Driven Software Development Workflow
-site_author: PlusCoder Team
+site_description: Documentation for PlusCoder; Fully programmable agents with coding capabilities
+site_author: granade.io
 site_url: https://pluscoder.cl/docs
 
 theme:
@@ -65,29 +65,45 @@ plugins:
 
 nav:
   - index.md
-  - PlusCoder:
-    - pluscoder/index.md
-    - Introduction: pluscoder/introduction.md
-    - Installation: pluscoder/installation_and_setup.md
-    - Quick Start: pluscoder/quick_start.md
-  - Running locally:
-    - local/index.md
-    - CLI: local/cli.md
-    - Configuration: local/configuration.md
-    - Talk to PlusCoder: local/talk_to_pluscoder.md
-    - Agents: local/agents.md
-    - Tools: local/tools.md
-    - Tips & Tricks: local/tips_and_tricks.md
-  - Running in the Cloud:
-    - cloud/index.md
-    - Non-Interactive Modes: cloud/non_interactive_mode.md
-    - Workflow Integration: cloud/workflow_automation.md
-  - API Reference:
-    - Agents: api/agents.md
-    - Tools: api/tools.md
-    - Configuration: api/config.md
+  - installation.md
+  - quick_start.md
+  - contributing.md
+  - Documentation:
+    - Configuration: documentation/configuration.md
+    - Agents: documentation/agents.md
+    - Automation: documentation/automation.md
+    - CLI:
+      - Overview: documentation/cli.md
+      - Commands: documentation/cli-commands.md
+      - Features: documentation/cli-features.md
+    - Providers: documentation/providers.md
+    - Repository Indexing: documentation/indexing.md
+  - Examples:
+    - Basic: examples/basic.md
+    - Issues Management: examples/custom_agent.md
+    - Pull Requests Management: examples/custom_agent.md
+    - Running with Docker: examples/custom_agent.md
+    - Advanced Agents: examples/custom_agent.md
+    - Remote Configuration: examples/custom_agent.md
+  # - Running locally:
+  #   - local/index.md
+  #   - CLI: local/cli.md
+  #   - Configuration: local/configuration.md
+  #   - Talk to PlusCoder: local/talk_to_pluscoder.md
+  #   - Agents: local/agents.md
+  #   - Tools: local/tools.md
+  #   - Tips & Tricks: local/tips_and_tricks.md
+  # - Running in the Cloud:
+  #   - cloud/index.md
+  #   - Non-Interactive Modes: cloud/non_interactive_mode.md
+  #   - Workflow Integration: cloud/workflow_automation.md
+  # - API Reference:
+  #   - Agents: api/agents.md
+  #   - Tools: api/tools.md
+  #   - Configuration: api/config.md
 
 markdown_extensions:
+  - admonition
   - pymdownx.highlight
   - pymdownx.superfences
   - attr_list
@@ -100,6 +116,9 @@ markdown_extensions:
   - pymdownx.snippets
   - pymdownx.tilde
   - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
 
 copyright: "© 2024 Pluscoder. All rights reserved"
 

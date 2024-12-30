@@ -2,8 +2,6 @@
 import asyncio
 import sys
 import traceback
-from datetime import datetime
-from datetime import timezone
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -323,38 +321,6 @@ def validate_run_requirements():
         sys.exit(1)
 
 
-async def validate_token() -> bool:
-    """Validate the PlusCoder API token."""
-    from pluscoder.api_integration import verify_token
-    from pluscoder.exceptions import TokenValidationException
-
-    if not config.pluscoder_token:
-        io.print(
-            "PlusCoder token not configured. Please set PLUSCODER_TOKEN env var or use --pluscoder_token",
-            style="bold red",
-        )
-        return False
-
-    try:
-        token_info = await verify_token()
-        if token_info.get("expired"):
-            io.print(token_info.get("expiration_message", "Token has expired"), style="bold red")
-            return False
-
-        if token_info.get("expires_at"):
-            expires = datetime.fromisoformat(token_info["expires_at"].replace("Z", "+00:00"))
-            days_left = (expires - datetime.now(timezone.utc)).days
-            if days_left <= 7:
-                io.print(
-                    f"Warning: Your Pluscoder token will expire in {days_left} days. Contact us at support@pluscoder.cl if you think this is an error.",
-                    style="bold dark_goldenrod",
-                )
-        return True
-    except TokenValidationException as e:
-        io.print(str(e), style="bold red")
-        return False
-
-
 def main() -> None:
     """
     Main entry point for the Pluscoder application.
@@ -375,10 +341,6 @@ def main() -> None:
 
         if config.show_config:
             show_config()
-            return
-
-        # Validate token before setup if not in dev mode
-        if not config.dev and not asyncio.run(validate_token()):
             return
 
         if not setup():

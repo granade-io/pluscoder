@@ -61,9 +61,18 @@ class IndexManager:
         # Check for modified files
         modified_files = set()
         for file_path in current_files_set & cached_files_set:
+            if not file_path.exists():
+                deleted_files = deleted_files | {file_path}
+                new_files.discard(file_path)
+                continue
             current_hash = self._get_file_hash(file_path)
             if current_hash != file_hashes.get(file_path):
                 modified_files.add(file_path)
+
+        for file_path in new_files.copy():
+            if not file_path.exists():
+                new_files.discard(file_path)
+                deleted_files = deleted_files | {file_path}
 
         return new_files, modified_files, deleted_files
 
