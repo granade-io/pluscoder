@@ -105,3 +105,8 @@ pluscoder --task_list task_list.json --auto_confirm yes
 
 !!! warning
     This feature is still in development.
+
+## Related Docs
+- [Configuration](configuration.md)
+- [Agents](agents.md)
+- [CLI Usage](cli.md)

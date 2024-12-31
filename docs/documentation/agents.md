@@ -70,3 +70,7 @@ You can use custom agents for:
       1. For example, a `JiraIntegration` agent can be created to interact with Jira API to create issues, assign tasks, or update issues.
       2. A `SlackIntegration` agent can be created to interact with Slack API to send messages, create channels, or update messages.
       3. A `GithubIssuesIntegration` agent can be created to interact with Github API to create issues, assign tasks, or update issues.
+
+## Related Docs
+- [Configuration](configuration.md)
+- [CLI Usage](cli.md)

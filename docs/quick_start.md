@@ -51,6 +51,14 @@ pluscoder --model gpt-4o --embedding_model cohere/embed-english-v3.0
 !!! info
     Using an embedding model usually incurs additional costs. We recommend using it along `repo_exclude_files` [config](documentation/configuration.md#repository-settings) option to exclude specific files from indexing.
 
+### Automated runs with CLI
+
+You can use `auto_confirm` flag to automatically confirm all prompts. This is useful for automated runs.
+
+```bash
+pluscoder --auto_confirm yes --user_input "Write unit tests for all functions in the `utils.py` file"
+```
+
 ## Programmatically
 
 PlusCoder provides an API to interact with the system programmatically. Here's an example of how to use it to run an agent in the current workdir with a given input:
@@ -67,41 +75,6 @@ dev_agent = agents.get('developer')
 # Runs agent in the current workdir
 workflow.run(agent=dev_agent, input="Write a detailed README.md file specifying develop environment setup using commands present in Makefile")
 ```
-
-
-| **Command**                     | **Description**                                                                                         |
-|----------------------------------|---------------------------------------------------------------------------------------------------------|
-| `/clear`                         | Reset entire chat history.                                                                              |
-| `/diff`                          | Show last commit diff.                                                                                  |
-| `/config <key> <value>`          | Override any pluscoder configuration. e.g., `/config auto-commits false`                                |
-| `/undo`                          | Revert last commit and remove last message from chat history.                                           |
-| `/agent`                         | Start a conversation with a new agent from scratch.                                                     |
-| `/help`                          | Display help information for available commands.                                                        |
-| `/init`                          | (Re)Initialize repository understanding the code base to generate project overview and code guidelines. |
-| `/show_repo`                     | Display information about the current repository.                                                       |
-| `/show_repomap`                  | Show the repository map with file structure and summaries.                                              |
-| `/show_config`                   | Display the current configuration settings.                                                             |
-| `/custom <prompt_name> <additional instructions>` | Execute a pre-configured custom prompt command.                                        |
-
-
-### CLI Actions
-
-PlusCoder provides an enhanced command-line interface for efficient interaction:
-
-> :warning: **Note**: Some of these features are not available in Docker.
-
-|               | **Action**                                      | **Description**                                                     |
-|--------------------------|---------------------------------------------------|------------------------------------------------------------------|
-| **Input History**         | Press the **Up Arrow**                            | Recall and reuse previous inputs.                                |
-| **Multiline Input**       | Press **Ctrl + Return**                           | Create a new line for multiline commands.                        |
-| **Input Clearing**        | Press **Ctrl + C**                                | Clear the current text in the input field.                       |
-| **File Autocomplete**     | Start typing a filename. Use **Tab** to alternate suggestions.                                | Get suggestions and autocomplete file paths.                     |
-| **Paste Support**         | Paste multiline text directly                     | Use standard paste commands in the input field.                  |
-| **Quick Confirmation**    | Use **'y'** or **'Y'**                            | Quickly confirm prompts or actions.                              |
-| **Image Uploading**       | Write `img::<url>` or `img::<local_path>`         | Upload images to the system.                                     |
-| **Coping Images**         | Press **Ctrl + V**                                | Copy images and paste it directly into. |
-
----
 
 ## Next Steps
 

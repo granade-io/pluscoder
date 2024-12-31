@@ -48,3 +48,4 @@ Instruct agent to work in the current repository:
 ## Next steps
 - [Installation](installation.md)
 - [Quick Start](quick_start.md)
+- [Examples](examples/index.md)

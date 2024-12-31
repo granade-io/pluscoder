@@ -20,3 +20,8 @@ You can check the installed version with:
 ```bash
 pluscoder --version
 ```
+
+## Next Steps
+- [Quick Start Guide](quick_start.md)
+- [Configuration](documentation/configuration.md)
+- [CLI Usage](documentation/cli.md)

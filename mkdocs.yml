@@ -79,12 +79,12 @@ nav:
     - Providers: documentation/providers.md
     - Repository Indexing: documentation/indexing.md
   - Examples:
-    - Basic: examples/basic.md
-    - Issues Management: examples/custom_agent.md
-    - Pull Requests Management: examples/custom_agent.md
-    - Running with Docker: examples/custom_agent.md
-    - Advanced Agents: examples/custom_agent.md
-    - Remote Configuration: examples/custom_agent.md
+    - examples/index.md
+    - Basic Coding: examples/basic-coding.md
+    - Issues Management: examples/issues-management.md
+    - Code Review: examples/code-review.md
+    - Custom Agents: examples/custom-agents.md
+    - Remote Configuration: examples/remote-configuration.md
   # - Running locally:
   #   - local/index.md
   #   - CLI: local/cli.md

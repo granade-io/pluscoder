@@ -225,3 +225,7 @@ Custom agents can be selected at the start of the chat in the interactive mode, 
     ```
 
 You can also create a custom agent using the `/agent_create` [command](documentation/commands#agent-creation).
+
+## Related Docs
+- [Agents](agents.md)
+- [CLI Usage](cli.md)
