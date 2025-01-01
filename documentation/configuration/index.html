@@ -1,0 +1,1387 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Documentation for PlusCoder; Fully programmable agents with coding capabilities">
+      
+      
+        <meta name="author" content="granade.io">
+      
+      
+        <link rel="canonical" href="https://pluscoder.cl/docs/documentation/configuration/">
+      
+      
+        <link rel="prev" href="../../contributing/">
+      
+      
+        <link rel="next" href="../agents/">
+      
+      
+      <link rel="icon" href="../../assets/pc.ico">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.4.14">
+    
+    
+      
+        <title>Configuration - PlusCoder</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.fad675c6.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.356b1318.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=-apple-system,+BlinkMacSystemFont,+'Segoe+UI',+'Roboto',+'Oxygen',+'Ubuntu',+'Cantarell',+'Fira+Sans',+'Droid+Sans',+'Helvetica+Neue',+sans-serif:300,300i,400,400i,700,700i%7Csource-code-pro,+Menlo,+Monaco,+Consolas,+'Courier+New',+monospace:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif";--md-code-font:"source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="blue">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#configuration" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="PlusCoder" class="md-header__button md-logo" aria-label="PlusCoder" data-md-component="logo">
+      
+  <img src="../../assets/pc.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PlusCoder
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Configuration
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="blue"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_3" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="deep-purple" data-md-color-accent="blue"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_2">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme)" data-md-color-scheme="slate" data-md-color-primary="deep-purple" data-md-color-accent="blue"  aria-label="Switch to system preference"  type="radio" name="__palette" id="__palette_3">
+    
+      <label class="md-header__button md-icon" title="Switch to system preference" for="__palette_2" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m14.3 16-.7-2h-3.2l-.7 2H7.8L11 7h2l3.2 9h-1.9M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69m-9.15 3.96h2.3L12 9l-1.15 3.65Z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="PlusCoder" class="md-nav__button md-logo" aria-label="PlusCoder" data-md-component="logo">
+      
+  <img src="../../assets/pc.svg" alt="logo">
+
+    </a>
+    PlusCoder
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../installation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Installation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../quick_start/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Quick Start
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../contributing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Contributing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  <span class="md-ellipsis">
+    Documentation
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Documentation
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Configuration
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Configuration
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration methods
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration options
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#application-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      Application Behavior
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#file-paths" class="md-nav__link">
+    <span class="md-ellipsis">
+      File Paths
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#models-and-providers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Models and Providers
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#provider-credentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      Provider Credentials
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#repository-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Repository Settings
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#git-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Git Settings
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test-and-lint-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Test and Lint Settings
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#custom-prompt-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      Custom Prompt Commands
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#custom-agents" class="md-nav__link">
+    <span class="md-ellipsis">
+      Custom Agents
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Related Docs
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../agents/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Agents
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../automation/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Automation
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_5_4" id="__nav_5_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    CLI
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_4">
+            <span class="md-nav__icon md-icon"></span>
+            CLI
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli-commands/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Commands
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cli-features/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Features
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../providers/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Providers
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../indexing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Repository Indexing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+      
+      
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        
+          
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../examples/" class="md-nav__link ">
+              
+  
+  <span class="md-ellipsis">
+    Examples
+  </span>
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_6" id="__nav_6_label" tabindex="">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            Examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/basic-coding.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Basic Coding
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/issues-management.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Issues Management
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/code-review.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Code Review
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/custom-agents.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Custom Agents
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/remote-configuration.md" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Remote Configuration
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration methods
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configuration options
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#application-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      Application Behavior
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#file-paths" class="md-nav__link">
+    <span class="md-ellipsis">
+      File Paths
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#models-and-providers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Models and Providers
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#provider-credentials" class="md-nav__link">
+    <span class="md-ellipsis">
+      Provider Credentials
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#repository-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Repository Settings
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#git-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Git Settings
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#test-and-lint-settings" class="md-nav__link">
+    <span class="md-ellipsis">
+      Test and Lint Settings
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#custom-prompt-commands" class="md-nav__link">
+    <span class="md-ellipsis">
+      Custom Prompt Commands
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#custom-agents" class="md-nav__link">
+    <span class="md-ellipsis">
+      Custom Agents
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      Related Docs
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="configuration">Configuration</h1>
+<h2 id="configuration-methods">Configuration methods</h2>
+<p>PlusCoder can be configured using several methods (following this precedence order):</p>
+<ol>
+<li>The <code>/config</code> in-chat command at runtime</li>
+<li>Command-line arguments when running <code>pluscoder</code> command.</li>
+<li>Dotenv variables ( <code>.env</code> file in the repository root)</li>
+<li><code>.pluscoder-config.yml</code> config file in the repository root</li>
+<li>Environment variables</li>
+<li>Global PlusCoder yaml config file (<code>~/.config/pluscoder/config.yml</code> or <code>AppData/Local/pluscoder/config.yml</code>)</li>
+<li>Global environment variables file (<code>~/.config/pluscoder/vars.env</code> or <code>AppData/Local/pluscoder/vars.env</code>)</li>
+</ol>
+<p>Same option can be configured using different methods as mentioned:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:6"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><input id="__tabbed_1_4" name="__tabbed_1" type="radio" /><input id="__tabbed_1_5" name="__tabbed_1" type="radio" /><input id="__tabbed_1_6" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">CLI</label><label for="__tabbed_1_2">.env</label><label for="__tabbed_1_3">.pluscoder-config.yml</label><label for="__tabbed_1_4">Env Vars</label><label for="__tabbed_1_5">Global config.yml</label><label for="__tabbed_1_6">Global vars.env</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code>pluscoder<span class="w"> </span>--model<span class="w"> </span>gpt-4o
+<span class="c1"># other options...</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="nv">MODEL</span><span class="o">=</span>gpt-4o
+<span class="c1"># other options...</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gpt-4o</span>
+<span class="c1"># other options...</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">MODEL</span><span class="o">=</span>gpt-4o
+pluscoder
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="nt">model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gpt-4o</span>
+<span class="c1"># other options...</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="nv">MODEL</span><span class="o">=</span>gpt-4o
+<span class="c1"># other options...</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Credentials</p>
+<p>Credentials and keys must be provided as environment variables, using <code>.env</code> or global <code>~/.config/pluscoder/vars.env</code> env file. Passing credentials in other files won't work.</p>
+</div>
+<p>To display current configuration settings, run in-chat command <code>/show_config</code> or pass config flag <code>show_config</code>.</p>
+<div class="highlight"><pre><span></span><code>pluscoder<span class="w"> </span>--show_config
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Global configuration files location</p>
+<p><code>--show_config</code> will also display configuration files location specific to your operating system.</p>
+</div>
+<h2 id="configuration-options">Configuration options</h2>
+<h3 id="application-behavior">Application Behavior</h3>
+<ul>
+<li><code>read_only</code>: Enable/disable read-only mode to avoid file editions (default: <code>False</code>)</li>
+<li><code>streaming</code>: Enable/disable LLM streaming (default: <code>True</code>)</li>
+<li><code>auto_confirm</code>: Enable/disable auto confirmation of pluscoder execution (default: <code>False</code>)</li>
+<li><code>hide_thinking_blocks</code>: Hide thinking blocks in LLM output (default: <code>True</code>)</li>
+<li><code>hide_output_blocks</code>: Hide output blocks in LLM output (default: <code>False</code>)</li>
+<li><code>hide_source_blocks</code>: Hide source blocks in LLM output (default: <code>False</code>)</li>
+<li><code>show_token_usage</code>: Show token usage/cost (default: <code>True</code>)</li>
+<li><code>default_agent</code>: Specify the name/number of the default agent to use. If not specified selection will be interactive (default: <code>None</code>)</li>
+</ul>
+<h3 id="file-paths">File Paths</h3>
+<ul>
+<li><code>log_filename</code>: Filename for logs (default: <code>"pluscoder.log"</code>)</li>
+</ul>
+<h3 id="models-and-providers">Models and Providers</h3>
+<p><em>Models</em>:</p>
+<ul>
+<li><code>model</code>: LLM model to use. Required. (default: <code>None</code>)</li>
+<li><code>orchestrator_model</code>: LLM model to use for orchestrator (default: same as <code>MODEL</code>)</li>
+<li><code>embedding_model</code>: Embedding model to use for building vector database of the repository (default: <code>None</code>).</li>
+</ul>
+<div class="admonition info">
+<p class="admonition-title">Indexing with Embedding Model</p>
+<p>To improve LLMs performance, we strongly recommend using an embedding model. This will allow PlusCoder to index the repository and provide better context to the AI. Check some examples at <a href="documentation/indexing.md">Indexing</a>.</p>
+</div>
+<p><em>Provider</em>:</p>
+<ul>
+<li><code>provider</code>: LLM provider to use. If <code>None</code>, provider will be selected based on available environment variables credentials. Options: <code>aws_bedrock</code>, <code>openai</code>, <code>litellm</code>, <code>anthropic</code>, <code>vertexai</code>, <code>google</code> (default: <code>None</code>)</li>
+<li><code>orchestrator_model_provider</code>: Provider to use for <a href="documentation/agents.md#orchestrator">orchestrator agent</a> (default: same as <code>PROVIDER</code>)</li>
+</ul>
+<h3 id="provider-credentials">Provider Credentials</h3>
+<p>Define these at <code>.env</code>, <code>~/.config/pluscoder/vars.env</code> or using <code>export VAR=value</code>:</p>
+<p><em>OpenAI</em>:</p>
+<ul>
+<li><code>OPENAI_API_KEY</code>: OpenAI API key. (default: <code>None</code>)</li>
+<li><code>OPENAI_API_BASE</code>: OpenAI API base URL. (default: <code>None</code>)</li>
+</ul>
+<p><em>Anthropic</em>:</p>
+<ul>
+<li><code>ANTHROPIC_API_KEY</code>: Anthropic API key. (default: <code>None</code>)</li>
+</ul>
+<p><em>AWS</em></p>
+<ul>
+<li><code>AWS_ACCESS_KEY_ID</code>: AWS Access Key ID. (default: <code>None</code>)</li>
+<li><code>AWS_SECRET_ACCESS_KEY</code>: AWS Secret Access Key. (default: <code>None</code>)</li>
+<li><code>AWS_PROFILE</code>: AWS profile name (default: <code>"default"</code>)</li>
+</ul>
+<h3 id="repository-settings">Repository Settings</h3>
+<p>Use these when running PlusCoder in remote repositories for automated runs. Check how at <a href="documentation/automation.md">Automated Runs</a>.</p>
+<ul>
+<li><code>repository</code>: Git repository path or URL to clone and process (default: <code>None</code>)</li>
+<li><code>source_branch</code>: Specify source branch to checkout when cloning repository (default: <code>None</code>)</li>
+<li><code>repo_exclude_files</code>: List of regex patterns to exclude files from repo operations (default: <code>[]</code>)</li>
+<li><code>repo_include_only_files</code>: List of regex patterns to include only specific files from repo operations (default: <code>[]</code>)</li>
+</ul>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:1"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">.pluscoder-config.yml</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block"></div>
+</div>
+</div>
+<div class="highlight"><pre><span></span><code><span class="c1"># exclude files based on their extensions from agents context</span>
+<span class="nt">repo_exclude_files</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;.(png|jpg|jpeg|svg)&quot;</span><span class="p p-Indicator">]</span>
+<span class="c1"># include only Python and Markdown files</span>
+<span class="nt">repo_include_only_files</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;.py&quot;</span><span class="p p-Indicator">]</span>
+</code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">Known issue</p>
+<p>Do not use \ (backslash) symbol in the regex patterns to scape characters, yaml won't parse. Use <code>.</code> instead.</p>
+</div>
+<h3 id="git-settings">Git Settings</h3>
+<ul>
+<li><code>auto_commits</code>: Enable/disable automatic Git commits after successful agent file editions (default: <code>False</code>)</li>
+<li><code>allow_dirty_commits</code>: Allow commits in a dirty repository (default: <code>False</code>)</li>
+</ul>
+<h3 id="test-and-lint-settings">Test and Lint Settings</h3>
+<p>Tests and Lint commands are executed after any file edition. Agents will try to fix any error found by these commands.</p>
+<ul>
+<li><code>run_tests_after_edit</code>: Run tests after file edits (default: <code>False</code>)</li>
+<li><code>run_lint_after_edit</code>: Run linter after file edits (default: <code>False</code>)</li>
+<li><code>test_command</code>: Command to run tests (default: <code>None</code>)</li>
+<li><code>lint_command</code>: Command to run linter (default: <code>None</code>)</li>
+<li><code>auto_run_linter_fix</code>: Automatically run linter fix before linting (default: <code>False</code>)</li>
+<li><code>lint_fix_command</code>: Command to run linter fix (default: <code>None</code>)</li>
+</ul>
+<div class="tabbed-set tabbed-alternate" data-tabs="3:1"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">.pluscoder-config.yml</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block"></div>
+</div>
+</div>
+<div class="highlight"><pre><span></span><code><span class="nt">run_tests_after_edit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">run_lint_after_edit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">auto_run_linter_fix</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">test_command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">make test</span>
+<span class="nt">lint_command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">make lint</span>
+<span class="nt">lint_fix_command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">make lint-fix</span>
+</code></pre></div>
+<h3 id="custom-prompt-commands">Custom Prompt Commands</h3>
+<p>Custom prompt commands allow you to define pre-configured prompts/instruction that can be easily executed during runtime and passed to agents.</p>
+<ul>
+<li><code>custom_prompt_commands</code>: List of custom prompts (default: <code>[]</code>). Each containing:<ul>
+<li><code>prompt_name</code>: A unique name for the command</li>
+<li><code>description</code>: A brief description of what the command does</li>
+<li><code>prompt</code>: The prompt suffix text to be sent to the agent along a custom message</li>
+</ul>
+</li>
+</ul>
+<div class="tabbed-set tabbed-alternate" data-tabs="4:1"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">.pluscoder-config.yml</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block"></div>
+</div>
+</div>
+<div class="highlight"><pre><span></span><code><span class="nt">custom_prompt_commands</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">prompt_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">docstring</span>
+<span class="w">    </span><span class="nt">prompt</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">      </span><span class="no">Please add docstring to these files above</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Generate</span><span class="nv"> </span><span class="s">docstring</span><span class="nv"> </span><span class="s">for</span><span class="nv"> </span><span class="s">specified</span><span class="nv"> </span><span class="s">files&quot;</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">prompt_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">brainstorm</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Propose ideas for implementation without editing code base.</span>
+<span class="w">    </span><span class="nt">prompt</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">|</span>
+<span class="w">      </span><span class="no">Based on the previous request, please perform a brainstorm of how could this achieved. </span>
+<span class="w">        </span><span class="no">1. Read key files, analyze them</span>
+<span class="w">        </span><span class="no">2. Tell me with a bullet point list, the role of each involved file</span>
+<span class="w">        </span><span class="no">3. Tell me a proposed plan in natural language</span>
+<span class="w">      </span><span class="no">Follow instructions above without editing files</span>
+</code></pre></div>
+<p>During the chat in the interactive mode, you can use these custom instructions as follows:</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="5:1"><input checked="checked" id="__tabbed_5_1" name="__tabbed_5" type="radio" /><div class="tabbed-labels"><label for="__tabbed_5_1">In-chat</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block"></div>
+</div>
+</div>
+<div class="highlight"><pre><span></span><code>/custom<span class="w"> </span>docstring
+/custom<span class="w"> </span>brainstorm<span class="w"> </span>i<span class="w"> </span>want<span class="w"> </span>a<span class="w"> </span>new<span class="w"> </span>api<span class="w"> </span>endpoints<span class="w"> </span>to<span class="w"> </span>register<span class="w"> </span>users<span class="w"> </span>and<span class="w"> </span>authenticate<span class="w"> </span>them
+</code></pre></div>
+<h3 id="custom-agents">Custom Agents</h3>
+<p>PlusCoder supports the creation of custom agents with different specializations. These agents can be defined in the configuration and used alongside the predefined agents.</p>
+<ul>
+<li><code>custom_agents</code> List of custom agent configurations (default: <code>[]</code>). Each containing:<ul>
+<li><code>name</code>: A unique name for the agent</li>
+<li><code>description</code>: a description of the agent</li>
+<li><code>prompt</code>: The system prompt defining the agent's role and capabilities</li>
+<li><code>repository_interaction</code>: Where or not the agent can interact with the repository. Useful for agents repository agnostic.</li>
+<li><code>read_only</code>: Boolean indicating whether the agent is restricted to read-only file operations</li>
+<li><code>reminder</code>: Reminder to the agent to send with every user message</li>
+<li><code>default_context_files</code>: Files that the agent will read automatically every chat session or execution</li>
+</ul>
+</li>
+</ul>
+<div class="tabbed-set tabbed-alternate" data-tabs="6:1"><input checked="checked" id="__tabbed_6_1" name="__tabbed_6" type="radio" /><div class="tabbed-labels"><label for="__tabbed_6_1">.pluscoder-config.yml</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block"></div>
+</div>
+</div>
+<div class="highlight"><pre><span></span><code><span class="nt">custom_agents</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">CodeReviewer</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Agent description</span>
+<span class="w">    </span><span class="nt">prompt</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;You</span><span class="nv"> </span><span class="s">are</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">code</span><span class="nv"> </span><span class="s">reviewer.</span><span class="nv"> </span><span class="s">Your</span><span class="nv"> </span><span class="s">task</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">review</span><span class="nv"> </span><span class="s">code</span><span class="nv"> </span><span class="s">changes</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">provide</span><span class="nv"> </span><span class="s">feedback</span><span class="nv"> </span><span class="s">on</span><span class="nv"> </span><span class="s">code</span><span class="nv"> </span><span class="s">quality,</span><span class="nv"> </span><span class="s">best</span><span class="nv"> </span><span class="s">practices,</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">potential</span><span class="nv"> </span><span class="s">issues.&quot;</span>
+<span class="w">    </span><span class="nt">read_only</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DocumentationWriter</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Agent description</span>
+<span class="w">    </span><span class="nt">prompt</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;You</span><span class="nv"> </span><span class="s">are</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">technical</span><span class="nv"> </span><span class="s">writer</span><span class="nv"> </span><span class="s">specializing</span><span class="nv"> </span><span class="s">in</span><span class="nv"> </span><span class="s">software</span><span class="nv"> </span><span class="s">documentation.</span><span class="nv"> </span><span class="s">Your</span><span class="nv"> </span><span class="s">task</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">to</span><span class="nv"> </span><span class="s">create</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">update</span><span class="nv"> </span><span class="s">project</span><span class="nv"> </span><span class="s">documentation,</span><span class="nv"> </span><span class="s">including</span><span class="nv"> </span><span class="s">README</span><span class="nv"> </span><span class="s">files,</span><span class="nv"> </span><span class="s">API</span><span class="nv"> </span><span class="s">documentation,</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">user</span><span class="nv"> </span><span class="s">guides.&quot;</span>
+<span class="w">    </span><span class="nt">read_only</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</code></pre></div>
+<p>Custom agents can be selected at the start of the chat in the interactive mode, by using <code>default_agent</code> option or by using the <code>/agent</code> command followed by the agent name.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="7:2"><input checked="checked" id="__tabbed_7_1" name="__tabbed_7" type="radio" /><input id="__tabbed_7_2" name="__tabbed_7" type="radio" /><div class="tabbed-labels"><label for="__tabbed_7_1">CLI</label><label for="__tabbed_7_2">In-chat</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="c1"># choose agent by name</span>
+pluscoder<span class="w"> </span>--default_agent<span class="w"> </span>codereviewer
+<span class="c1"># or by number in the given list</span>
+pluscoder<span class="w"> </span>--default_agent<span class="w"> </span><span class="m">4</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code>/agent<span class="w"> </span>CodeReviewer
+</code></pre></div>
+</div>
+</div>
+</div>
+<p>You can also create a custom agent using the <code>/agent_create</code> <a href="documentation/commands#agent-creation">command</a>.</p>
+<h2 id="related-docs">Related Docs</h2>
+<ul>
+<li><a href="../agents/">Agents</a></li>
+<li><a href="../cli/">CLI Usage</a></li>
+</ul>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      © 2024 Pluscoder. All rights reserved
+    </div>
+  
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.sections", "navigation.expand", "navigation.indexes", "content.code.copy", "content.code.annotate", "search.suggest", "search.highlight", "color.scheme", "instant.loading"], "search": "../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.cd18aaf1.min.js"></script>
+      
+    
+  </body>
+</html>
