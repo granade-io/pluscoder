@@ -343,6 +343,8 @@
       
         
       
+        
+      
     
     
     
@@ -690,6 +692,27 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tools/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tools
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -973,12 +996,45 @@
 <p>PlusCoder core system relies on agents to perform tasks and provide assistance to the user.</p>
 <h2 id="features">Features</h2>
 <p>PlusCoder agents have the following features:</p>
-<ul>
-<li><code>Filesystem interaction</code>: Agents can create/edit files on the repository workspace.</li>
-<li><code>File downloading</code>: Agents can download files from external sources given their raw URLs when instructed to do.</li>
-<li><code>Multi-modal support</code>: Agents can read images passed as input by the user using <code>img::&lt;img_url&gt;</code> or pasting an image with Ctrl+V during the conversation.</li>
-<li><code>Test and Lint support</code>: Agents can execute tests and linting commands in the repository workspace and recover from errors.</li>
-</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Feature</th>
+<th style="text-align: left;">Description</th>
+<th style="text-align: left;">Example instruction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><code>Filesystem interaction</code></td>
+<td style="text-align: left;">Agents can create/edit files on the repository workspace.</td>
+<td style="text-align: left;"><code>Read core files and explain me what is this repository about</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>File downloading</code></td>
+<td style="text-align: left;">Agents can download files from external sources given their raw URLs when instructed to do.</td>
+<td style="text-align: left;"><code>Read https://github.com/granade-io/pluscoder/blob/develop/CODING_GUIDELINES.md and apply them to utils.py</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>Multi-modal support</code></td>
+<td style="text-align: left;">Agents can read images passed as input by the user using <code>img::&lt;img_url&gt;</code> or pasting an image with Ctrl+V  during the conversation.</td>
+<td style="text-align: left;"><code>I'd like you to code a navbar.js identical to this one at img::https://user-images.githubusercontent.com/25878302/212479928-553c2d37-793b-4bcd-ac53-352f26337955.jpg</code></td>
+</tr>
+<tr>
+<td style="text-align: left;"><code>Test and Lint support</code></td>
+<td style="text-align: left;">After editions, agents will execute tests and linting commands in the repository workspace and try recover from errors. See <a href="../configuration/#test-and-lint-settings">config here</a>.</td>
+<td style="text-align: left;"><code>update validate_email to handle validation using a regex</code></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition tip">
+<p class="admonition-title">Multi-modal support</p>
+<p>Not all models support multi-modal inputs. And we rely en OpenAI's API scheme to provide this feature. Providers like OpenAI and Anthropic support multi-modal inputs.</p>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Recover from errors</p>
+<p>Agents will try to recover from errors at most 3 times to avoid infinite loops and cost overruns. We recommend to specify just key linting and testing commands in the configuration to avoid unnecessary errors.</p>
+</div>
 <h2 id="predefined-agents">Predefined Agents</h2>
 <p>PlusCoder comes with a set of predefined agents that can be used in your conversations or automated runs.</p>
 <ul>

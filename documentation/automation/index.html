@@ -343,6 +343,8 @@
       
         
       
+        
+      
     
     
     
@@ -723,6 +725,27 @@
 
               
             
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tools/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Tools
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
           </ul>
         </nav>
       
@@ -1081,45 +1104,60 @@
 <span class="k">done</span>
 </code></pre></div>
 <h4 id="task-list-for-complex-instructions">Task list for complex instructions</h4>
+<p>You can define a task list to achieve more complex instructions. Orchestrator agent will handle the task list and delegate tasks to agents until each task is completed.</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:1"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">task_list.json</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block"></div>
 </div>
 </div>
-<div class="highlight"><pre><span></span><code><span class="p">[</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="nt">&quot;objective&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Apply Google Python Style Guide to main app file&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;details&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">    - Read Python style guide from https://google.github.io/styleguide/pyguide.html</span>
-<span class="s2">    - Apply formatting rules to app/main.py</span>
-<span class="s2">    - Fix docstrings format</span>
-<span class="s2">    - Adjust import order</span>
-<span class="s2">    - Fix naming conventions</span>
-<span class="s2">    &quot;&quot;&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;restrictions&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Only modify app/main.py file, keep functionality intact&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;outcome&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;main.py formatted according to Google Python Style Guide&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;agent&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;developer&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;completed&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;is_finished&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
-<span class="p">},</span>
-<span class="p">{</span>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+
 <span class="w">    </span><span class="nt">&quot;objective&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Update API endpoints documentation&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;details&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">    - Follow OpenAPI 3.0 spec from https://spec.openapis.org/oas/v3.0.3</span>
-<span class="s2">    - Update documentation for /users endpoints</span>
-<span class="s2">    - Update documentation for /auth endpoints</span>
-<span class="s2">    &quot;&quot;&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;restrictions&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Only modify api/docs/endpoints.yaml file&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;outcome&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;API documentation updated following OpenAPI 3.0 specification&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;agent&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;developer&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;completed&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;is_finished&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">    </span><span class="nt">&quot;task_list&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;objective&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Apply Google Python Style Guide to main app file&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;details&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        - Read Python style guide from https://google.github.io/styleguide/pyguide.html</span>
+<span class="s2">        - Apply formatting rules to app/main.py</span>
+<span class="s2">        - Fix docstrings format</span>
+<span class="s2">        - Adjust import order</span>
+<span class="s2">        - Fix naming conventions</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;restrictions&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Only modify app/main.py file, keep functionality intact&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;outcome&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;main.py formatted according to Google Python Style Guide&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;agent&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;developer&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;completed&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;is_finished&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="nt">&quot;objective&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Update API endpoints documentation&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;details&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">        - Follow OpenAPI 3.0 spec from https://spec.openapis.org/oas/v3.0.3</span>
+<span class="s2">        - Update documentation for /users endpoints</span>
+<span class="s2">        - Update documentation for /auth endpoints</span>
+<span class="s2">        &quot;&quot;&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;restrictions&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Only modify api/docs/endpoints.yaml file&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;outcome&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;API documentation updated following OpenAPI 3.0 specification&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;agent&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;developer&quot;</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;completed&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">        </span><span class="nt">&quot;is_finished&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="p">]</span>
 <span class="p">}</span>
-<span class="p">]</span>
 </code></pre></div>
 <p>PlusCoder will use the orchestration workflow to delegate tasks to agents:</p>
 <div class="highlight"><pre><span></span><code>pluscoder<span class="w"> </span>--task_list<span class="w"> </span>task_list.json<span class="w"> </span>--auto_confirm<span class="w"> </span>yes
 </code></pre></div>
+<div class="admonition tip">
+<p class="admonition-title">Task list recommendations</p>
+<p>Task list are executed sequentially and each agent will work on its task until it's completed. We recommend:</p>
+<ol>
+<li>Keep tasks simple and focused</li>
+<li>Define clear objectives and outcomes</li>
+<li>Use restrictions to avoid unwanted changes</li>
+<li>Specify involved files and/or guidelines to accomplish the task</li>
+</ol>
+</div>
 <h2 id="python">Python</h2>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
