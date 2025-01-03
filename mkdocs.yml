@@ -78,6 +78,7 @@ nav:
       - Features: documentation/cli-features.md
     - Providers: documentation/providers.md
     - Repository Indexing: documentation/indexing.md
+    - Tools: documentation/tools.md
   - Examples:
     - examples/index.md
     - Basic Coding: examples/basic-coding.md

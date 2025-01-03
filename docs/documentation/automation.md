@@ -60,38 +60,44 @@ done
 
 #### Task list for complex instructions
 
+You can define a task list to achieve more complex instructions. Orchestrator agent will handle the task list and delegate tasks to agents until each task is completed.
+
 === "task_list.json"
 ```json
-[
 {
-    "objective": "Apply Google Python Style Guide to main app file",
-    "details": """
-    - Read Python style guide from https://google.github.io/styleguide/pyguide.html
-    - Apply formatting rules to app/main.py
-    - Fix docstrings format
-    - Adjust import order
-    - Fix naming conventions
-    """,
-    "restrictions": "Only modify app/main.py file, keep functionality intact",
-    "outcome": "main.py formatted according to Google Python Style Guide",
-    "agent": "developer",
-    "completed": false,
-    "is_finished": false
-},
-{
+
     "objective": "Update API endpoints documentation",
-    "details": """
-    - Follow OpenAPI 3.0 spec from https://spec.openapis.org/oas/v3.0.3
-    - Update documentation for /users endpoints
-    - Update documentation for /auth endpoints
-    """,
-    "restrictions": "Only modify api/docs/endpoints.yaml file",
-    "outcome": "API documentation updated following OpenAPI 3.0 specification",
-    "agent": "developer",
-    "completed": false,
-    "is_finished": false
+    "task_list": [
+    {
+        "objective": "Apply Google Python Style Guide to main app file",
+        "details": """
+        - Read Python style guide from https://google.github.io/styleguide/pyguide.html
+        - Apply formatting rules to app/main.py
+        - Fix docstrings format
+        - Adjust import order
+        - Fix naming conventions
+        """,
+        "restrictions": "Only modify app/main.py file, keep functionality intact",
+        "outcome": "main.py formatted according to Google Python Style Guide",
+        "agent": "developer",
+        "completed": false,
+        "is_finished": false
+    },
+    {
+        "objective": "Update API endpoints documentation",
+        "details": """
+        - Follow OpenAPI 3.0 spec from https://spec.openapis.org/oas/v3.0.3
+        - Update documentation for /users endpoints
+        - Update documentation for /auth endpoints
+        """,
+        "restrictions": "Only modify api/docs/endpoints.yaml file",
+        "outcome": "API documentation updated following OpenAPI 3.0 specification",
+        "agent": "developer",
+        "completed": false,
+        "is_finished": false
+    }
+    ]
 }
-]
 ```
 
 PlusCoder will use the orchestration workflow to delegate tasks to agents:
@@ -99,6 +105,14 @@ PlusCoder will use the orchestration workflow to delegate tasks to agents:
 ```bash
 pluscoder --task_list task_list.json --auto_confirm yes
 ```
+
+!!! tip "Task list recommendations"
+    Task list are executed sequentially and each agent will work on its task until it's completed. We recommend:
+    
+    1. Keep tasks simple and focused
+    2. Define clear objectives and outcomes
+    3. Use restrictions to avoid unwanted changes
+    4. Specify involved files and/or guidelines to accomplish the task
 
 
 ## Python

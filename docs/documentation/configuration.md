@@ -196,6 +196,7 @@ PlusCoder supports the creation of custom agents with different specializations.
      - `read_only`: Boolean indicating whether the agent is restricted to read-only file operations
      - `reminder`: Reminder to the agent to send with every user message
      - `default_context_files`: Files that the agent will read automatically every chat session or execution
+     - `tools`: Names of the tools available for the agent. By default (if not defined) all [pre-defined tools](tools.md) are available.
 
 === ".pluscoder-config.yml"
 ```yaml

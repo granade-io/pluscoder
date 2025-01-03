@@ -8,10 +8,6 @@ from pluscoder.config import config
 from pluscoder.exceptions import GitCloneException
 from pluscoder.exceptions import NotGitRepositoryException
 from pluscoder.io_utils import io
-from pluscoder.model import get_default_embedding_model
-from pluscoder.model import get_default_model_for_provider
-from pluscoder.model import get_inferred_provider
-from pluscoder.model import get_model_validation_message
 from pluscoder.repo import Repository
 
 # TODO: Move this?
@@ -140,6 +136,11 @@ def write_yaml(file_path, data):
 
 
 def prompt_for_config():
+    from pluscoder.model import get_default_embedding_model
+    from pluscoder.model import get_default_model_for_provider
+    from pluscoder.model import get_inferred_provider
+    from pluscoder.model import get_model_validation_message
+
     example_config_text = load_example_config()
     descriptions = get_config_descriptions()
     current_config = get_config_defaults()

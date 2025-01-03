@@ -2,6 +2,7 @@ from typing import List
 
 from pluscoder import tools
 from pluscoder.agents.base import Agent
+from pluscoder.agents.core import AgentDefinition
 from pluscoder.agents.prompts import build_system_prompt
 from pluscoder.agents.stream_parser import XMLStreamParser
 from pluscoder.config import config
@@ -23,8 +24,10 @@ Remember your role is to understand user requirements to generate/plan a proper 
 """
 
 
-class OrchestratorAgent(Agent):
+class OrchestratorAgent(Agent, AgentDefinition):
     id = "orchestrator"
+    name = "Orchestrator"
+    description = "Design and run complex plan delegating it to other agents"
     suggestions = [
         "Plan implementation of SSO with Keycloak and JWT auth",
         "Create roadmap for migrating monolith to microservices",

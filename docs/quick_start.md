@@ -64,16 +64,17 @@ pluscoder --auto_confirm yes --user_input "Write unit tests for all functions in
 PlusCoder provides an API to interact with the system programmatically. Here's an example of how to use it to run an agent in the current workdir with a given input:
 
 ```python
-from pluscoder import workflow, build_agents
-
-# Obtain predefined & company-wide agents
-agents = build_agents()
+from pluscoder.agents.core import DeveloperAgent
+from pluscoder.type import AgentConfig
+from pluscoder.workflow import run_agent
 
 # Select specific agent
-dev_agent = agents.get('developer')
+dev_agent: AgentConfig = DeveloperAgent.to_agent_config()
 
 # Runs agent in the current workdir
-workflow.run(agent=dev_agent, input="Write a detailed README.md file specifying develop environment setup using commands present in Makefile")
+run_agent(agent=dev_agent, input="Write a detailed README.md file specifying develop environment setup using commands present in Makefile")
+
+
 ```
 
 ## Next Steps

@@ -8,32 +8,11 @@ from dotenv import load_dotenv
 from rich.prompt import Prompt
 
 from pluscoder.__version__ import __version__
-from pluscoder.agents.event.config import event_emitter
-from pluscoder.commands import show_config
-from pluscoder.commands import show_repo
-from pluscoder.commands import show_repomap
 from pluscoder.config import config
 from pluscoder.config.utils import get_global_env_filepath
 from pluscoder.display_utils import display_agent
 from pluscoder.io_utils import io
-from pluscoder.model import get_inferred_provider
-from pluscoder.model import get_model_token_info
-from pluscoder.model import get_model_validation_message
 from pluscoder.repo import Repository
-from pluscoder.search.algorithms import DenseSearch
-from pluscoder.search.algorithms import HybridSearch
-from pluscoder.search.algorithms import SparseSearch
-from pluscoder.search.chunking import TokenBasedChunking
-from pluscoder.search.embeddings import LiteLLMEmbedding
-from pluscoder.search.engine import SearchEngine
-from pluscoder.setup import setup
-from pluscoder.type import TokenUsage
-from pluscoder.workflow import build_agents
-from pluscoder.workflow import build_workflow
-from pluscoder.workflow import run_workflow
-
-load_dotenv()
-load_dotenv(dotenv_path=get_global_env_filepath())
 
 
 def banner() -> None:
@@ -149,6 +128,14 @@ def ask_index_confirmation(tracked_files: int) -> bool:
 
 async def initialize_search_engine():
     """Initialize the search engine with appropriate algorithm."""
+    from pluscoder.agents.event.config import event_emitter
+    from pluscoder.search.algorithms import DenseSearch
+    from pluscoder.search.algorithms import HybridSearch
+    from pluscoder.search.algorithms import SparseSearch
+    from pluscoder.search.chunking import TokenBasedChunking
+    from pluscoder.search.embeddings import LiteLLMEmbedding
+    from pluscoder.search.engine import SearchEngine
+
     try:
         io.live.start("indexing")
         storage_dir = Path(".pluscoder") / "search_index"
@@ -200,6 +187,10 @@ async def initialize_search_engine():
 
 def display_initial_messages():
     """Display initial message with the number of files detected by git, excluded files, and model information."""
+    from pluscoder.model import get_inferred_provider
+    from pluscoder.model import get_model_token_info
+    from pluscoder.model import get_model_validation_message
+
     banner()
 
     repo = Repository(io)
@@ -331,20 +322,24 @@ def main() -> None:
             io.print(f"{__version__}")
             return
 
+        from pluscoder.commands import show_config
+        from pluscoder.commands import show_repo
+
         if config.show_repo:
             show_repo()
-            return
-
-        if config.show_repomap:
-            show_repomap()
             return
 
         if config.show_config:
             show_config()
             return
 
+        from pluscoder.setup import setup
+
         if not setup():
             return
+
+        load_dotenv()
+        load_dotenv(dotenv_path=get_global_env_filepath())
 
         validate_run_requirements()
         display_initial_messages()
@@ -353,6 +348,11 @@ def main() -> None:
         asyncio.run(initialize_search_engine())
 
         # Check if the default_agent is valid
+        from pluscoder.type import TokenUsage
+        from pluscoder.workflow import build_agents
+        from pluscoder.workflow import build_workflow
+        from pluscoder.workflow import run_workflow
+
         agent_dict = build_agents()
         if config.default_agent and (
             # Check if valid number

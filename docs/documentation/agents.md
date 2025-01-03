@@ -6,10 +6,18 @@ PlusCoder core system relies on agents to perform tasks and provide assistance t
 
 PlusCoder agents have the following features:
 
-- `Filesystem interaction`: Agents can create/edit files on the repository workspace.
-- `File downloading`: Agents can download files from external sources given their raw URLs when instructed to do.
-- `Multi-modal support`: Agents can read images passed as input by the user using `img::<img_url>` or pasting an image with Ctrl+V during the conversation.
-- `Test and Lint support`: Agents can execute tests and linting commands in the repository workspace and recover from errors.
+| Feature | Description | Example instruction |
+|:--|:--|:--|
+|`Filesystem interaction` | Agents can create/edit files on the repository workspace. | `Read core files and explain me what is this repository about` |
+|`File downloading` | Agents can download files from external sources given their raw URLs when instructed to do. | `Read https://github.com/granade-io/pluscoder/blob/develop/CODING_GUIDELINES.md and apply them to utils.py` |
+|`Multi-modal support` | Agents can read images passed as input by the user using `img::<img_url>` or pasting an image with Ctrl+V  during the conversation. | `I'd like you to code a navbar.js identical to this one at img::https://user-images.githubusercontent.com/25878302/212479928-553c2d37-793b-4bcd-ac53-352f26337955.jpg` |
+|`Test and Lint support` | After editions, agents will execute tests and linting commands in the repository workspace and try recover from errors. See [config here](configuration.md#test-and-lint-settings).  | `update validate_email to handle validation using a regex` |
+
+!!! tip "Multi-modal support"
+    Not all models support multi-modal inputs. And we rely en OpenAI's API scheme to provide this feature. Providers like OpenAI and Anthropic support multi-modal inputs.
+
+!!! tip "Recover from errors"
+    Agents will try to recover from errors at most 3 times to avoid infinite loops and cost overruns. We recommend to specify just key linting and testing commands in the configuration to avoid unnecessary errors.
 
 ## Predefined Agents
 

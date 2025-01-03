@@ -13,7 +13,6 @@ from pluscoder import tools
 from pluscoder.agents.base import Agent
 from pluscoder.agents.core import DeveloperAgent
 from pluscoder.agents.core import DomainStakeholderAgent
-from pluscoder.agents.core import RepoExplorerAgent
 from pluscoder.agents.event.config import event_emitter
 from pluscoder.agents.orchestrator import OrchestratorAgent
 from pluscoder.agents.output_handlers.action_handlers import ActionProcessHandler
@@ -30,13 +29,12 @@ from pluscoder.message_utils import get_message_content_str
 from pluscoder.state_utils import accumulate_token_usage
 from pluscoder.type import AgentConfig
 from pluscoder.type import OrchestrationState
+from pluscoder.type import TokenUsage
 
 set_debug(False)
 
 # Ignore deprecation warnings
 warnings.filterwarnings("ignore")
-
-default_context_files = []
 
 # Setup handlers to process llm outputs
 action_handler = ActionProcessHandler()
@@ -48,73 +46,51 @@ parser.subscribe(display_handler)
 parser.subscribe(action_handler)
 
 
-def build_agents() -> dict[str, AgentConfig]:
-    # Create agent configs
-    agents_config = {
-        "orchestrator": AgentConfig(
-            id=OrchestratorAgent.id,
-            name="Orchestrator",
-            description="Design and run complex plan delegating it to other agents",
-            prompt=OrchestratorAgent.specialization_prompt,
-            reminder="",
+def _build_predefined_agents() -> dict[str, AgentConfig]:
+    return {
+        "orchestrator": OrchestratorAgent.to_agent_config(
             tools=[tool.name for tool in tools.base_tools],
-            default_context_files=default_context_files,
-            repository_interaction=True,
             read_only=True,
-            suggestions=OrchestratorAgent.suggestions,
         ),
-        "developer": AgentConfig(
-            id=DeveloperAgent.id,
-            name="Developer",
-            description=DeveloperAgent.description,
-            prompt=DeveloperAgent.specialization_prompt,
-            reminder="",
+        "developer": DeveloperAgent.to_agent_config(
             tools=[tool.name for tool in tools.base_tools],
-            default_context_files=default_context_files,
-            repository_interaction=True,
-            read_only=False,
-            suggestions=DeveloperAgent.suggestions,
         ),
-        "domain_stakeholder": AgentConfig(
-            id=DomainStakeholderAgent.id,
-            name="Domain Stakeholder",
-            description=DomainStakeholderAgent.description,
-            prompt=DomainStakeholderAgent.specialization_prompt,
-            reminder="",
+        "domain_stakeholder": DomainStakeholderAgent.to_agent_config(
             tools=[tool.name for tool in tools.base_tools],
-            default_context_files=default_context_files,
-            repository_interaction=True,
-            read_only=False,
-            suggestions=DomainStakeholderAgent.suggestions,
-        ),
-        "repo_explorer": AgentConfig(
-            id="repo_explorer",
-            name="Explorer",
-            description=RepoExplorerAgent.description,
-            prompt=RepoExplorerAgent.specialization_prompt,
-            reminder=RepoExplorerAgent.reminder,
-            tools=[tool.name for tool in [tools.read_files, tools.query_repository]],
-            default_context_files=[],
-            repository_interaction=True,
-            read_only=True,
-            suggestions=RepoExplorerAgent.suggestions,
         ),
     }
 
+
+def build_agents(include_predefined: bool = True, include_custom: bool = True) -> dict[str, AgentConfig]:
+    """Generate a dict with all available agents configurations.
+
+    Args:
+        include_predefined (bool, optional): Include predefined agents in the result. Defaults to True.
+        include_custom (bool, optional): Include custom agents in the result. Defaults to True.
+
+    Returns:
+        dict[str, AgentConfig]: _description_
+    """
+    agents_config = {}
+
+    if include_predefined:
+        agents_config.update(_build_predefined_agents())
+
     # Add custom agent configs
-    for agent_cfg in config.custom_agents:
-        agents_config[agent_cfg["name"]] = AgentConfig(
-            is_custom=True,
-            id=agent_cfg["name"],
-            name=agent_cfg["name"],
-            description=agent_cfg["description"],
-            prompt=agent_cfg["prompt"],
-            reminder=agent_cfg.get("reminder", ""),
-            tools=[tool.name for tool in tools.base_tools],
-            default_context_files=default_context_files + agent_cfg.get("default_context_files", []),
-            read_only=agent_cfg.get("read_only", False),
-            repository_interaction=agent_cfg.get("repository_interaction", True),
-        )
+    if include_custom:
+        for agent_cfg in config.custom_agents:
+            agents_config[agent_cfg["name"]] = AgentConfig(
+                is_custom=True,
+                id=agent_cfg["name"],
+                name=agent_cfg["name"],
+                description=agent_cfg["description"],
+                prompt=agent_cfg["prompt"],
+                reminder=agent_cfg.get("reminder", ""),
+                tools=[tool.name for tool in tools.base_tools],
+                default_context_files=agent_cfg.get("default_context_files", []),
+                read_only=agent_cfg.get("read_only", False),
+                repository_interaction=agent_cfg.get("repository_interaction", True),
+            )
 
     return agents_config
 
@@ -125,8 +101,8 @@ def user_input(state: OrchestrationState):
         return {"return_to_user": False}
 
     io.live.stop()
-    if config.user_input:
-        user_input = config.user_input
+    if state.get("input", None) or config.user_input:
+        user_input = state.get("input", None) or config.user_input
     else:
         io.print()
         io.print("[bold green]Enter your message ('q' or 'ctrl+c' to exit, '/help' for commands): [/bold green]")
@@ -535,4 +511,39 @@ def build_workflow(agents_config: dict[str, AgentConfig]):
 
 # Run the workflow
 async def run_workflow(app, state: OrchestrationState) -> None:
+    return await app.ainvoke(state, config={"recursion_limit": 100})
+
+
+async def run_agent(agent: AgentConfig, input: str) -> None:
+    """Runs the specified agent with the given user input and task list.
+
+    Args:
+        agent (AgentConfig): Configuration object for the agent.
+        input (str): Instructions to the agent to perform.
+        task_list (dict): Dictionary containing tasks to be processed by the agent (runs with orchestrator agent only).
+    """
+
+    agents_configs = {agent.id: agent}
+
+    # Build workflow with the given agent
+    app = build_workflow(agents_configs)
+
+    # Creates initial state
+    state = {
+        "user_input": input,
+        "agents_configs": agents_configs,
+        "chat_agent": agent,
+        "current_iterations": 0,
+        "max_iterations": 100,
+        "return_to_user": False,
+        "messages": [],
+        "context_files": [],
+        "accumulated_token_usage": TokenUsage.default(),
+        "token_usage": None,
+        "current_agent_deflections": 0,
+        "max_agent_deflections": 3,
+        "is_task_list_workflow": False,
+        "status": "active",
+    }
+
     return await app.ainvoke(state, config={"recursion_limit": 100})

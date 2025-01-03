@@ -11,7 +11,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="pluscoder",
-    version=os.getenv("NEXT_VERSION", "0.1.0"),
+    version=os.getenv("NEXT_VERSION", "0.1.3rc"),
     author="Granade.io",
     author_email="contact@granade.io",
     description="AI-assisted software development tool for streamlining development process",
@@ -34,10 +34,7 @@ setup(
         "Intended Audience :: Developers",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.12",
     ],
     python_requires=">=3.8",
     license="GPL-3.0",

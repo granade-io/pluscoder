@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Any
 from typing import Optional
 
-from PIL import ImageGrab
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import Completer
 from prompt_toolkit.completion import Completion
@@ -239,6 +238,8 @@ class IO:
         return None
 
     def handle_clipboard_image(self):
+        from PIL import ImageGrab
+
         try:
             image = ImageGrab.grabclipboard()
             if image:
