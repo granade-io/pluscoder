@@ -1,10 +1,8 @@
 # PlusCoder
 
---8<-- "docs/.partials/header.html"
+A Python agents framework intended for working in repositories. In simple words, programmable agents that code.
 
-* **PlusCoder** is an AI-powered tool that accelerates software development by assisting with planning, coding, and management tasks.
-* The name ”+ Coder” extends beyond just **“You + Coder”**—it can be paired with other tools, or CI/CD processes, enhancing them with AI.
-* PlusCoder is a versatile assistant specialized for integration with other systems for streamlined, effortless development.
+See full documentation at [https://granade-io.github.io/pluscoder/](https://granade-io.github.io/pluscoder/)
 
 ## Basic Usage
 
