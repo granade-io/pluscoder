@@ -223,14 +223,23 @@ def query_repository(
     """
     Search key file snippets and filenames in the repository for better understanding and analysis given a new user request.
     """
+    unavailable_message = "Search engine is not available. Just read key files of the repository for better understanding and analysis to handle the user request."
     try:
         from pluscoder.search.engine import SearchEngine
 
         engine = SearchEngine.get_instance()
+
+        if not engine:
+            io.console.print(
+                "Warning: Search engine is not available. To improve agents performance please setup the search engine. Check https://granade-io.github.io/pluscoder/documentation/indexing/ for examples.",
+                style="bold dark_goldenrod",
+            )
+            return unavailable_message
+
         results = engine.search(query, top_k=5)
 
         if not results:
-            return "No matching results found in repository. Just read key files of the repository for better understanding and analysis."
+            return "No matching results found in repository. Just read key files of the repository for better understanding and analysis for handling the user request."
 
         output = f"Found {len(results)} possible relevant results for query '{query}':\n\n"
 
@@ -249,7 +258,7 @@ def query_repository(
 
     except Exception:
         io.print(traceback.format_exc(), style="bold red")
-        return "Search engine is not available. Just read key files of the repository for better understanding and analysis."
+        return unavailable_message
 
 
 # @tool

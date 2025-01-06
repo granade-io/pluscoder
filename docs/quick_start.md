@@ -23,7 +23,7 @@ pluscoder --model gpt-4o --skip_repo_index
     You can also specify any CLI config flag using environment variables or inside pluscoder-config.yaml file. Check configuration options at [Configuration](documentation/config.md) or by running `pluscoder -h`.
 
 !!! info
-    First time you run `pluscoder` you will be prompted to specify your preferred LLM provider and model.  You can also specify the provider and model using the `provider` and `model` options. Check all available providers at the [Configuration](documentation/config.md#providers).
+    First time you run `pluscoder` you will be prompted to specify your preferred LLM provider and model.  You can also specify the provider and model using the `provider` and `model` options. Check all supported providers at [Providers Section](documentation/providers.md).
 
 Agents by default can read/write local repository files. You can run agents using read-only mode by adding the `read_only` flag.
 
@@ -41,10 +41,11 @@ Or using the in-chat command `/show_repo`.
 
 ### Optimized chat with indexed repository
 
-To optimize the chat experience, we recommend to enable repository indexing. For that just remove the `skip_repo_index` flag and specify an embedding model using the `embedding_model` config.
+To optimize the chat experience, we recommend to enable [repository indexing](documentation/indexing.md). For that just remove the `skip_repo_index` flag and specify an embedding model using the `embedding_model` config.
 
 ```bash
 export OPENAI_API_KEY=<your_openai_api_key>
+export COHERE_API_KEY=<your_cohere_api_key>
 pluscoder --model gpt-4o --embedding_model cohere/embed-english-v3.0
 ```
 
@@ -68,19 +69,20 @@ from pluscoder.agents.core import DeveloperAgent
 from pluscoder.type import AgentConfig
 from pluscoder.workflow import run_agent
 
-# Select specific agent
-dev_agent: AgentConfig = DeveloperAgent.to_agent_config()
 
-# Runs agent in the current workdir
-run_agent(agent=dev_agent, input="Write a detailed README.md file specifying develop environment setup using commands present in Makefile")
+async def main():
+    # Select specific agent
+    developer_agent: AgentConfig = DeveloperAgent.to_agent_config(model="gpt-4o")
 
-
+    # Runs agent in the current workdir
+    await run_agent(
+        agent=developer_agent,
+        input="Write a detailed README.md file specifying develop environment setup using commands present in Makefile"
+    )
 ```
 
 ## Next Steps
 
-* Read the [PlusCoder Configuration](01_pluscoder_configuration.md) documentation to learn how to configure PlusCoder for your projects with the `.pluscoder-config.yml` file.
-* Read the [Adding Custom Agents](02_custom_agents.md) tutorial to learn how to add custom agents to PlusCoder.
-* Learn the [Tips and Tricks](03_tips_and_tricks.md) to get the most out of PlusCoder.
-* Check out the [Workflows+Coder](https://gitlab.com/codematos/workflows) section for an example.
-****
+- Read the [Configuration](documentation/configuration.md) section for more customization.
+- Read [Agents](documentation/agents.md) section to learn how to use pre-defined agents and to setup custom ones.
+- Check [Examples](examples/index.md) section to learn how to setup PlusCoder for different common use-cases.

@@ -21,6 +21,8 @@ def orchestrator_agent():
             tools=[],
             default_context_files=[],
             repository_interaction=True,
+            provider="openai",
+            model="gpt-4o",
         ),
         stream_parser=XMLStreamParser(),
     )  # We don't need a real LLM for these tests

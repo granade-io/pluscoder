@@ -21,10 +21,11 @@ Most of the time there is no need to disable these tools, but if you want to do 
     from pluscoder.type import AgentConfig
     from pluscoder.agents.core import DeveloperAgent
 
-    # Override agent default tools
-    disabled_tool_names = ['read_files', 'move_files', 'query_repository']
-    tool_names = [tool.name for tool in tools.base_tools if tool.name not in disabled_tool_names]
-    developer_agent: AgentConfig = DeveloperAgent.to_agent_config(tools=tool_names)
+    async def main():
+        # Override agent default tools
+        disabled_tool_names = ['read_files', 'move_files', 'query_repository']
+        tool_names = [tool.name for tool in tools.base_tools if tool.name not in disabled_tool_names]
+        developer_agent: AgentConfig = DeveloperAgent.to_agent_config(tools=tool_names)
     ```
 
 !!! tip "Specifying tools for custom agents"
@@ -46,6 +47,7 @@ Here an example to read open issues and read issue details:
     from pluscoder.type import AgentConfig
     from pluscoder.agents.core import DeveloperAgent
     from pluscoder.workflow import run_agent
+    from pluscoder.search.builtin import setup_search_engine
 
     @tool
     def read_open_repository_issues() -> str:
@@ -71,16 +73,19 @@ Here an example to read open issues and read issue details:
         return f"Issue with ID {issue_id} has been successfully commented"
 
 
-    # Override agent default tools
-    my_tools = tools.base_tools + [read_open_repository_issues, read_issue_details, comment_issue]
-    developer_agent: AgentConfig = DeveloperAgent.to_agent_config(tools=my_tools)
+    async def main():
+        await setup_search_engine(show_progress=True, embedding_model="cohere/embed-english-v3.0")
 
-    # Run the agent
-    run_agent(
-        agent=developer_agent, 
-        input="""Read details about any tech debt issue,
-    brainstorm about how to solve it and code the proposed solution""",
-    ), 
+        # Override agent default tools
+        my_tools = tools.base_tools + [read_open_repository_issues, read_issue_details, comment_issue]
+        developer_agent: AgentConfig = DeveloperAgent.to_agent_config(tools=my_tools)
+
+        # Run the agent
+        await run_agent(
+            agent=developer_agent, 
+            input="""Read details about last tech debt issue,
+        brainstorm about how to solve it and code the proposed solution""",
+        )
     ```
 
 ## Related Docs

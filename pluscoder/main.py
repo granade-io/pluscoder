@@ -353,7 +353,7 @@ def main() -> None:
         from pluscoder.workflow import build_workflow
         from pluscoder.workflow import run_workflow
 
-        agent_dict = build_agents()
+        agent_dict = build_agents(provider=config.provider, model=config.model)
         if config.default_agent and (
             # Check if valid number
             config.default_agent.isdigit()

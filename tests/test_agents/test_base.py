@@ -140,6 +140,8 @@ def agent():
             tools=[],
             default_context_files=["test_file.txt"],
             repository_interaction=True,
+            provider="openai",
+            model="gpt-4o",
         ),
         stream_parser=XMLStreamParser(),
     )

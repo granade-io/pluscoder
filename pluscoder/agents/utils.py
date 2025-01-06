@@ -1,6 +1,7 @@
 from langchain.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 
+from pluscoder.config import config
 from pluscoder.io_utils import io
 from pluscoder.model import get_llm
 
@@ -91,7 +92,7 @@ Return the only well-formatted json without any tag. With this structure:
         template=prompt_template,
     )
 
-    model = get_llm()
+    model = get_llm(config.provider, config.model)
     if model is None:
         io.print("Error: Language model not found.", style="bold red")
         return ""

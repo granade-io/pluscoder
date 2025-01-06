@@ -46,8 +46,7 @@ class SearchEngine:
     def get_instance(cls) -> "SearchEngine":
         """Get singleton instance."""
         if cls.__instance is None or not getattr(cls.__instance, "is_initialized", False):
-            msg = "SearchEngine not initialized. Use create() first."
-            raise RuntimeError(msg)
+            return None
         return cls.__instance
 
     @classmethod

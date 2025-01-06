@@ -199,8 +199,8 @@ def get_llm_base(model_id, provider):
     return None
 
 
-def get_llm():
-    return get_llm_base(config.model, config.provider or get_inferred_provider())
+def get_llm(provider, model):
+    return get_llm_base(model, provider or get_inferred_provider())
 
 
 def get_orchestrator_llm():

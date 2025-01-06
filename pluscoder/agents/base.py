@@ -26,6 +26,7 @@ from pluscoder.agents.prompts import build_system_prompt
 from pluscoder.agents.stream_parser import XMLStreamParser
 from pluscoder.config import config
 from pluscoder.exceptions import AgentException
+from pluscoder.exceptions import WorkflowException
 from pluscoder.fs import get_formatted_files_content
 from pluscoder.io_utils import io
 from pluscoder.logs import file_callback
@@ -35,6 +36,7 @@ from pluscoder.message_utils import filter_messages
 from pluscoder.message_utils import mask_stale_file_messages
 from pluscoder.message_utils import tag_messages
 from pluscoder.model import get_llm
+from pluscoder.model import get_model_validation_message
 from pluscoder.repo import Repository
 from pluscoder.type import AgentConfig
 from pluscoder.type import OrchestrationState
@@ -72,6 +74,8 @@ class Agent:
         self.name = agent_config.name
         self.system_message = agent_config.prompt
         self.tools = [getattr(tools, tool, None) for tool in agent_config.tools if getattr(tools, tool, None)]
+        self.provider = agent_config.provider
+        self.model = agent_config.model
         self.extraction_tools = extraction_tools
         self.default_context_files = agent_config.default_context_files
         self.graph = self.get_graph()
@@ -187,7 +191,10 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
         return "auto"
 
     def get_agent_model(self):
-        return get_llm()
+        llm = get_llm(self.provider, self.model)
+        if not llm:
+            raise WorkflowException(get_model_validation_message(self.provider))
+        return llm
 
     def _stream_events(self, chain, state: OrchestrationState, deflection_messages: List[str]):
         self.stream_parser.start_stream()
@@ -220,6 +227,7 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
     def _invoke_llm_chain(self, state: OrchestrationState, deflection_messages: List[str] = []):
         assistant_prompt = self.build_assistant_prompt(state, deflection_messages=deflection_messages)
         llm = self.get_agent_model()
+
         chain: Runnable = assistant_prompt | llm.bind_tools(
             self.tools + self.extraction_tools, tool_choice=self.get_tool_choice(state)
         )
@@ -271,6 +279,8 @@ Here are all repository files you don't have access yet: \n\n{files_not_in_conte
                         interaction_msgs.append(HumanMessage(content=f"An error ocurred: {e!s}", tags=[self.id]))
                         sleep(backoff_time)
                         backoff_time *= 2  # Exponential backoff
+                except WorkflowException:
+                    raise
                 except Exception as e:
                     # Handles unknown exceptions, maybe caused by llm api or wrong state
                     io.print(f"An error ocurred when calling model: {e!s}", style="bold red")

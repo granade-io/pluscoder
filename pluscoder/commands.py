@@ -123,7 +123,7 @@ def select_agent(state: OrchestrationState, *args):
     """Start a new conversation with another agent"""
     from pluscoder.workflow import build_agents
 
-    agent_dict = build_agents()
+    agent_dict = build_agents(provider=config.provider, model=config.model)
     chosen_agent = " ".join(args).strip()
 
     if chosen_agent not in agent_dict:
@@ -320,6 +320,8 @@ def create_agent(state: OrchestrationState, *args):
             default_context_files=[],
             read_only=new_agent["read_only"],
             repository_interaction=new_agent["repository_interaction"],
+            provider=config.provider,
+            model=config.model,
         )
 
         return select_agent(

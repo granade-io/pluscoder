@@ -1,3 +1,4 @@
+import asyncio
 import functools
 import warnings
 
@@ -46,25 +47,35 @@ parser.subscribe(display_handler)
 parser.subscribe(action_handler)
 
 
-def _build_predefined_agents() -> dict[str, AgentConfig]:
+def _build_predefined_agents(provider: str, model: str) -> dict[str, AgentConfig]:
     return {
         "orchestrator": OrchestratorAgent.to_agent_config(
             tools=[tool.name for tool in tools.base_tools],
             read_only=True,
+            provider=provider,
+            model=model,
         ),
         "developer": DeveloperAgent.to_agent_config(
             tools=[tool.name for tool in tools.base_tools],
+            provider=provider,
+            model=model,
         ),
         "domain_stakeholder": DomainStakeholderAgent.to_agent_config(
             tools=[tool.name for tool in tools.base_tools],
+            provider=provider,
+            model=model,
         ),
     }
 
 
-def build_agents(include_predefined: bool = True, include_custom: bool = True) -> dict[str, AgentConfig]:
+def build_agents(
+    provider: str, model: str, include_predefined: bool = True, include_custom: bool = True
+) -> dict[str, AgentConfig]:
     """Generate a dict with all available agents configurations.
 
     Args:
+        provider (str): Provider to use for all agents.
+        model (str): Model to use for all agents.
         include_predefined (bool, optional): Include predefined agents in the result. Defaults to True.
         include_custom (bool, optional): Include custom agents in the result. Defaults to True.
 
@@ -74,7 +85,7 @@ def build_agents(include_predefined: bool = True, include_custom: bool = True) -
     agents_config = {}
 
     if include_predefined:
-        agents_config.update(_build_predefined_agents())
+        agents_config.update(_build_predefined_agents(provider, model))
 
     # Add custom agent configs
     if include_custom:
@@ -90,6 +101,8 @@ def build_agents(include_predefined: bool = True, include_custom: bool = True) -
                 default_context_files=agent_cfg.get("default_context_files", []),
                 read_only=agent_cfg.get("read_only", False),
                 repository_interaction=agent_cfg.get("repository_interaction", True),
+                provider=provider,
+                model=model,
             )
 
     return agents_config
@@ -482,28 +495,31 @@ async def _orchestrator_agent_node(
 
 
 def build_workflow(agents_config: dict[str, AgentConfig]):
-    # Create orchestrator instance for router functions
-    orchestrator_agent = OrchestratorAgent(agents_config[OrchestratorAgent.id], stream_parser=parser)
-
     # Create the graph
     workflow = StateGraph(OrchestrationState)
 
-    # Add nodes
+    # Add base nodes
     workflow.add_node("user_input", user_input)
-    workflow.add_node(
-        "orchestrator", functools.partial(_orchestrator_agent_node, orchestrator_agent=orchestrator_agent)
-    )
     workflow.add_node("agent", _agent_node)  # Single node for all other agents
 
-    # Routers
-    orchestrator_router_node = functools.partial(orchestrator_router, orchestrator_agent=orchestrator_agent)
-    agent_router_node = functools.partial(agent_router, orchestrator_agent=orchestrator_agent)
-
-    # Add edges
+    # Add base edges
     workflow.add_edge(START, "user_input")
     workflow.add_conditional_edges("user_input", user_router)
-    workflow.add_conditional_edges("orchestrator", orchestrator_router_node)
-    workflow.add_conditional_edges("agent", agent_router_node)
+
+    # Add orchestrator related node and edges
+    if OrchestratorAgent.id in agents_config:
+        orchestrator_agent = OrchestratorAgent(agents_config[OrchestratorAgent.id], stream_parser=parser)
+
+        # Add nodes
+        workflow.add_node(
+            "orchestrator", functools.partial(_orchestrator_agent_node, orchestrator_agent=orchestrator_agent)
+        )
+
+        # Add edges
+        orchestrator_router_node = functools.partial(orchestrator_router, orchestrator_agent=orchestrator_agent)
+        agent_router_node = functools.partial(agent_router, orchestrator_agent=orchestrator_agent)
+        workflow.add_conditional_edges("orchestrator", orchestrator_router_node)
+        workflow.add_conditional_edges("agent", agent_router_node)
 
     # Compile the workflow
     return workflow.compile()
@@ -530,7 +546,7 @@ async def run_agent(agent: AgentConfig, input: str) -> None:
 
     # Creates initial state
     state = {
-        "user_input": input,
+        "input": input,
         "agents_configs": agents_configs,
         "chat_agent": agent,
         "current_iterations": 0,
@@ -547,3 +563,43 @@ async def run_agent(agent: AgentConfig, input: str) -> None:
     }
 
     return await app.ainvoke(state, config={"recursion_limit": 100})
+
+
+def run_agent_sync(agent: AgentConfig, input: str) -> None:
+    """Runs the specified agent with the given user input and task list.
+
+    Args:
+        agent (AgentConfig): Configuration object for the agent.
+        input (str): Instructions to the agent to perform.
+        task_list (dict): Dictionary containing tasks to be processed by the agent (runs with orchestrator agent only).
+    """
+
+    agents_configs = {agent.id: agent}
+
+    # Build workflow with the given agent
+    app = build_workflow(agents_configs)
+
+    # Creates initial state
+    state = {
+        "input": input,
+        "agents_configs": agents_configs,
+        "chat_agent": agent,
+        "current_iterations": 0,
+        "max_iterations": 100,
+        "return_to_user": False,
+        "messages": [],
+        "context_files": [],
+        "accumulated_token_usage": TokenUsage.default(),
+        "token_usage": None,
+        "current_agent_deflections": 0,
+        "max_agent_deflections": 3,
+        "is_task_list_workflow": False,
+        "status": "active",
+    }
+
+    try:
+        loop = asyncio.get_running_loop()
+        out_state = loop.run_until_complete(app.ainvoke(state, config={"recursion_limit": 100}))
+    except RuntimeError:
+        out_state = asyncio.run(app.ainvoke(state, config={"recursion_limit": 100}))
+    return out_state

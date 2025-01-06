@@ -1,3 +1,4 @@
+from pluscoder.tools import base_tools
 from pluscoder.type import AgentConfig
 
 
@@ -11,7 +12,7 @@ class AgentDefinition:
         Check the AgentConfig class for more details on the available fields.
 
         Returns:
-            _type_: _description_
+            AgentConfig: Agent configuration dict
         """
         return AgentConfig(
             **{
@@ -24,6 +25,8 @@ class AgentDefinition:
                 "read_only": False,
                 "reminder": "",
                 "default_context_files": [],
+                "tools": [tool.name for tool in base_tools],
+                "provider": None,
                 **kwargs,
             },
         )

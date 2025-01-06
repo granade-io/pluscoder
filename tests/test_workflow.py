@@ -31,6 +31,8 @@ def mock_agents_config():
             tools=[],
             default_context_files=[],
             repository_interaction=True,
+            provider="openai",
+            model="gpt-4o",
         ),
         "developer": AgentConfig(
             id="developer",
@@ -41,6 +43,8 @@ def mock_agents_config():
             tools=[],
             default_context_files=[],
             repository_interaction=True,
+            provider="openai",
+            model="gpt-4o",
         ),
     }
 
@@ -57,6 +61,8 @@ def agent():
             tools=[],
             default_context_files=["test_file.txt"],
             repository_interaction=True,
+            provider="openai",
+            model="gpt-4o",
         ),
         stream_parser=XMLStreamParser(),
     )

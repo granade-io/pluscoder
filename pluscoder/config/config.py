@@ -76,11 +76,11 @@ def validate_custom_agents(custom_agents: List[Dict[str, Any]]) -> List[Dict[str
 class Settings(BaseSettings):
     def __new__(cls, *args, **kwargs):
         if not hasattr(cls, "_instance"):
-            cls._instance = super().__new__(cls)
+            cls._instance = super().__new__(cls, *args, **kwargs)
         return cls._instance
 
-    def reconfigure(self):
-        self.__init__(**{})
+    def reconfigure(self, **kwargs):
+        self.__init__(**kwargs)
 
     custom_agents: List[Dict[str, Any]] = Field(
         default=[],

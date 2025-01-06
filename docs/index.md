@@ -9,11 +9,11 @@
 
 ## Why to use PlusCoder
 
-1. It's just Python: Coding agents are designed to work with large codebases efficiently, and they are fully programmable. You can run them in your development environment or in the cloud, leveraging LLM power in an easy sweep in all your repositories.
-2. Customizable and Standardizable: You can write custom company-wide specialized agents, instructions and tools. Allowing your entire team to leverage a single centralized configuration of agents.
-3. Chat with agents: You can chat with PlusCoder agents directly working with them as a coding partner with same company-wide configurations and guidelines.
-4. Task based workflows: PlusCoder allows you to create customizable and standardizable workflows for automating repetitive coding tasks.
-5. Multiple LLM providers: Choose your preferred LLM provider, such as OpenAI, Anthropic, or Cohere, everything supported by LiteLLM.
+1. **It's just Python**: Coding agents are designed to work with large codebases efficiently, and they are fully programmable. You can run them in your development environment or in the cloud, leveraging LLM power in an easy sweep in all your repositories.
+2. **Customizable and Standardizable**: You can write custom company-wide specialized agents, instructions and tools. Allowing your entire team to leverage a single centralized configuration of agents.
+3. **Chat with agents**: You can chat with PlusCoder agents directly working with them as a coding partner with same company-wide configurations and guidelines.
+4. **Task based workflows**: PlusCoder allows you to create customizable and standardizable workflows for automating repetitive coding tasks.
+5. **Multiple LLM providers**: Choose your preferred LLM provider, such as OpenAI, Anthropic, or VertexAI, and everything supported by LiteLLM.
 
 
 ## Basic Examples
@@ -23,16 +23,20 @@ Instruct agent to work in the current repository:
 
 === "python"
     ```python
-    from pluscoder import workflow, build_agents
+    from pluscoder.agents.core import DeveloperAgent
+    from pluscoder.type import AgentConfig
+    from pluscoder.workflow import run_agent
 
-    # Obtain predefined & company-wide agents
-    agents = build_agents()
 
-    # Select specific agent
-    dev_agent = agents.get('developer')
+    async def main():
+        # Select specific agent
+        developer_agent: AgentConfig = DeveloperAgent.to_agent_config(model="gpt-4o")
 
-    # Runs agent in the current workdir
-    workflow.run(agent=dev_agent, input="Write a detailed README.md file specifying develop environment setup using commands present in Makefile")
+        # Runs agent in the current workdir
+        await run_agent(
+            agent=developer_agent,
+            input="Write a detailed README.md file specifying develop environment setup using commands present in Makefile"
+        )
     ```
 === "CLI"
     ```bash

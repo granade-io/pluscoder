@@ -135,6 +135,12 @@ class AgentConfig(BaseModel):
             developer_agent: AgentConfig = DeveloperAgent.to_agent_config(tools=my_tools)
             ```
 
+        provider (str): Provider of the agent. Can be 'openai', 'anthropic', 'vertexai', 'google', 'aws_bedrock', 'litellm' or None.
+
+            If none, provider will be inferred from available credentials.
+
+        model (str): LLM model to use when running the agent.
+
         default_context_files (List[str]): List of default context files to load when the agent is initialized.
 
             Agents have access to a pre-defined set of context files by default; useful for adding key files to perform its tasks.
@@ -153,6 +159,8 @@ class AgentConfig(BaseModel):
     prompt: str
     reminder: Optional[str]
     tools: List[str]
+    provider: Optional[str]
+    model: str
     default_context_files: List[str]
     read_only: bool = False
     repository_interaction: bool = True

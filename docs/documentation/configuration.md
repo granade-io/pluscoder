@@ -4,16 +4,29 @@
 
 PlusCoder can be configured using several methods (following this precedence order):
 
-1. The `/config` in-chat command at runtime
-2. Command-line arguments when running `pluscoder` command.
-3. Dotenv variables ( `.env` file in the repository root)
-4. `.pluscoder-config.yml` config file in the repository root
-5. Environment variables
-6. Global PlusCoder yaml config file (`~/.config/pluscoder/config.yml` or `AppData/Local/pluscoder/config.yml`)
-7. Global environment variables file (`~/.config/pluscoder/vars.env` or `AppData/Local/pluscoder/vars.env`)
+1. Python global Settings class
+2. The `/config` in-chat command at runtime
+3. Command-line arguments when running `pluscoder` command.
+4. Dotenv variables ( `.env` file in the repository root)
+5. `.pluscoder-config.yml` config file in the repository root
+6. Environment variables
+7. Global PlusCoder yaml config file (`~/.config/pluscoder/config.yml` or `AppData/Local/pluscoder/config.yml`)
+8. Global environment variables file (`~/.config/pluscoder/vars.env` or `AppData/Local/pluscoder/vars.env`)
 
 Same option can be configured using different methods as mentioned:
 
+=== "Python"
+    ```python
+    from pluscoder.config import Settings
+
+    # Get current global settings
+    settings = Settings()
+
+    # Updates it
+    settings.reconfigure(
+        model="gpt-4o"
+    )
+    ```
 === "CLI"
     ```bash
     pluscoder --model gpt-4o
@@ -62,7 +75,7 @@ pluscoder --show_config
 ### Application Behavior
 - `read_only`: Enable/disable read-only mode to avoid file editions (default: `False`)
 - `streaming`: Enable/disable LLM streaming (default: `True`)
-- `auto_confirm`: Enable/disable auto confirmation of pluscoder execution (default: `False`)
+- `auto_confirm`: Enable/disable auto confirmation of PlusCoder execution (default: `False`)
 - `hide_thinking_blocks`: Hide thinking blocks in LLM output (default: `True`)
 - `hide_output_blocks`: Hide output blocks in LLM output (default: `False`)
 - `hide_source_blocks`: Hide source blocks in LLM output (default: `False`)
@@ -88,24 +101,7 @@ pluscoder --show_config
 - `provider`: LLM provider to use. If `None`, provider will be selected based on available environment variables credentials. Options: `aws_bedrock`, `openai`, `litellm`, `anthropic`, `vertexai`, `google` (default: `None`)
 - `orchestrator_model_provider`: Provider to use for [orchestrator agent](documentation/agents.md#orchestrator) (default: same as `PROVIDER`)
 
-### Provider Credentials
-
-Define these at `.env`, `~/.config/pluscoder/vars.env` or using `export VAR=value`:
-
-*OpenAI*:
-
-- `OPENAI_API_KEY`: OpenAI API key. (default: `None`)
-- `OPENAI_API_BASE`: OpenAI API base URL. (default: `None`)
-
-*Anthropic*:
-
-- `ANTHROPIC_API_KEY`: Anthropic API key. (default: `None`)
-
-*AWS*
-
-- `AWS_ACCESS_KEY_ID`: AWS Access Key ID. (default: `None`)
-- `AWS_SECRET_ACCESS_KEY`: AWS Secret Access Key. (default: `None`)
-- `AWS_PROFILE`: AWS profile name (default: `"default"`)
+Check detailed information about all available providers at [Providers](providers.md).
 
 ### Repository Settings
 Use these when running PlusCoder in remote repositories for automated runs. Check how at [Automated Runs](documentation/automation.md).
