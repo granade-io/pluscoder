@@ -12,13 +12,13 @@
         <meta name="author" content="granade.io">
       
       
-        <link rel="canonical" href="https://pluscoder.cl/docs/documentation/automation/">
+        <link rel="canonical" href="https://pluscoder.cl/docs/examples/code-review/">
       
       
-        <link rel="prev" href="../agents/">
+        <link rel="prev" href="../issues-management/">
       
       
-        <link rel="next" href="../cli/">
+        <link rel="next" href="../custom-agents/">
       
       
       <link rel="icon" href="../../assets/pc.ico">
@@ -26,7 +26,7 @@
     
     
       
-        <title>Automation - PlusCoder</title>
+        <title>Code Review - PlusCoder</title>
       
     
     
@@ -85,7 +85,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#automation" class="md-skip">
+        <a href="#code-review-example" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Automation
+              Code Review
             
           </span>
         </div>
@@ -324,10 +324,8 @@
       
   
   
-    
   
   
-  
     
     
       
@@ -352,12 +350,14 @@
       
       
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
       
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
         
           
           <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
@@ -371,7 +371,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             Documentation
@@ -385,7 +385,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../configuration/" class="md-nav__link">
+      <a href="../../documentation/configuration/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -406,7 +406,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../agents/" class="md-nav__link">
+      <a href="../../documentation/agents/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -424,30 +424,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    Automation
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../documentation/automation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -456,110 +436,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#cli" class="md-nav__link">
-    <span class="md-ellipsis">
-      CLI
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="CLI">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#basic-examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      Basic examples
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Basic examples">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#basic-coding-instruction" class="md-nav__link">
-    <span class="md-ellipsis">
-      Basic coding instruction
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#instruction-supported-with-remote-guidelines" class="md-nav__link">
-    <span class="md-ellipsis">
-      Instruction supported with remote guidelines
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#handling-multiple-repositories" class="md-nav__link">
-    <span class="md-ellipsis">
-      Handling multiple repositories
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#task-list-for-complex-instructions" class="md-nav__link">
-    <span class="md-ellipsis">
-      Task list for complex instructions
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#python" class="md-nav__link">
-    <span class="md-ellipsis">
-      Python
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#related-docs" class="md-nav__link">
-    <span class="md-ellipsis">
-      Related Docs
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -619,7 +495,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../cli/" class="md-nav__link">
+      <a href="../../documentation/cli/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -640,7 +516,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../cli-commands/" class="md-nav__link">
+      <a href="../../documentation/cli-commands/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -661,7 +537,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../cli-features/" class="md-nav__link">
+      <a href="../../documentation/cli-features/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -690,7 +566,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../providers/" class="md-nav__link">
+      <a href="../../documentation/providers/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -711,7 +587,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../indexing/" class="md-nav__link">
+      <a href="../../documentation/indexing/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -732,7 +608,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../tools/" class="md-nav__link">
+      <a href="../../documentation/tools/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -757,6 +633,8 @@
       
   
   
+    
+  
   
   
     
@@ -783,19 +661,17 @@
       
       
     
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
         
           
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../examples/" class="md-nav__link ">
+            <a href="../" class="md-nav__link ">
               
   
   <span class="md-ellipsis">
@@ -812,7 +688,7 @@
             
           </div>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             Examples
@@ -828,7 +704,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/basic-coding/" class="md-nav__link">
+      <a href="../basic-coding/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -849,7 +725,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/issues-management/" class="md-nav__link">
+      <a href="../issues-management/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -867,10 +743,19 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../../examples/code-review/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -879,6 +764,7 @@
   
 
       </a>
+      
     </li>
   
 
@@ -891,7 +777,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/custom-agents/" class="md-nav__link">
+      <a href="../custom-agents/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -912,7 +798,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/remote-configuration/" class="md-nav__link">
+      <a href="../remote-configuration/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -953,98 +839,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#cli" class="md-nav__link">
-    <span class="md-ellipsis">
-      CLI
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="CLI">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#basic-examples" class="md-nav__link">
-    <span class="md-ellipsis">
-      Basic examples
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Basic examples">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#basic-coding-instruction" class="md-nav__link">
-    <span class="md-ellipsis">
-      Basic coding instruction
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#instruction-supported-with-remote-guidelines" class="md-nav__link">
-    <span class="md-ellipsis">
-      Instruction supported with remote guidelines
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#handling-multiple-repositories" class="md-nav__link">
-    <span class="md-ellipsis">
-      Handling multiple repositories
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#task-list-for-complex-instructions" class="md-nav__link">
-    <span class="md-ellipsis">
-      Task list for complex instructions
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#python" class="md-nav__link">
-    <span class="md-ellipsis">
-      Python
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#related-docs" class="md-nav__link">
-    <span class="md-ellipsis">
-      Related Docs
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -1058,117 +852,7 @@
                   
 
 
-<h1 id="automation">Automation</h1>
-<p>Automation can be reached in two ways: out-of-the-box using the CLI and through custom python scripts.</p>
-<h2 id="cli">CLI</h2>
-<p>PlusCoder CLI handles most core functionalities automatically, so you can just give an instruction or task list to agents to work in the repository without any additional code or configuration.</p>
-<div class="highlight"><pre><span></span><code>pluscoder<span class="w"> </span>--user_input<span class="w"> </span><span class="s2">&quot;List all open issues in the &#39;pluscoder/pluscoder&#39; repository&quot;</span><span class="w"> </span>--default_agent<span class="w"> </span>developer<span class="w"> </span>--auto_confirm<span class="w"> </span>yes
-</code></pre></div>
-<div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>The <code>--auto_confirm</code> flag is used to skip the confirmation steps allowing agents to run freely.</p>
-</div>
-<p>Under the hood:</p>
-<ul>
-<li>CLI reads configuration from different sources</li>
-<li>Repository is indexed using embedding model if its defined</li>
-<li>Detects task list and parses it to run Orchestrator Agent with orchestrated workflow</li>
-</ul>
-<h3 id="basic-examples">Basic examples</h3>
-<h4 id="basic-coding-instruction">Basic coding instruction</h4>
-<div class="highlight"><pre><span></span><code>pluscoder<span class="w"> </span>--user_input<span class="w"> </span><span class="s2">&quot;Write unit tests for api/endpoints.py endpoints&quot;</span><span class="w"> </span>--default_agent<span class="w"> </span>developer<span class="w"> </span>--auto_confirm<span class="w"> </span>yes
-</code></pre></div>
-<h4 id="instruction-supported-with-remote-guidelines">Instruction supported with remote guidelines</h4>
-<div class="highlight"><pre><span></span><code>pluscoder<span class="w"> </span>--user_input<span class="w"> </span><span class="s2">&quot;Read the &#39;Code Style Guide&#39; file at https://github.com/pluscoder/pluscoder/blob/main/docs/CodeStyleGuide.md and apply it to the codebase&quot;</span><span class="w"> </span>--default_agent<span class="w"> </span>developer<span class="w"> </span>--auto_confirm<span class="w"> </span>yes
-</code></pre></div>
-<h4 id="handling-multiple-repositories">Handling multiple repositories</h4>
-<div class="highlight"><pre><span></span><code><span class="ch">#!/bin/bash</span>
-
-<span class="nv">repositories</span><span class="o">=(</span><span class="s2">&quot;granade-io/pluscoder&quot;</span><span class="w"> </span><span class="s2">&quot;granade-io/pluscoder-docs&quot;</span><span class="w"> </span><span class="s2">&quot;granade-io/pluscoder-cli&quot;</span><span class="o">)</span>
-
-<span class="k">for</span><span class="w"> </span>repo<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">repositories</span><span class="p">[@]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
-<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Running PlusCoder for </span><span class="nv">$repo</span><span class="s2">...&quot;</span>
-<span class="w">    </span><span class="c1"># PlusCoder will clone the repository</span>
-<span class="w">    </span>pluscoder<span class="w"> </span><span class="se">\</span>
-<span class="w">        </span>--repository<span class="w"> </span><span class="nv">$repo</span><span class="w"> </span><span class="se">\</span>
-<span class="w">        </span>--source_branch<span class="w"> </span>develop<span class="w"> </span><span class="se">\</span>
-<span class="w">        </span>--user_input<span class="w"> </span><span class="s2">&quot;Add README.md file following guidelines at https://github.com/granade-io/pluscoder/blob/main/docs/README-GUIDELINES.md&quot;</span><span class="w"> </span><span class="se">\</span>
-<span class="w">        </span>--default_agent<span class="w"> </span>developer<span class="w"> </span><span class="se">\</span>
-<span class="w">        </span>--auto_confirm<span class="w"> </span>yes<span class="w"> </span><span class="se">\</span>
-<span class="w">        </span>--auto_commit<span class="w"> </span><span class="nb">false</span>
-<span class="w">    </span><span class="nb">cd</span><span class="w"> </span><span class="nv">$repo</span>
-<span class="w">    </span>git<span class="w"> </span>add<span class="w"> </span>README.md
-<span class="w">    </span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;Add README.md file&quot;</span>
-<span class="w">    </span>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>develop
-<span class="w">    </span><span class="nb">cd</span><span class="w"> </span>..
-<span class="k">done</span>
-</code></pre></div>
-<h4 id="task-list-for-complex-instructions">Task list for complex instructions</h4>
-<p>You can define a task list to achieve more complex instructions. Orchestrator agent will handle the task list and delegate tasks to agents until each task is completed.</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:1"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">task_list.json</label></div>
-<div class="tabbed-content">
-<div class="tabbed-block"></div>
-</div>
-</div>
-<div class="highlight"><pre><span></span><code><span class="p">{</span>
-
-<span class="w">    </span><span class="nt">&quot;objective&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Update API endpoints documentation&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nt">&quot;task_list&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;objective&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Apply Google Python Style Guide to main app file&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;details&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">        - Read Python style guide from https://google.github.io/styleguide/pyguide.html</span>
-<span class="s2">        - Apply formatting rules to app/main.py</span>
-<span class="s2">        - Fix docstrings format</span>
-<span class="s2">        - Adjust import order</span>
-<span class="s2">        - Fix naming conventions</span>
-<span class="s2">        &quot;&quot;&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;restrictions&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Only modify app/main.py file, keep functionality intact&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;outcome&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;main.py formatted according to Google Python Style Guide&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;agent&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;developer&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;completed&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;is_finished&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
-<span class="w">    </span><span class="p">},</span>
-<span class="w">    </span><span class="p">{</span>
-<span class="w">        </span><span class="nt">&quot;objective&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Update API endpoints documentation&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;details&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&quot;&quot;</span>
-<span class="s2">        - Follow OpenAPI 3.0 spec from https://spec.openapis.org/oas/v3.0.3</span>
-<span class="s2">        - Update documentation for /users endpoints</span>
-<span class="s2">        - Update documentation for /auth endpoints</span>
-<span class="s2">        &quot;&quot;&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;restrictions&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Only modify api/docs/endpoints.yaml file&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;outcome&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;API documentation updated following OpenAPI 3.0 specification&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;agent&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;developer&quot;</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;completed&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<span class="w">        </span><span class="nt">&quot;is_finished&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="p">]</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>PlusCoder will use the orchestration workflow to delegate tasks to agents:</p>
-<div class="highlight"><pre><span></span><code>pluscoder<span class="w"> </span>--task_list<span class="w"> </span>task_list.json<span class="w"> </span>--auto_confirm<span class="w"> </span>yes
-</code></pre></div>
-<div class="admonition tip">
-<p class="admonition-title">Task list recommendations</p>
-<p>Task list are executed sequentially and each agent will work on its task until it's completed. We recommend:</p>
-<ol>
-<li>Keep tasks simple and focused</li>
-<li>Define clear objectives and outcomes</li>
-<li>Use restrictions to avoid unwanted changes</li>
-<li>Specify involved files and/or guidelines to accomplish the task</li>
-</ol>
-</div>
-<h2 id="python">Python</h2>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>This feature is still in development.</p>
-</div>
-<h2 id="related-docs">Related Docs</h2>
-<ul>
-<li><a href="../configuration/">Configuration</a></li>
-<li><a href="../agents/">Agents</a></li>
-<li><a href="../cli/">CLI Usage</a></li>
-</ul>
+<h1 id="code-review-example">Code Review Example</h1>
 
 
 
