@@ -477,15 +477,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#provider-credentials" class="md-nav__link">
-    <span class="md-ellipsis">
-      Provider Credentials
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#repository-settings" class="md-nav__link">
     <span class="md-ellipsis">
       Repository Settings
@@ -1036,15 +1027,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#provider-credentials" class="md-nav__link">
-    <span class="md-ellipsis">
-      Provider Credentials
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#repository-settings" class="md-nav__link">
     <span class="md-ellipsis">
       Repository Settings
@@ -1122,6 +1104,7 @@
 <h2 id="configuration-methods">Configuration methods</h2>
 <p>PlusCoder can be configured using several methods (following this precedence order):</p>
 <ol>
+<li>Python global Settings class</li>
 <li>The <code>/config</code> in-chat command at runtime</li>
 <li>Command-line arguments when running <code>pluscoder</code> command.</li>
 <li>Dotenv variables ( <code>.env</code> file in the repository root)</li>
@@ -1131,8 +1114,20 @@
 <li>Global environment variables file (<code>~/.config/pluscoder/vars.env</code> or <code>AppData/Local/pluscoder/vars.env</code>)</li>
 </ol>
 <p>Same option can be configured using different methods as mentioned:</p>
-<div class="tabbed-set tabbed-alternate" data-tabs="1:6"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><input id="__tabbed_1_4" name="__tabbed_1" type="radio" /><input id="__tabbed_1_5" name="__tabbed_1" type="radio" /><input id="__tabbed_1_6" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">CLI</label><label for="__tabbed_1_2">.env</label><label for="__tabbed_1_3">.pluscoder-config.yml</label><label for="__tabbed_1_4">Env Vars</label><label for="__tabbed_1_5">Global config.yml</label><label for="__tabbed_1_6">Global vars.env</label></div>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:7"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><input id="__tabbed_1_4" name="__tabbed_1" type="radio" /><input id="__tabbed_1_5" name="__tabbed_1" type="radio" /><input id="__tabbed_1_6" name="__tabbed_1" type="radio" /><input id="__tabbed_1_7" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">Python</label><label for="__tabbed_1_2">CLI</label><label for="__tabbed_1_3">.env</label><label for="__tabbed_1_4">.pluscoder-config.yml</label><label for="__tabbed_1_5">Env Vars</label><label for="__tabbed_1_6">Global config.yml</label><label for="__tabbed_1_7">Global vars.env</label></div>
 <div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pluscoder.config</span> <span class="kn">import</span> <span class="n">Settings</span>
+
+<span class="c1"># Get current global settings</span>
+<span class="n">settings</span> <span class="o">=</span> <span class="n">Settings</span><span class="p">()</span>
+
+<span class="c1"># Updates it</span>
+<span class="n">settings</span><span class="o">.</span><span class="n">reconfigure</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o&quot;</span>
+<span class="p">)</span>
+</code></pre></div>
+</div>
 <div class="tabbed-block">
 <div class="highlight"><pre><span></span><code>pluscoder<span class="w"> </span>--model<span class="w"> </span>gpt-4o
 <span class="c1"># other options...</span>
@@ -1181,7 +1176,7 @@ pluscoder
 <ul>
 <li><code>read_only</code>: Enable/disable read-only mode to avoid file editions (default: <code>False</code>)</li>
 <li><code>streaming</code>: Enable/disable LLM streaming (default: <code>True</code>)</li>
-<li><code>auto_confirm</code>: Enable/disable auto confirmation of pluscoder execution (default: <code>False</code>)</li>
+<li><code>auto_confirm</code>: Enable/disable auto confirmation of PlusCoder execution (default: <code>False</code>)</li>
 <li><code>hide_thinking_blocks</code>: Hide thinking blocks in LLM output (default: <code>True</code>)</li>
 <li><code>hide_output_blocks</code>: Hide output blocks in LLM output (default: <code>False</code>)</li>
 <li><code>hide_source_blocks</code>: Hide source blocks in LLM output (default: <code>False</code>)</li>
@@ -1208,23 +1203,7 @@ pluscoder
 <li><code>provider</code>: LLM provider to use. If <code>None</code>, provider will be selected based on available environment variables credentials. Options: <code>aws_bedrock</code>, <code>openai</code>, <code>litellm</code>, <code>anthropic</code>, <code>vertexai</code>, <code>google</code> (default: <code>None</code>)</li>
 <li><code>orchestrator_model_provider</code>: Provider to use for <a href="documentation/agents.md#orchestrator">orchestrator agent</a> (default: same as <code>PROVIDER</code>)</li>
 </ul>
-<h3 id="provider-credentials">Provider Credentials</h3>
-<p>Define these at <code>.env</code>, <code>~/.config/pluscoder/vars.env</code> or using <code>export VAR=value</code>:</p>
-<p><em>OpenAI</em>:</p>
-<ul>
-<li><code>OPENAI_API_KEY</code>: OpenAI API key. (default: <code>None</code>)</li>
-<li><code>OPENAI_API_BASE</code>: OpenAI API base URL. (default: <code>None</code>)</li>
-</ul>
-<p><em>Anthropic</em>:</p>
-<ul>
-<li><code>ANTHROPIC_API_KEY</code>: Anthropic API key. (default: <code>None</code>)</li>
-</ul>
-<p><em>AWS</em></p>
-<ul>
-<li><code>AWS_ACCESS_KEY_ID</code>: AWS Access Key ID. (default: <code>None</code>)</li>
-<li><code>AWS_SECRET_ACCESS_KEY</code>: AWS Secret Access Key. (default: <code>None</code>)</li>
-<li><code>AWS_PROFILE</code>: AWS profile name (default: <code>"default"</code>)</li>
-</ul>
+<p>Check detailed information about all available providers at <a href="../providers/">Providers</a>.</p>
 <h3 id="repository-settings">Repository Settings</h3>
 <p>Use these when running PlusCoder in remote repositories for automated runs. Check how at <a href="documentation/automation.md">Automated Runs</a>.</p>
 <ul>

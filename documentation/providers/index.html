@@ -84,6 +84,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#providers" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -567,6 +572,19 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Providers
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -577,6 +595,103 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#setup-provider-and-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setup provider and model
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#supported-providers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Supported providers
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Supported providers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#openai" class="md-nav__link">
+    <span class="md-ellipsis">
+      OpenAI
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#anthropic" class="md-nav__link">
+    <span class="md-ellipsis">
+      Anthropic
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vertexai" class="md-nav__link">
+    <span class="md-ellipsis">
+      VertexAI
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#google" class="md-nav__link">
+    <span class="md-ellipsis">
+      Google
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aws-bedrock" class="md-nav__link">
+    <span class="md-ellipsis">
+      AWS Bedrock
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#litellm" class="md-nav__link">
+    <span class="md-ellipsis">
+      LiteLLM
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -829,6 +944,94 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#setup-provider-and-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      Setup provider and model
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#supported-providers" class="md-nav__link">
+    <span class="md-ellipsis">
+      Supported providers
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Supported providers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#openai" class="md-nav__link">
+    <span class="md-ellipsis">
+      OpenAI
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#anthropic" class="md-nav__link">
+    <span class="md-ellipsis">
+      Anthropic
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#vertexai" class="md-nav__link">
+    <span class="md-ellipsis">
+      VertexAI
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#google" class="md-nav__link">
+    <span class="md-ellipsis">
+      Google
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aws-bedrock" class="md-nav__link">
+    <span class="md-ellipsis">
+      AWS Bedrock
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#litellm" class="md-nav__link">
+    <span class="md-ellipsis">
+      LiteLLM
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -843,9 +1046,70 @@
                   
 
 
-  <h1>Providers</h1>
+<h1 id="providers">Providers</h1>
+<p>PlusCoder support multiple providers by using LiteLLM, but we also support some native providers like OpenAI, Anthropic and VertexAI.</p>
+<h2 id="setup-provider-and-model">Setup provider and model</h2>
+<p>You can specify <code>provider</code> and <code>model</code> options with different methods. Check how at the <a href="documentation/config.md#configuration-methods">Configuration</a> section.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">CLI</label><label for="__tabbed_1_2">Python</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code>pluscoder<span class="w"> </span>--provider<span class="w"> </span>&lt;your-provider&gt;<span class="w"> </span>--model<span class="w"> </span>&lt;your-model&gt;
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pluscoder.agents.core</span> <span class="kn">import</span> <span class="n">DeveloperAgent</span>
+<span class="kn">from</span> <span class="nn">pluscoder.type</span> <span class="kn">import</span> <span class="n">AgentConfig</span>
 
+<span class="c1"># Setup provider and model when overriding agent defaults</span>
+<span class="n">developer_agent</span><span class="p">:</span> <span class="n">AgentConfig</span> <span class="o">=</span> <span class="n">DeveloperAgent</span><span class="o">.</span><span class="n">to_agent_config</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="s2">&quot;openai&quot;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o&quot;</span><span class="p">)</span>
 
+<span class="c1"># Or update agent on the fly</span>
+<span class="n">developer_agent</span><span class="o">.</span><span class="n">provider</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">your</span><span class="o">-</span><span class="n">provider</span><span class="o">&gt;</span>
+<span class="n">developer_agent</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">your</span><span class="o">-</span><span class="n">model</span><span class="o">&gt;</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>When no provider is specified, provider is inferred from credentials available in the environment variables. For example, if you have <code>OPENAI_API_KEY</code> set, OpenAI provider will be used, requiring only <code>model</code> option to run PlusCoder.</p>
+</div>
+<h2 id="supported-providers">Supported providers</h2>
+<h3 id="openai">OpenAI</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>&lt;your_openai_api_key&gt;
+<span class="nb">export</span><span class="w"> </span><span class="nv">OPENAI_API_BASE</span><span class="o">=</span>&lt;your_openai_api_base&gt;
+pluscoder<span class="w"> </span>--provider<span class="w"> </span>openai<span class="w"> </span>--model<span class="w"> </span>gpt-4o
+</code></pre></div>
+<h3 id="anthropic">Anthropic</h3>
+<div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">ANTHROPIC_API_KEY</span><span class="o">=</span>&lt;your_anthropic_api_key&gt;
+pluscoder<span class="w"> </span>--provider<span class="w"> </span>anthropic<span class="w"> </span>--model<span class="w"> </span>claude-3-5-sonnet-20241022
+</code></pre></div>
+<h3 id="vertexai">VertexAI</h3>
+<p>VertexAI provider requires gcloud CLI installed and authenticated.</p>
+<p>Check available models at <a href="https://console.cloud.google.com/vertex-ai/model-garden">VertexAI Model Garden</a>.</p>
+<div class="highlight"><pre><span></span><code>pluscoder<span class="w"> </span>--provider<span class="w"> </span>vertexai<span class="w"> </span>--model<span class="w"> </span>claude-3-5-sonnet-v2@20241022
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>VertexAI requires to enable its API and models along proper IAM permissions before using it.</p>
+</div>
+<h3 id="google">Google</h3>
+<p>Google provider is used for Google AI Studio. </p>
+<div class="highlight"><pre><span></span><code>export GOOGLE_API_KEY=&lt;your_google_ai_studio_api_key&gt;
+pluscoder --provider google --model gemini-1.5-pro
+</code></pre></div>
+<h3 id="aws-bedrock">AWS Bedrock</h3>
+<p>AWS Bedrock provider requires AWS CLI installed and authenticated.</p>
+<div class="highlight"><pre><span></span><code>export AWS_ACCESS_KEY_ID=&lt;your_aws_access_key_id&gt;
+export AWS_SECRET_ACCESS_KEY=&lt;your_aws_secret_access_key&gt;
+export AWS_PROFILE=&lt;your_aws_profile&gt;
+pluscoder --provider aws_bedrock --model anthropic.claude-3-5-sonnet-20241022-v2:0
+</code></pre></div>
+<h3 id="litellm">LiteLLM</h3>
+<p>You can use LiteLLM to access multiple providers and models.</p>
+<div class="highlight"><pre><span></span><code>export OPENAI_API_KEY=&lt;your_openai_api_key&gt;
+pluscoder --provider litellm --model openai/gpt-4o
+</code></pre></div>
 
 
 

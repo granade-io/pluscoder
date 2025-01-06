@@ -967,27 +967,31 @@
 </ul>
 <h2 id="why-to-use-pluscoder">Why to use PlusCoder</h2>
 <ol>
-<li>It's just Python: Coding agents are designed to work with large codebases efficiently, and they are fully programmable. You can run them in your development environment or in the cloud, leveraging LLM power in an easy sweep in all your repositories.</li>
-<li>Customizable and Standardizable: You can write custom company-wide specialized agents, instructions and tools. Allowing your entire team to leverage a single centralized configuration of agents.</li>
-<li>Chat with agents: You can chat with PlusCoder agents directly working with them as a coding partner with same company-wide configurations and guidelines.</li>
-<li>Task based workflows: PlusCoder allows you to create customizable and standardizable workflows for automating repetitive coding tasks.</li>
-<li>Multiple LLM providers: Choose your preferred LLM provider, such as OpenAI, Anthropic, or Cohere, everything supported by LiteLLM.</li>
+<li><strong>It's just Python</strong>: Coding agents are designed to work with large codebases efficiently, and they are fully programmable. You can run them in your development environment or in the cloud, leveraging LLM power in an easy sweep in all your repositories.</li>
+<li><strong>Customizable and Standardizable</strong>: You can write custom company-wide specialized agents, instructions and tools. Allowing your entire team to leverage a single centralized configuration of agents.</li>
+<li><strong>Chat with agents</strong>: You can chat with PlusCoder agents directly working with them as a coding partner with same company-wide configurations and guidelines.</li>
+<li><strong>Task based workflows</strong>: PlusCoder allows you to create customizable and standardizable workflows for automating repetitive coding tasks.</li>
+<li><strong>Multiple LLM providers</strong>: Choose your preferred LLM provider, such as OpenAI, Anthropic, or VertexAI, and everything supported by LiteLLM.</li>
 </ol>
 <h2 id="basic-examples">Basic Examples</h2>
 <p>Instruct agent to work in the current repository:</p>
 <div class="tabbed-set tabbed-alternate" data-tabs="1:3"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><input id="__tabbed_1_3" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">python</label><label for="__tabbed_1_2">CLI</label><label for="__tabbed_1_3">In-Chat</label></div>
 <div class="tabbed-content">
 <div class="tabbed-block">
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pluscoder</span> <span class="kn">import</span> <span class="n">workflow</span><span class="p">,</span> <span class="n">build_agents</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pluscoder.agents.core</span> <span class="kn">import</span> <span class="n">DeveloperAgent</span>
+<span class="kn">from</span> <span class="nn">pluscoder.type</span> <span class="kn">import</span> <span class="n">AgentConfig</span>
+<span class="kn">from</span> <span class="nn">pluscoder.workflow</span> <span class="kn">import</span> <span class="n">run_agent</span>
 
-<span class="c1"># Obtain predefined &amp; company-wide agents</span>
-<span class="n">agents</span> <span class="o">=</span> <span class="n">build_agents</span><span class="p">()</span>
 
-<span class="c1"># Select specific agent</span>
-<span class="n">dev_agent</span> <span class="o">=</span> <span class="n">agents</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;developer&#39;</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="c1"># Select specific agent</span>
+    <span class="n">developer_agent</span><span class="p">:</span> <span class="n">AgentConfig</span> <span class="o">=</span> <span class="n">DeveloperAgent</span><span class="o">.</span><span class="n">to_agent_config</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o&quot;</span><span class="p">)</span>
 
-<span class="c1"># Runs agent in the current workdir</span>
-<span class="n">workflow</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">agent</span><span class="o">=</span><span class="n">dev_agent</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="s2">&quot;Write a detailed README.md file specifying develop environment setup using commands present in Makefile&quot;</span><span class="p">)</span>
+    <span class="c1"># Runs agent in the current workdir</span>
+    <span class="k">await</span> <span class="n">run_agent</span><span class="p">(</span>
+        <span class="n">agent</span><span class="o">=</span><span class="n">developer_agent</span><span class="p">,</span>
+        <span class="nb">input</span><span class="o">=</span><span class="s2">&quot;Write a detailed README.md file specifying develop environment setup using commands present in Makefile&quot;</span>
+    <span class="p">)</span>
 </code></pre></div>
 </div>
 <div class="tabbed-block">

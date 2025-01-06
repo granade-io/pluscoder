@@ -1029,7 +1029,7 @@ pluscoder<span class="w"> </span>--model<span class="w"> </span>gpt-4o<span clas
 </div>
 <div class="admonition info">
 <p class="admonition-title">Info</p>
-<p>First time you run <code>pluscoder</code> you will be prompted to specify your preferred LLM provider and model.  You can also specify the provider and model using the <code>provider</code> and <code>model</code> options. Check all available providers at the <a href="documentation/config.md#providers">Configuration</a>.</p>
+<p>First time you run <code>pluscoder</code> you will be prompted to specify your preferred LLM provider and model.  You can also specify the provider and model using the <code>provider</code> and <code>model</code> options. Check all supported providers at <a href="../documentation/providers/">Providers Section</a>.</p>
 </div>
 <p>Agents by default can read/write local repository files. You can run agents using read-only mode by adding the <code>read_only</code> flag.</p>
 <div class="highlight"><pre><span></span><code>pluscoder<span class="w"> </span>--read_only<span class="w"> </span>--skip_repo_index
@@ -1039,8 +1039,9 @@ pluscoder<span class="w"> </span>--model<span class="w"> </span>gpt-4o<span clas
 </code></pre></div>
 <p>Or using the in-chat command <code>/show_repo</code>.</p>
 <h3 id="optimized-chat-with-indexed-repository">Optimized chat with indexed repository</h3>
-<p>To optimize the chat experience, we recommend to enable repository indexing. For that just remove the <code>skip_repo_index</code> flag and specify an embedding model using the <code>embedding_model</code> config.</p>
+<p>To optimize the chat experience, we recommend to enable <a href="../documentation/indexing/">repository indexing</a>. For that just remove the <code>skip_repo_index</code> flag and specify an embedding model using the <code>embedding_model</code> config.</p>
 <div class="highlight"><pre><span></span><code><span class="nb">export</span><span class="w"> </span><span class="nv">OPENAI_API_KEY</span><span class="o">=</span>&lt;your_openai_api_key&gt;
+<span class="nb">export</span><span class="w"> </span><span class="nv">COHERE_API_KEY</span><span class="o">=</span>&lt;your_cohere_api_key&gt;
 pluscoder<span class="w"> </span>--model<span class="w"> </span>gpt-4o<span class="w"> </span>--embedding_model<span class="w"> </span>cohere/embed-english-v3.0
 </code></pre></div>
 <div class="admonition info">
@@ -1057,20 +1058,23 @@ pluscoder<span class="w"> </span>--model<span class="w"> </span>gpt-4o<span clas
 <span class="kn">from</span> <span class="nn">pluscoder.type</span> <span class="kn">import</span> <span class="n">AgentConfig</span>
 <span class="kn">from</span> <span class="nn">pluscoder.workflow</span> <span class="kn">import</span> <span class="n">run_agent</span>
 
-<span class="c1"># Select specific agent</span>
-<span class="n">dev_agent</span><span class="p">:</span> <span class="n">AgentConfig</span> <span class="o">=</span> <span class="n">DeveloperAgent</span><span class="o">.</span><span class="n">to_agent_config</span><span class="p">()</span>
 
-<span class="c1"># Runs agent in the current workdir</span>
-<span class="n">run_agent</span><span class="p">(</span><span class="n">agent</span><span class="o">=</span><span class="n">dev_agent</span><span class="p">,</span> <span class="nb">input</span><span class="o">=</span><span class="s2">&quot;Write a detailed README.md file specifying develop environment setup using commands present in Makefile&quot;</span><span class="p">)</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="c1"># Select specific agent</span>
+    <span class="n">developer_agent</span><span class="p">:</span> <span class="n">AgentConfig</span> <span class="o">=</span> <span class="n">DeveloperAgent</span><span class="o">.</span><span class="n">to_agent_config</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;gpt-4o&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Runs agent in the current workdir</span>
+    <span class="k">await</span> <span class="n">run_agent</span><span class="p">(</span>
+        <span class="n">agent</span><span class="o">=</span><span class="n">developer_agent</span><span class="p">,</span>
+        <span class="nb">input</span><span class="o">=</span><span class="s2">&quot;Write a detailed README.md file specifying develop environment setup using commands present in Makefile&quot;</span>
+    <span class="p">)</span>
 </code></pre></div>
 <h2 id="next-steps">Next Steps</h2>
 <ul>
-<li>Read the <a href="01_pluscoder_configuration.md">PlusCoder Configuration</a> documentation to learn how to configure PlusCoder for your projects with the <code>.pluscoder-config.yml</code> file.</li>
-<li>Read the <a href="02_custom_agents.md">Adding Custom Agents</a> tutorial to learn how to add custom agents to PlusCoder.</li>
-<li>Learn the <a href="03_tips_and_tricks.md">Tips and Tricks</a> to get the most out of PlusCoder.</li>
-<li>Check out the <a href="https://gitlab.com/codematos/workflows">Workflows+Coder</a> section for an example.</li>
+<li>Read the <a href="../documentation/configuration/">Configuration</a> section for more customization.</li>
+<li>Read <a href="../documentation/agents/">Agents</a> section to learn how to use pre-defined agents and to setup custom ones.</li>
+<li>Check <a href="../examples/">Examples</a> section to learn how to setup PlusCoder for different common use-cases.</li>
 </ul>
-<hr />
 
 
 
